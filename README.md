@@ -29,6 +29,9 @@
 - Q: When will that be done?
 - A: Probably tomorrow if I don't sleep or next day at max.
 
+- Q:Is this a malware
+- A:Depends...malware for your brain but no not as a malware for computers since I don't know how to script them yet.
+
 - Q: Why are you doing this to yourself?
 - A:Bro you are talking to yourself in README pull yourself together.
 
@@ -40,5 +43,10 @@ cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 #To run
 ./filename.o #Then have fun
 ```
+
+## winPORTsux for V2 
+- https://github.com/neurmancer/Basic-C-Examples/tree/winPORTsux/thingsThatSupposedToBasicButOverengineeredForNothing -> In the old repo will be added to here winPORTsux branch (Which I won't merge with main since it's sucks) when V4 be ready for first Linux then I'll port it to windows
+- Yes it'll have .exe I know you can't compile for shit.
+
 
 ## THIRD-PARTY APP NEEDS AND LICENSES WILL BE HERE I put that title to not forget and this text is to long for a title and it's self-aware
