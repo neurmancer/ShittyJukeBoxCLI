@@ -11,11 +11,12 @@
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
 - Unfortunetly not uses prime numbers to determine if you want RGB or not anymore since I've learned structs
 - Now apperantly it got it's own windows branch which I'll provide with .exe file too since Win users don't know what a compiler is. but it is in another repo and outdated for now (link will be at the end for the old win repo)
-- WindowsPORT has it's own branch called winPORTsux which I won't merge(and since I started to C 5 days ago. That port is possible thanks to Grok(taught me what IFNDEF is))
+- WindowsPORT has it's own branch called winPORTsux which I won't merge(and since I started to C 10 days ago. That port is possible thanks to Grok(taught me what IFNDEF is))
 
 - Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
 - New features will be added 'cuz why not?
+
 ## In Development Features
 - One more genre category 
 - CLI music playing (tbh I don't know if I can pull this off but eventually we'll see)
@@ -39,3 +40,5 @@ cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 #To run
 ./filename.o #Then have fun
 ```
+
+## THIRD-PARTY APP NEEDS AND LICENSES WILL BE HERE I put that title to not forget and this text is to long for a title and it's self-aware
