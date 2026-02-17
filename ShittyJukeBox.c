@@ -950,7 +950,7 @@ char *NWOBHSongs[] = {
 
         //Ace of Spades 
 
-        "If you like to gamble\n"
+    "If you like to gamble\n"
     "I tell you, I'm your man\n"
     "You win some, lose some\n"
     "It's all the same to me\n"
@@ -1044,8 +1044,296 @@ char *NWOBHSongs[] = {
     "What do I have to lose?\n"
     "Stalemate\n"
     "Too late, too late\n"
-    "Too late, too late\n"
+    "Too late, too late\n",
 
+        //Am I Evil? (spoiler alert nope I am autistic af)
+    "My mother was a witch\nShe was burned alive\n"
+    "Thankless little bitch\nFor the tears I cried\n"
+    "Take her down now\nDon't want to see her face\n"
+    "Blistered and burned\nCan't hide my disgrace\n\n"
+    "Twenty-seven, everyone was nice\n"
+    "Got to see them\nMake them pay the price\n"
+    "See their bodies out on the ice\n"
+    "Take my time\n\n"
+    "Am I evil?\nYes, I am\n"
+    "Am I evil?\nI am, man\nYes, I am\n\n"
+    "As I watched my mother die\nI lost my head\n"
+    "Revenge now I sought to break with my bread\n"
+    "Taking no chances\nYou come with me\n"
+    "I'll split you to the bone\nHelp set you free\n\n"
+    "Twenty-seven\nEveryone was nice\n"
+    "Got to see them\nMake them pay the price\n"
+    "See their bodies out on the ice\n"
+    "Take my time\n\n"
+    "Am I evil?\nYes, I am\n"
+    "Am I evil?\nI am, man, yes, I am\n\n"
+    "Ohoh!\n\n"
+    "On with the action now\nI'll strip your pride\n"
+    "I'll spread your blood around\nI'll see you ride\n"
+    "Your face is scarred with steel\nWounds deep and neat\n"
+    "Like a double dozen before you\nSmells so sweet\n\n"
+    "Am I evil?\nYes, I am\n"
+    "Am I evil?\nI am, man\n\n"
+    "My soul is longing before\nAwait my hell\n"
+    "Sent to avenge my mother\nSleep myself\n"
+    "My face is long forgotten\nMy face not my own\n"
+    "Sweet and timely whore\nTake me home\n\n"
+    "Am I evil?\nYes I am\n"
+    "Am I evil?\nI am, man, yes, I am\n"
+    "Oh\n\n"
+    "On with the action now, I'll strip your pride\n"
+    "I'll spread your blood around, I'll see you ride\n"
+    "Your face is scarred with steel, your spirits dance\n"
+    "Like a double dozen before you, no romance\n\n"
+    "Am I evil? Yes, I am\n"
+    "Am I evil? I am, man\n"
+    "Am I evil? Yes, I am\n"
+    "Am I evil? I am, man, yes, I am\n",
+
+                //In the Heat of The Night 
+    "Steely eyes of a silvery people\n"
+    "Walk behind me, with evil intent\n"
+    "Up to the tower, I stand alone\n"
+    "Stripped of rank before them I'm sent\n\n"
+    "What befalls us in the heat of the night?\n"
+    "What befalls us in the heat of the night?\n\n"
+    "Before long, behind adamantine doors\n"
+    "I taste of the wine of their joy\n"
+    "Through delirium of a tortured mind\n"
+    "Her face gave me strength to this day\n\n"
+    "What befalls us in the heat of the night?\n"
+    "What befalls us in the heat of the night?\n"
+    "In the heat of the night\n\n"
+    "But love deceived me, and in my despair\n"
+    "I recalled the ring once again\n"
+    "Born of Sorrow my cunning revives me\n"
+    "And I took them with me enchained\n\n"
+    "What befalls us in the heat of the night?\n"
+    "What befalls us in the heat of the night?\n"
+    "In the heat of the night\n",
+
+        //Denim&Leather
+
+    "Where were you in '79 when the dam began to burst\n"
+    "Did you check us out down at the local show\n"
+    "Were you wearing denim, wearing leather\n"
+    "Did you run down to the front\n"
+    "Did you queue for your ticket through the ice and snow\n\n"
+    "Denim and Leather\n"
+    "Brought us all together\n"
+    "It was you that set the spirit free\n"
+    "Denim and Leather\n"
+    "Brought us all together\n"
+    "It was you that set the spirit free\n\n"
+    "Did you read the music paper from the back and to the front\n"
+    "Did you find out where to see your favorite band\n"
+    "Did you listen to the radio every Friday night\n"
+    "Did hang around your local record store\n\n"
+    "Denim and Leather\n"
+    "Brought us all together\n"
+    "It was you that set the spirit free\n"
+    "Denim and Leather\n"
+    "Brought us all together\n"
+    "It was you that set the spirit free\n\n"
+    "Do you dream of playing guitar or smashing up the drums\n"
+    "Maybe you can learn to play the bass\n"
+    "You can always be a singer like me and front the band\n"
+    "When on the stage we wait at your command\n\n"
+    "Denim and Leather\n"
+    "Brought us all together\n"
+    "It was you that set the spirit free\n"
+    "Denim and Leather\n"
+    "Brought us all together\n"
+    "It was you that set the spirit free\n\n"
+    "It was you - that set the spirit free\n"
+    "It was you - that put us here today\n"
+    "It was you - that filled the concert halls\n"
+    "It was you - that set the spirit free\n\n"
+    "Denim and Leather\n"
+    "Brought us all together\n"
+    "It was you that set the spirit free\n"
+    "Denim and Leather\n"
+    "Brought us all together\n"
+    "It was you that set the spirit free\n",
+            
+    
+                //Crusader
+    "Crusader, crusader, please take me with you\n"
+    "The battle lies far to the east\n"
+    "Crusader, crusader, don't leave me alone\n"
+    "I want to ride out on your quest\n"
+    "I'm waiting, I'm waiting, to stand by your side\n"
+    "To fight with you over the sea\n"
+    "They're calling, they're calling, I have to be there\n"
+    "The holy land has to be free\n\n"
+    "Fight the good fight, believe what is right\n"
+    "Crusader, the Lord of the Realm\n"
+    "Fight the good fight with all your might\n"
+    "Crusader, the Lord of the Realm\n\n"
+    "We're marching, we're marching, to a land far from home\n"
+    "No one can say who'll return\n"
+    "For Christendom's sake, we'll take our revenge\n"
+    "On the pagans from out of the east\n"
+    "We Christians are coming, with swords held on high\n"
+    "United by faith and the cause\n"
+    "The Saracen heathen will soon taste our steel\n"
+    "Our standards will rise 'cross the land\n\n"
+    "Fight the good fight, believe what is right\n"
+    "Crusader, the Lord of the Realm\n"
+    "Fight the good fight with all your might\n"
+    "Crusader, the Lord of the Realm\n\n"
+    "To battle, to battle, the Saracen hordes\n"
+    "We follow the warrior king\n"
+    "Onward, ride onward, into the fight\n"
+    "We carry the sign of the cross\n"
+    "Warlords of England, Knights of the Realm\n"
+    "Spilling their blood in the sand\n"
+    "Crusader, crusader, the legend is born\n"
+    "The future will honour your deeds\n\n"
+    "Fight the good fight, believe what is right\n"
+    "Crusader, the Lord of the Realm\n"
+    "Fight the good fight with all your might\n"
+    "Crusader, the Lord of the Realm\n",
+            
+    
+    
+            //Fire in The SKYYYY
+    "There's a fire in the sky\n"
+    "There's a feeling in the air\n"
+    "When the ground starts to tremble\n"
+    "The first attack is here\n\n"
+    "You won't stand a chance\n"
+    "When the missiles start to fly\n"
+    "They never tell the people\n"
+    "'Til the holocaust is here\n\n"
+    "When the fire's in the sky\n"
+    "You'll be running for your lives\n"
+    "When the fire's in the sky\n"
+    "Prepare yourselves to die\n\n"
+    "Where, where are the shelters?\n"
+    "They said they would be there\n"
+    "You'll need, need some protection\n"
+    "From the radiation flare\n\n"
+    "Don't, don't start a panic\n"
+    "It won't do you no good\n"
+    "You'll just have to wait\n"
+    "For the end of all mankind\n\n"
+    "If you're near the point of impact\n"
+    "There's nowhere you can run\n"
+    "If the heatwave don't get you\n"
+    "The shockwave surely will\n\n"
+    "There won't be no more heroes\n"
+    "There's no one left to fight\n"
+    "It's the end of our planet\n"
+    "We'd commit eternal sight\n\n"
+    "When the fire's in the sky\n"
+    "You'll be running for your lives\n"
+    "When the fire's in the sky\n"
+    "Prepare yourselves to die\n\n"
+    "When the fire's in the sky\n"
+    "You'll be running for your lives\n"
+    "When the fire's in the sky\n"
+    "Prepare yourselves to die\n"
+    "To die, to die, to die, to die\n",
+
+        //The Trooper
+
+    "You'll take my life, but I'll take yours too\n"
+    "You'll fire your musket, but I'll run you through\n"
+    "So when you're waiting for the next attack\n"
+    "You'd better stand, there's no turning back\n\n"
+    "The bugle sounds, the charge begins\n"
+    "But on this battlefield, no one wins\n"
+    "The smell of acrid smoke and horses' breath\n"
+    "As I plunge on into certain death, oh, oh\n\n"
+    "The horse, he sweats with fear, we break to run\n"
+    "The mighty roar of the Russian guns\n"
+    "And as we race towards the human wall\n"
+    "The screams of pain as my comrades fall\n\n"
+    "We hurdle bodies that lay on the ground\n"
+    "And the Russians fire another round\n"
+    "We get so near, yet so far away\n"
+    "We were meant to fight another day, oh, oh\n\n"
+    "We get so close, near enough to fight\n"
+    "When a Russian gets me in his sights\n"
+    "He pulls the trigger and I feel the blow\n"
+    "A burst of rounds take my horse below\n\n"
+    "And as I lay there gazing at the sky\n"
+    "My body's numb and my throat is dry\n"
+    "And as I lay forgotten and alone\n"
+    "Without a tear, I draw my parting groan, oh, oh\n",
+
+
+                //Prisoner of Your (Hazel) Eyes
+
+    "When I saw your face\n"
+    "I became a prisoner of your eyes\n"
+    "And I would do just anything\n"
+    "To stay and be with you\n\n"
+    "You know there are times\n"
+    "When I let myself wonder\n"
+    "As I was going under\n"
+    "You pulled me back to earth\n\n"
+    "Don't you hear me crying?\n"
+    "Take me in your arms again\n"
+    "Tell me that you're trying\n"
+    "Or is our love a lie?\n\n"
+    "Love is blind\n"
+    "And love deceives you\n"
+    "You came along and captured me\n"
+    "Now I'm a prisoner of your eyes\n"
+    "Trapped in time\n"
+    "I cannot leave you\n"
+    "I'm just a prisoner of your eyes\n\n"
+    "As each day goes by\n"
+    "I've given up completely\n"
+    "I've locked myself inside your heart\n"
+    "And thrown away the key\n\n"
+    "Only time will tell\n"
+    "If I can live without you\n"
+    "Can you see into the future?\n"
+    "Will you ever set me free?\n\n"
+    "Don't you hear me crying?\n"
+    "Take me in your arms again\n"
+    "Tell me that you're trying\n"
+    "Or is our love a lie?\n\n"
+    "Love is blind\n"
+    "And love deceives you\n"
+    "You came along and captured me\n"
+    "Now I'm a prisoner of your eyes\n"
+    "Trapped in time\n"
+    "I cannot leave you\n"
+    "I'm just a prisoner of your eyes\n\n"
+    "In this heartache\n"
+    "We can try and start again\n"
+    "Stop the heartbreak\n"
+    "A little time will help to kill the pain\n\n"
+    "Don't you hear me crying?\n"
+    "Take me in your arms again\n"
+    "Tell me that you're trying\n"
+    "Or is our love a lie?\n\n"
+    "Love is blind\n"
+    "And love deceives you\n"
+    "You came along and captured me\n"
+    "Now I'm a prisoner of your eyes\n"
+    "Trapped in time\n"
+    "I cannot leave you\n"
+    "I'm just a prisoner of your eyes\n\n"
+    "Love is blind\n"
+    "And love deceives you\n"
+    "You came along and captured me\n"
+    "Now I'm a prisoner of your eyes\n"
+    "Trapped in time\n"
+    "I cannot leave you\n"
+    "I'm just a prisoner of your eyes\n\n"
+    "Love is blind\n"
+    "And love deceives you\n"
+    "You came along and captured me\n"
+    "Now I'm a prisoner of your eyes\n"
+    "Trapped in time\n"
+    "I cannot leave you\n"
+    "I'm just a prisoner of your eyes\n"
+    
 };
 
 
@@ -1103,7 +1391,14 @@ enum Bangers {
     BULLET_FOR_MY_VALENTINE,            //Yeah band name as place holder
     ACE_OF_SPADES,
     OVERKILL,
-    TOO_LATE
+    TOO_LATE,
+    AM_I_EVIL,
+    IN_THE_HEAT,
+    DENIM_AND_LEATHER,
+    CRUSADER,
+    FIRE_IN_THE_SKY,
+    TROOPER,
+    PRISONER_OF_YOUR_EYES
 };
 
 typedef void (*WriterFunction)(const char *lyrics);
@@ -1318,9 +1613,9 @@ songData nwobhmInput(void)
 {
     songData songPrefs = {-1,2};
     char *nwobhmTitles[] = {
-        "Ace of Spades - Motörhead", "Overkill - Motörhead", "Too Late Too Late - Motörhead",NULL
-    
-    
+        "Ace of Spades - Motörhead", "Overkill - Motörhead", "Too Late Too Late - Motörhead",
+        "Am I Evil - Diamondhead","In The Heat of The Night - Diamondhead","Denim&Leather - Saxon","Crusader - Saxon","Fire In The Sky - Saxon","The Trooper - Iron Maiden","Prisoner Of Your Eyes - Judas Priest", 
+        NULL
     }; //Not to future self...Don't forget NULL or you get core dump (like how she dumped you...but bright side:You found the bug under a min since you are used to get dumped)
 
     int songCount = sizeof(nwobhmTitles)/sizeof(nwobhmTitles[0]);
@@ -1416,13 +1711,13 @@ void bold_typewriter(const char* song)
     {
         if (*song == '\n')
         {
-            usleep(275000); 
+            usleep(325000); 
             printf("%c\a",*song);
         }
         else
         {
             printf("%c",*song);
-            usleep(12*960); 
+            usleep(12*1200); 
         }
         song++;
     }
