@@ -11,6 +11,8 @@
 #define BOLD "\e[1m"
 #define FIX_FONT "\e[0m"
 #define WIPE_TERMINAL "\033[H\033[J"
+#define WIPE_TOP "\033[2J"
+#define GO_HOME "\033[H"
 #define VANISH_CURSOR "\033[?25l"
 #define BRING_BACK_THE_CURSOR_FROM_THE_DEAD "\033[?25h" //Yeah I know it doesn't need to be that dramatic nor that long but C'MON WE ARE BUILDING A EMO JUKEBOX, DUH.
 #define FREQ 0.4
@@ -630,60 +632,51 @@ char *ADHDSongs[] = {
     "Teeth\n"
     "Never, never, never ever let go\n",
 
-            //Thunder
-    "Just a young gun with a quick fuse\n"
-    "I was uptight, wanna let loose\n"
-    "I was dreaming of bigger things\n"
-    "And wanna leave my own life behind\n"
-    "Not a yes-sir, not a follower\n"
-    "Fit the box, fit the mold\n"
-    "Have a seat in the foyer, take a number\n"
-    "I was lightning before the thunder\n"
-    "Thunder, thunder\n"
-    "Thunder, thun-, thunder\n"
-    "Thun-thun-thunder, thunder, thunder\n"
-    "Thunder, thun-, thunder\n"
-    "Thun-thun-thunder, thunder\n"
-    "Thunder, feel the thunder\n"
-    "Lightning then the thunder\n"
-    "Thunder, feel the thunder\n"
-    "Lightning then the thunder\n"
-    "Thunder, thunder\n"
-    "Thunder\n"
-    "Kids were laughing in my classes\n"
-    "While I was scheming for the masses\n"
-    "Who do you think you are?\n"
-    "Dreaming 'bout being a big star\n"
-    "You say you're basic, you say you're easy\n"
-    "You're always riding in the back seat\n"
-    "Now I'm smiling from the stage while\n"
-    "You were clapping in the nosebleeds\n"
-    "Thunder, thunder\n"
-    "Thunder, thun-, thunder\n"
-    "Thun-thun-thunder, thunder, thunder\n"
-    "Thunder, thun-, thunder\n"
-    "Thun-thun-thunder, thunder\n"
-    "Thunder, feel the thunder\n"
-    "Lightning then the thunder\n"
-    "Thunder, feel the thunder\n"
-    "Lightning then the thunder\n"
-    "Thunder, thunder\n"
-    "Thunder\n"
-    "Thunder, feel the thunder\n"
-    "Lightning then the thunder, thunder\n"
-    "Thunder, feel the thunder\n"
-    "Lightning then the thunder, thunder\n"
-    "Thunder, feel the thunder\n"
-    "Lightning then the thunder, thunder\n"
-    "Thunder, feel the thunder (never give up, never give up)\n"
-    "Lightning then the thunder, thunder (never give up, never give up)\n"
-    "Thunder, feel the thunder (never give up, never give up)\n"
-    "Lightning then the thunder, thunder (never give up, never give up)\n"
-    "Thunder, thunder\n"
-    "Thunder, thun-, thunder\n"
-    "Thun-thun-thunder, thunder, thunder\n"
-    "Thunder, thun-, thunder\n"
-    "Thun-thun-thunder, thunder\n",
+            //Thunder - Updated
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over, we\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n"
+    "We down\n\n"
+    "We're getting on fire\n"
+    "We're rising up higher\n"
+    "The bottle is up\n"
+    "We're over the top\n"
+    "It's time to get wild\n"
+    "The time of our life\n"
+    "It's happening now\n"
+    "We're out of control\n"
+    "Together we're rolling\n"
+    "Over and over, we\n\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n\n"
+    "Na-na-na-na\n"
+    "Na-na-na-na\n\n"
+    "We gotta rock, rock\n"
+    "Party till the last shot\n"
+    "Fill that jug and raise your cup up\n"
+    "We got chug chug\n"
+    "Better take it non stop\n"
+    "Hey! Come drink it till the last drop\n\n"
+    "So please just let us burning down this place\n"
+    "And we will end up in the hall of fame\n"
+    "Let's get ready for a drinking game\n"
+    "So come and sip it to the last drop\n"
+    "Over and over we're\n\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n"
+    "Down the river, we're drunk and all of our thumbs went up in the air\n"
+    "Sung in the wind and sung to the thunder rolling over and over\n",
 
 
 
@@ -953,19 +946,123 @@ char *ADHDSongs[] = {
 };
 
 
+char *NWOBHSongs[] = {
+
+        //Ace of Spades 
+
+        "If you like to gamble\n"
+    "I tell you, I'm your man\n"
+    "You win some, lose some\n"
+    "It's all the same to me\n"
+    "The pleasure is to play\n"
+    "Makes no difference what you say\n"
+    "I don't share your greed\n"
+    "The only card I need\n"
+    "Is the Ace of Spades\n"
+    "The Ace of Spades\n\n"
+    "Playing for the high one\n"
+    "Dancing with the devil\n"
+    "Going with the flow\n"
+    "It's all a game to me\n"
+    "Seven or eleven\n"
+    "Snake eyes watching you\n"
+    "Double up or quit\n"
+    "Double stake or split\n"
+    "The Ace of Spades\n"
+    "The Ace of Spades\n\n"
+    "You know I'm born to lose\n"
+    "And gambling's for fools\n"
+    "But that's the way I like it, baby\n"
+    "I don't want to live forever\n"
+    "And don't forget the joker\n\n"
+    "Pushing up the ante\n"
+    "I know you got to see me\n"
+    "Read 'em and weep\n"
+    "The dead man's hand again\n"
+    "I see it in your eyes\n"
+    "Take one look and die\n"
+    "The only thing you see\n"
+    "You know it's gonna be\n"
+    "The Ace of Spades\n"
+    "The Ace of Spades, uh\n",
+
+
+        //Overkill
+
+    "Only way to feel the noise is when it's good and loud\n"
+    "So good I can't believe it, screaming with the crowd\n"
+    "Don't sweat it, we'll get it back to you\n"
+    "Don't sweat it, we'll get it back to you\n"
+    "Overkill, overkill, overkill\n\n"
+    "On your feet you feel the beat, it goes straight to your spine\n"
+    "Shake your head you must be dead if it don't make you fly\n"
+    "Don't sweat it, we'll get it back to you\n"
+    "Don't sweat it, we'll get it back to you\n"
+    "Overkill, overkill, overkill\n\n"
+    "Know your body's made to move, ya feel it in your guts\n"
+    "Rock 'n' roll ain't worth the name if it don't make ya strut\n"
+    "Don't sweat it, we'll get it back to you\n"
+    "Don't sweat it, we'll get it back to you\n"
+    "Overkill, overkill, overkill\n", 
+
+
+        //Too late Too Late
+
+    "I see that nothing's changed\n"
+    "Insist on playing games\n"
+    "Some waste of time you are\n"
+    "And you're so popular\n"
+    "Well, this is it, you bitch\n"
+    "I got to make a switch\n"
+    "You find some other John\n"
+    "I know what's going on\n\n"
+    "Good move\n"
+    "What do I have to lose?\n"
+    "Stalemate\n"
+    "Too late, too late\n\n"
+    "I thought you were for real\n"
+    "Just one more rip-off deal\n"
+    "Don't give me all that crap\n"
+    "I just escaped your trap\n"
+    "You think you see the joke\n"
+    "But you're just chasing smoke\n"
+    "'Cause now the thrill is gone\n"
+    "I know what's going on\n\n"
+    "Good move\n"
+    "What do I have to lose?\n"
+    "Stalemate\n"
+    "Too late, too late\n\n"
+    "Misunderstanding me\n"
+    "The way you felt so free\n"
+    "I'm gonna jump the gun\n"
+    "I'm gonna cut and run\n"
+    "Your credibility\n"
+    "Don't cut no ice with me\n"
+    "You're just a feeble con\n"
+    "I know what's going on\n\n"
+    "Good move\n"
+    "What do I have to lose?\n"
+    "Stalemate\n"
+    "Too late, too late\n"
+    "Too late, too late\n"
+
+};
+
 
 typedef struct {
     int songIndex;
-    int iWantEpilepsySeizures;
+    int writerType; //Yeah no more isSeizuring or shit since I got more typers 
 }songData;
 
 void clearIBuffer(void);
+void bold_typewriter(const char* song);
 void epilepsy_typewriter(const char* song);
 void typewriter(const char* song);
 void sigintHandler(int sig);
 void asciiPrinter(void);
 songData emoInput(void);
 songData nightcoreInput(void);
+songData nwobhmInput(void);
 int genreMenu(void);
 
 
@@ -974,7 +1071,7 @@ int genreMenu(void);
     We are not python dict pussies here
 */
 
-enum emoSongList {
+enum EmoSongList {
     LIVE_SHELL,             //Yeah over dramatized but c'mon IT'S EMO
     BRING_ME_TO_LIFE,
     LITHIUM_EVA,
@@ -1002,6 +1099,12 @@ enum ADHDcore {
     ANGEL_OF_DARKNESS
 };
 
+enum Bangers {
+    BULLET_FOR_MY_VALENTINE,            //Yeah band name as place holder
+    ACE_OF_SPADES,
+    OVERKILL,
+    TOO_LATE
+};
 
 typedef void (*WriterFunction)(const char *lyrics);
 
@@ -1009,21 +1112,26 @@ typedef songData (*MenuFunction)();
 
 WriterFunction writerType[] = {
     typewriter,
-    epilepsy_typewriter
+    epilepsy_typewriter,
+    bold_typewriter
 };
 
 MenuFunction genre_menus[] = {
-    NULL,
+    NULL, //Since we start getting input from 1-n basically index shifting...and yeah I started to comment actual important shit to keep track funny ones will be when I enter flow state 
     emoInput,
-    nightcoreInput
+    nightcoreInput,
+    nwobhmInput
 };
 
-char *asciiArt[] = {"  ______________   ","  /  __________  \\"," |  | LITHIUM  |  | "," |  |----------|  | "," |  | SONG B2  |  | "," |  |__________|  |",
+char *asciiArt[] = {"   ______________   ","  /  __________  \\"," |  | LITHIUM  |  | "," |  |----------|  | "," |  | TEETH    |  | "," |  |__________|  |",
     "|  _   ____   _  |", " | (O) |____| (O) |","|  Coin [50c]    |", " |________________|"
 };
 
+char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal",NULL};
 
-char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD"};
+
+
+
 
 int main(void)
 {
@@ -1031,11 +1139,12 @@ int main(void)
     setvbuf(stdout,NULL,_IONBF,0);
     signal(SIGINT,sigintHandler);
 
+
     while (1) //Yeah I ain't giving up my infinite loop unless you use Ctrl+C to roll rickroll dice
     {
         int genreChoice = genreMenu();
-        if (genreChoice)
-        {
+        if (genreChoice) 
+        {            
             MenuFunction genre = genre_menus[genreChoice];
             songData selectedSong = genre(); 
             if (selectedSong.songIndex == -1)
@@ -1044,18 +1153,27 @@ int main(void)
             } //As I said that's gonna help me
             else 
             {
-                WriterFunction writer = writerType[selectedSong.iWantEpilepsySeizures];
+                //I'll optimize this shit too
+                WriterFunction writer = writerType[selectedSong.writerType];
+                selectedSong.songIndex -= SONG_OFFSET;
                 switch (genreChoice)
                 {
                     case 1:
-                        writer(myTherapySession[selectedSong.songIndex-1]);
+                        writer(myTherapySession[selectedSong.songIndex]);
                         break;
+                    
                     case 2:
-                        writer(ADHDSongs[selectedSong.songIndex-1]);
+                        writer(ADHDSongs[selectedSong.songIndex]);
                         break;
-                    }
-            }
+                    
+                    case 3:
+                        writer(NWOBHSongs[selectedSong.songIndex]);
+                        break;
             
+                }
+            
+            }
+            printf(WIPE_TOP GO_HOME); //Clear the top and go (1,1)
         }
         else {return(1);} //Menu Error Code (from that point I'll act like every error starting from 1-n to determine shit easier)
         printf(WIPE_TERMINAL);
@@ -1066,16 +1184,21 @@ int main(void)
 }
 
 
+
+
+
 void sigintHandler(int sig) //Ctrl+C magic
 {
     int gettingRickrolledOrNot = (rand() % 4)+1; //Never trust a computer's calculation use bracelets    -Sun Tzu (or Linus Torvalds IDK)
     if (gettingRickrolledOrNot == 3)
     {
+
         printf(WIPE_TERMINAL);
         usleep(5000);
-        epilepsy_typewriter(rickroll); //If you get this ctrl+c ain't saving you. I FUCKING REALIZED IT AFTER 3RD ONE...REDUCED FREQ
+        epilepsy_typewriter(rickroll); //If you get this ctrl+c ain't saving you. 
     }
-    printf(WIPE_TERMINAL);
+    printf(FIX_FONT WIPE_TERMINAL);
+    printf(WIPE_TOP GO_HOME);
     printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD); //Don't worry bro got your cursor back
     exit(0);
 }
@@ -1086,7 +1209,7 @@ songData emoInput(void)
    
     songData songPrefs;
     songPrefs.songIndex = -1;
-    songPrefs.iWantEpilepsySeizures = 0;
+    songPrefs.writerType = 0;
     const char *depressed_titles[] = {
         "Bring Me To Life - Evanescence",
         "Lithium - Evanescence",
@@ -1135,7 +1258,7 @@ songData emoInput(void)
             switch (reply)
             {
                 case 'y':
-                    songPrefs.iWantEpilepsySeizures = 1;
+                    songPrefs.writerType = 1;
                     return(songPrefs);
                     break;
                 
@@ -1146,7 +1269,7 @@ songData emoInput(void)
         }
         else
         {
-            songPrefs.iWantEpilepsySeizures = -1;
+            songPrefs.writerType = -1;
             printf("Fuck you.Sincerely...\n");
             return(songPrefs);
         }
@@ -1191,18 +1314,58 @@ songData nightcoreInput(void)
     }
 }
 
+songData nwobhmInput(void)
+{
+    songData songPrefs = {-1,2};
+    char *nwobhmTitles[] = {
+        "Ace of Spades - Motörhead", "Overkill - Motörhead", "Too Late Too Late - Motörhead",NULL
+    
+    
+    }; //Not to future self...Don't forget NULL or you get core dump (like how she dumped you...but bright side:You found the bug under a min since you are used to get dumped)
+
+    int songCount = sizeof(nwobhmTitles)/sizeof(nwobhmTitles[0]);
+    int i = 0;
+    printf(WIPE_TERMINAL BOLD);
+    while (nwobhmTitles[i] != NULL)
+    {   
+        printf("%d)%s\n",i+SONG_OFFSET,nwobhmTitles[i]);
+        usleep(50000);
+        i++;    
+    }
+    printf(FIX_FONT);
+
+    printf("Please select a poison(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
+    //Still...program doesn't know how to handle just entering please don't.     > /// < 
+    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
+    {
+        // NEw shiny fucntion to clear buffer OwO
+        clearIBuffer();
+
+        printf("Bro...either try not to be a idiot or Delta the fuck out\n"); 
+        songPrefs.songIndex = -1;
+        return(songPrefs);
+    } 
+    else
+    {
+        return(songPrefs);
+    }
+}
+
+
 int genreMenu(void)
 {
-    int lengthOfCatalouge = sizeof(genres)/sizeof(genres[0]);
+    int lengthOfCatalouge = (sizeof(genres)/sizeof(genres[0]))- SONG_OFFSET;
     int genrePick = -1;
     printf(WIPE_TERMINAL);
     printf(BOLD "\t\t\t_-JUST A SHITTY JUKEBOX-_\n" FIX_FONT);
     asciiPrinter();
     printf(BOLD "Genres\n" FIX_FONT);
-    printf("1)%s\n",genres[0]);
-    printf("2)%s\n\n",genres[1]); //Make the array dynamic in a loop later
-
-    printf("Select one genre to see its special menu(1-2):");
+    for (int i = 0; genres[i] != NULL; i++)
+    {
+        printf("%d)%s\n",i+SONG_OFFSET,genres[i]);
+    }
+    
+    printf("Select one genre to see its special menu(1-%d):",lengthOfCatalouge);
     if (scanf("%d",&genrePick) != 1 || genrePick < 1 || genrePick > lengthOfCatalouge)
     {   
         clearIBuffer();
@@ -1239,15 +1402,38 @@ void epilepsy_typewriter(const char* song) {
         color_timer++;
     }
     printf("\033[0m"); // reset colors
-    sleep(1);
     printf(WIPE_TERMINAL);
+    sleep(1);
 }
 
+void bold_typewriter(const char* song)
+{
+    printf(VANISH_CURSOR);
+    printf(WIPE_TERMINAL);
+    printf(BOLD);
+    usleep(250000);
+    while (*song != '\0')
+    {
+        if (*song == '\n')
+        {
+            usleep(275000); 
+            printf("%c\a",*song);
+        }
+        else
+        {
+            printf("%c",*song);
+            usleep(12*960); 
+        }
+        song++;
+    }
+    printf(FIX_FONT);
+    printf(WIPE_TERMINAL);
+    sleep(1);
+
+}
 
 void typewriter(const char* song)
 {
-
-
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(250000);
@@ -1265,8 +1451,9 @@ void typewriter(const char* song)
         }
         song++;
     }
-    sleep(1);
     printf(WIPE_TERMINAL);
+    sleep(1);
+
 }
 
 void asciiPrinter()
@@ -1311,7 +1498,7 @@ void clearIBuffer(void)
   '.________' |o|==|o|====:====|o|==|o| '________.'
     |  |  ||  ____ |:| | | | | |:| ____  ||  |  |
     |  |  || |    ||:| | | | | |:||    | ||  |  |
-    |  |  || |____||: Wurlitzer :||____| ||  |  |
+    |  |  || |____||: UwU   OwO :||____| ||  |  |
     |  |  ||  |   /|:| | | | | |:|\   |  ||  |  |
     |  |  ||  |_.` |:| | | | | |:| `._|  ||  |  |
     |  |  || .---.-'-'-'-'-'-'-'-'-.---. ||  |  |
