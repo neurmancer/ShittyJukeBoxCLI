@@ -1,6 +1,7 @@
 # SHITTY JUKEBOX IS NOW IN ITS OWN REPO  
 - ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY
-- Current Version V3 
+- Current Version V3
+- - (V3.3 beta actually) (and yeah V3.3 is justa a voltage joke) 
 
 ## FEATURES
 
