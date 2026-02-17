@@ -4,8 +4,8 @@
 
 ## FEATURES
 
-- 8 emo/rock songs (with 2 included metallica songs)
-- 8 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
+- 10emo/rock songs (with 2 included metallica songs)
+- 10 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
@@ -17,12 +17,14 @@
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
 - New features will be added 'cuz why not?
 
+- Latest added 2 more songs for each genre and this entry just to remind myself tomorrow will be deleted with next README update
+
 ## In Development Features
 - One more genre category 
 - CLI music playing (tbh I don't know if I can pull this off but eventually we'll see)
 - windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons)
 - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
-- Songs will be summed up to 10 + 10 songs in the new genre.
+- Songs will be summed up to 10 + 10 songs in the new genre. DONE(New genre excluded for now because it's 3.32AM rn)
 
 ## QA
 

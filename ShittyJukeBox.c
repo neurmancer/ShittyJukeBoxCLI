@@ -129,6 +129,105 @@ char *myTherapySession[] = { "How can you see into my eyes like open doors?\nLea
     "You love me\n"
     "I hate everything about you\n"
     "Why do I love you?\n",
+            //Pain
+    "Pain without love\n"
+    "Pain, I can't get enough\n"
+    "Pain, I like it rough\n"
+    "'Cause I'd rather feel pain than nothing at all\n"
+    "You're sick of feeling numb\n"
+    "You're not the only one\n"
+    "I'll take you by the hand\n"
+    "And I'll show you a world that you can understand\n"
+    "This life is filled with hurt\n"
+    "When happiness doesn't work\n"
+    "Trust me and take my hand\n"
+    "When the lights go out, you'll understand\n"
+    "Pain without love\n"
+    "Pain, I can't get enough\n"
+    "Pain, I like it rough\n"
+    "'Cause I'd rather feel pain than nothing at all\n"
+    "Pain without love\n"
+    "Pain, I can't get enough\n"
+    "Pain, I like it rough\n"
+    "'Cause I'd rather feel pain than nothing at all\n"
+    "Anger and agony are better than misery\n"
+    "Trust me, I've got a plan\n"
+    "When the lights go up, you'll understand\n"
+    "Pain without love\n"
+    "Pain, I can't get enough\n"
+    "Pain, I like it rough\n"
+    "'Cause I'd rather feel pain than nothing at all\n"
+    "Pain, without love\n"
+    "Pain, I can't get enough\n"
+    "Pain, I like it rough\n"
+    "'Cause I'd like to feel pain than nothing\n"
+    "Rather feel pain\n"
+    "I know, I know, I know, I know, I know\n"
+    "That you're wounded\n"
+    "You know, you know, you know, you know\n"
+    "That I'm here to save you\n"
+    "You know, you know, you know, you know\n"
+    "I'm always here for you\n"
+    "I know, I know, I know, I know\n"
+    "That you'll thank me later\n"
+    "Pain without love\n"
+    "Pain, can't get enough\n"
+    "Pain, I like it rough\n"
+    "'Cause I'd rather feel pain than nothing at all\n"
+    "Pain without love\n"
+    "Pain, I can't get enough\n"
+    "Pain, I like it rough\n"
+    "'Cause I'd rather feel pain than nothing at all\n"
+    "Pain without love\n"
+    "Pain, I can't get enough\n"
+    "Pain, I like it rough\n"
+    "'Cause I'd rather feel pain than nothing at all\n"
+    "Rather feel pain than nothing at all\n"
+    "Rather feel pain\n",
+
+        //Boulevard of Broken Dreams
+
+    "I walk a lonely road\n"
+    "The only one that I have ever known\n"
+    "Don't know where it goes\n"
+    "But it's home to me, and I walk alone\n"
+    "I walk this empty street\n"
+    "On the Boulevard of Broken Dreams\n"
+    "Where the city sleeps\n"
+    "And I'm the only one, and I walk alone\n"
+    "I walk alone, I walk alone\n"
+    "I walk alone, I walk a-\n"
+    "My shadow's the only one that walks beside me\n"
+    "My shallow heart's the only thing that's beating\n"
+    "Sometimes, I wish someone out there will find me\n"
+    "'Til then, I walk alone\n"
+    "Ah-ah, ah-ah, ah-ah, ah-ah\n"
+    "Ah-ah, ah-ah, ah-ah\n"
+    "I'm walking down the line\n"
+    "That divides me somewhere in my mind\n"
+    "On the borderline\n"
+    "Of the edge, and where I walk alone\n"
+    "Read between the lines\n"
+    "What's fucked up, and everything's alright\n"
+    "Check my vital signs\n"
+    "To know I'm still alive, and I walk alone\n"
+    "I walk alone, I walk alone\n"
+    "I walk alone, I walk a-\n"
+    "My shadow's the only one that walks beside me\n"
+    "My shallow heart's the only thing that's beating\n"
+    "Sometimes, I wish someone out there will find me\n"
+    "'Til then, I walk alone\n"
+    "Ah-ah, ah-ah, ah-ah, ah-ah\n"
+    "Ah-ah, ah-ah, I walk alone, I walk a-\n"
+    "I walk this empty street\n"
+    "On the Boulevard of Broken Dreams\n"
+    "Where the city sleeps\n"
+    "And I'm the only one, and I walk a-\n"
+    "My shadow's the only one that walks beside me\n"
+    "My shallow heart's the only thing that's beating\n"
+    "Sometimes, I wish someone out there will find me\n"
+    "'Til then, I walk alone\n",
+
 
         //Unforgiven (my hardcoding habbits)
     "New blood joins this earth\n"
@@ -761,8 +860,97 @@ char *ADHDSongs[] = {
     "Pretty rave girl\n"
     "Pretty rave girl\n"
     "Pretty rave girl\n"
-    "Pretty rave girl\n"
+    "Pretty rave girl\n",
+
+        //All I Ever Wanted
+
+    "All I ever wanted was to see you smiling\n"
+    "I know that I love you, oh baby why don't you see\n"
+    "All I ever wanted was to see you smiling\n"
+    "All I ever wanted was to make you mine\n"
+    "I know that I love you, oh baby why don't you see\n"
+    "That all I ever wanted was you and me\n"
+    "All I ever wanted was to see you smiling\n"
+    "All I ever wanted was to make you mine\n"
+    "I know that I love you, oh baby why don't you see\n"
+    "That all I ever wanted was you and me\n"
+    "Drop the bass\n"
+    "I'm so alone\n"
+    "Here on my own\n"
+    "And I'm waiting for you to come\n"
+    "I want to be a part of you\n"
+    "Think of all the things we could do\n"
+    "And everyday\n"
+    "You're in my head\n"
+    "I want to have you in my bed\n"
+    "You are the one\n"
+    "You're in my eyes\n"
+    "All I ever wanted in my life\n"
+    "All I ever wanted was to see you smiling\n"
+    "All I ever wanted was to make you mine\n"
+    "I know that I love you, oh baby why don't you see\n"
+    "That all I ever wanted was you and me\n"
+    "All I ever wanted was to see you smiling\n"
+    "All I ever wanted was to make you mine\n"
+    "I know that I love you oh baby why don't you see\n"
+    "That all I ever wanted was you and me\n"
+    "Are you ready?\n"
+    "All I ever wanted was to see you smiling\n"
+    "All I ever wanted was to make you mine\n"
+    "I know that I love you, oh baby why don't you see\n"
+    "That all I ever wanted was you and me\n"
+    "All I ever wanted\n",
+
+        //Angel of Darkness
+
+    "Angel of Darkness\n"
+    "Angel of Darkness\n"
+    "The world is in your hand\n"
+    "But I will fight until the end\n"
+    "Angel of Darkness\n"
+    "Angel of Darkness\n"
+    "Don't follow your command\n"
+    "But I will fight and I will stand\n"
+    "When darkness falls pain is all\n"
+    "The Angel of Darkness\n"
+    "Will leave behind and I will fight\n"
+    "The love is lost\n"
+    "Beauty and light\n"
+    "Have vanished from garden of delight\n"
+    "The dreams are gone\n"
+    "Midnight has come\n"
+    "The darkness is our new kingdom\n"
+    "Angel of Darkness\n"
+    "Angel of Darkness\n"
+    "The world is in your hand\n"
+    "But I will fight until the end\n"
+    "Angel of Darkness\n"
+    "Angel of Darkness\n"
+    "Don't follow your command\n"
+    "But I will fight and I will stand\n"
+    "Hunt goes on deep in the night\n"
+    "Time to pray down on your knees\n"
+    "You can't hide from me\n"
+    "Etern the light\n"
+    "Until my last breath I will fight\n"
+    "(I will fight, I will fight, I will fight, I will fight)\n"
+    "Now realize\n"
+    "The stars they die\n"
+    "Darkness has fallen in paradise\n"
+    "But we'll be strong\n"
+    "And we will fight\n"
+    "Against the creatures of the night\n"
+    "Angel of Darkness\n"
+    "Angel of Darkness\n"
+    "The world is in your hand\n"
+    "But I will fight until the end\n"
+    "Angel of Darkness\n"
+    "Angel of Darkness\n"
+    "Don't follow your command\n"
+    "But I will fight and I will stand\n"
+    
 };
+
 
 
 typedef struct {
@@ -781,12 +969,18 @@ int genreMenu(void);
 
 
 
+/*those enums will be mine to navigate through URLs when I got the ffplay working like parallel arrays cuz I can't be bothered by hashmaps and 
+    We are not python dict pussies here
+*/
 
 enum emoSongList {
+    BLANK_SHELL,
     BRING_ME_TO_LIFE,
     LITHIUM_EVA,
     MY_IMMORTAL,
     I_HATE_EVERYTHING_ABOUT_C,
+    PAIN,
+    BOULEVARD_OF_BROKEN_DREAMS,
     UNFORGIVEN,
     FADE_TO_BLACK,
     HOW_YOU_REMIND_ME,
@@ -794,8 +988,7 @@ enum emoSongList {
 };
 
 enum ADHDcore {
-
-        
+    BLANK_BULLET,
     ANGEL_WITH_A_SHOTGUN,
     ROCKEFELLER_STREET,
     TEETH,
@@ -803,7 +996,9 @@ enum ADHDcore {
     TAKE_A_HINT,
     HOW_TO_BE_A_HB,
     LIGHT_IT_UP,
-    PRETTY_RAVE_GIRL
+    PRETTY_RAVE_GIRL,
+    ALL_I_EVER_WANTED,
+    ANGEL_OF_DARKNESS
 };
 
 
@@ -872,7 +1067,7 @@ int main(void)
 
 void sigintHandler(int sig) //Ctrl+C magic
 {
-    int gettingRickrolledOrNot = (rand() % 9)+1; //Never trust a computer's calculation use bracelets    -Sun Tzu (or Linus Torvalds IDK)
+    int gettingRickrolledOrNot = (rand() % 4)+1; //Never trust a computer's calculation use bracelets    -Sun Tzu (or Linus Torvalds IDK)
     if (gettingRickrolledOrNot == 3)
     {
         printf(WIPE_TERMINAL);
@@ -896,6 +1091,8 @@ songData emoInput(void)
         "Lithium - Evanescence",
         "My Immortal - Evanescence",
         "I Hate Everything About You - Three Days Grace",
+        "Pain - Three Days Grace",
+        "Boulevard of Broken Dreams - Green Day",
         "Unforgiven - Metallica",
         "Fade To Black - Metallica",
         "How You Remind Me - Nickelback",
@@ -960,7 +1157,9 @@ songData nightcoreInput(void)
 {
     songData songPrefs = {-1,1};
     char *nightcoreSongs[] = {"Angel with a Shotgun","Rockefeller Street",
-            "Teeth","Thunder","Take a Hint","How to be a Heartbreaker","Light it Up","Pretty Rave Girl",NULL
+            "Teeth","Thunder","Take a Hint","How to be a Heartbreaker",
+            "Light it Up","Pretty Rave Girl","All I Ever Wanted","Angel Of Darkness",
+            NULL
     };
     int songCount = sizeof(nightcoreSongs)/sizeof(nightcoreSongs[0]);
     int i = 0;
@@ -1033,7 +1232,7 @@ void epilepsy_typewriter(const char* song) {
         {
             usleep(75000);
         }
-        else {usleep(135550);}
+        else {usleep(23987);}
         song++;
         color_timer++;
     }
