@@ -14,6 +14,7 @@
 #define VANISH_CURSOR "\033[?25l"
 #define BRING_BACK_THE_CURSOR_FROM_THE_DEAD "\033[?25h" //Yeah I know it doesn't need to be that dramatic nor that long but C'MON WE ARE BUILDING A EMO JUKEBOX, DUH.
 #define FREQ 0.4
+#define SONG_OFFSET 1
 
 
 char *myTherapySession[] = { "How can you see into my eyes like open doors?\nLeading you down into my core\nWhere I've become so numb\nWithout a soul\nMy spirit's sleeping somewhere cold\nUntil you find it there and lead it back home\nWake me up inside (save me)\nCall my name and save me from the dark (wake me up)\nBid my blood to run (I can't wake up)\nBefore I come undone (save me)\nSave me from the nothing I've become\nNow that I know what I'm without\nYou can't just leave me\nBreathe into me and make me real\nBring (bring) me (me) to life\nWake me up inside (save me)\nCall my name and save me from the dark (wake me up)\nBid my blood to run (I can't wake up)\nBefore I come undone (save me)\nSave me from the nothing I've become\nBring me to life\nI've been living a lie\nThere's nothing inside\nBring me to life\nFrozen (frozen) inside without your touch\nWithout your love darling\nOnly (only) you are the life among the dead\nAll of this time I can't believe I couldn't see\nKept in the dark but you were there in front of me\nI've been sleeping a thousand years it seems\nGot to open my eyes to everything\nWithout a thought without a voice without a soul\nDon't let me die here\n(There must be something more) bring me to life\nWake me up inside (save me)\nCall my name and save me from the dark (wake me up)\nBid my blood to run (I can't wake up)\nBefore I come undone (save me)\nSave me from the nothing I've become\nBring me to life\nI've been living a lie\nThere's nothing inside\nBring me to life\n",
@@ -958,7 +959,7 @@ typedef struct {
     int iWantEpilepsySeizures;
 }songData;
 
-
+void clearIBuffer(void);
 void epilepsy_typewriter(const char* song);
 void typewriter(const char* song);
 void sigintHandler(int sig);
@@ -974,7 +975,7 @@ int genreMenu(void);
 */
 
 enum emoSongList {
-    BLANK_SHELL,
+    LIVE_SHELL,             //Yeah over dramatized but c'mon IT'S EMO
     BRING_ME_TO_LIFE,
     LITHIUM_EVA,
     MY_IMMORTAL,
@@ -988,7 +989,7 @@ enum emoSongList {
 };
 
 enum ADHDcore {
-    BLANK_BULLET,
+    BLANK_SHELL,
     ANGEL_WITH_A_SHOTGUN,
     ROCKEFELLER_STREET,
     TEETH,
@@ -1104,25 +1105,26 @@ songData emoInput(void)
     printf(WIPE_TERMINAL BOLD);
     while (depressed_titles[i] != NULL)
     {
-        printf("%d)%s\n",i+1,depressed_titles[i]);
+        printf("%d)%s\n",i+SONG_OFFSET,depressed_titles[i]);
         usleep(55555);
         i++;
     }
     printf(FIX_FONT);
-    printf("Please select a song(1-%d) or Ctrl+C to exit:",songCount-1); //-1 Because of NULL -                                                      
+    printf("Please select a song(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET); //-1 Because of NULL -                                                      
     //Program -for some reason- doesn't know how to handle just an 'enter' stroke please don't > /// < 
-    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  //I'll probably make the length dynamic one day but not today at 5.57AM
+    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount) 
     {
-        int c;
-        while ((c = getchar()) != '\n' && c != EOF) { } //To clear stdin buffer ig my bro said trust me 
+        clearIBuffer();
+
         printf("Bro...either try not to be a idiot or Delta the fuck out\n"); //Delta as in displacement a 'Naive' way to GTFO...(not physics 101 flex)
         songPrefs.songIndex = -1;
         return(songPrefs);
     } 
-    else
+
+
     {
-        int c;
-        while ((c = getchar()) != '\n' && c != EOF) { } 
+        clearIBuffer();
+        
         char reply;
         printf("Want it to be RGB?(y/n):");
         scanf("%c",&reply);
@@ -1166,18 +1168,19 @@ songData nightcoreInput(void)
     printf(WIPE_TERMINAL BOLD);
     while (nightcoreSongs[i] != NULL)
     {   
-        printf("%d)%s\n",i+1,nightcoreSongs[i]);
+        printf("%d)%s\n",i+SONG_OFFSET,nightcoreSongs[i]);
         usleep(50000);
         i++;    
     }
     printf(FIX_FONT);
 
-    printf("Please select a poison(1-%d) or Ctrl+C to exit:",songCount-1);                                                      
+    printf("Please select a poison(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
     //Program -for some reason- doesn't know how to handle just an 'enter' stroke please don't > /// < 
     if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
     {
-        int c;
-        while ((c = getchar()) != '\n' && c != EOF) { } 
+
+        clearIBuffer();
+
         printf("Bro...either try not to be a idiot or Delta the fuck out\n"); //Delta as in displacement a 'Naive' way to GTFO yeah yeah what ever.
         songPrefs.songIndex = -1;
         return(songPrefs);
@@ -1197,13 +1200,12 @@ int genreMenu(void)
     asciiPrinter();
     printf(BOLD "Genres\n" FIX_FONT);
     printf("1)%s\n",genres[0]);
-    printf("2)%s\n\n",genres[1]);
+    printf("2)%s\n\n",genres[1]); //Make the array dynamic in a loop later
 
     printf("Select one genre to see its special menu(1-2):");
     if (scanf("%d",&genrePick) != 1 || genrePick < 1 || genrePick > lengthOfCatalouge)
     {   
-        int c;
-        while ((c = getchar()) != '\n' && c != EOF) { } 
+        clearIBuffer();
         printf("Bro how hard can it be to pick 1 or 2? Delta...\n");
         return(0); 
     }
@@ -1278,6 +1280,11 @@ void asciiPrinter()
     printf("\n\n");
 }
 
+void clearIBuffer(void)
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) { } 
+}
 
 
 /*
