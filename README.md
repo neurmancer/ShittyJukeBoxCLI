@@ -6,25 +6,37 @@
 
 - 10emo/rock songs (with 2 included metallica songs)
 - 10 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
+- 3 Motörhead songs for you to feel the speed metal/NWOBHM in your bones (just with lyrics for now)
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
 - Unfortunetly not uses prime numbers to determine if you want RGB or not anymore since I've learned structs
 - Now apperantly it got it's own windows branch which I'll provide with .exe file too since Win users don't know what a compiler is. but it is in another repo and outdated for now (link will be at the end for the old win repo)
 - WindowsPORT has it's own branch called winPORTsux which I won't merge(and since I started to C 10 days ago. That port is possible thanks to Grok(taught me what IFNDEF is))
-
 - Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
 - New features will be added 'cuz why not?
+- **3 Types of lyrics printing option**
+- - RGB/Pale white choice for emo songs
+- - Forced RGB for Nightcore for obvious reasons
+- - Forced Bold white for NWOBHM songs   
 
-- Latest added 2 more songs for each genre and this entry just to remind myself tomorrow will be deleted with next README update
 
 ## In Development Features
-- One more genre category 
+- One more genre category : **DONE**  
 - CLI music playing (tbh I don't know if I can pull this off but eventually we'll see)
-- windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons)
+- windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postpone a few days
 - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
-- Songs will be summed up to 10 + 10 songs in the new genre. DONE(New genre excluded for now because it's 3.32AM rn)
+- Songs will be summed up to 10 + 10 songs in the new genre. %70 *DONE*
+
+
+### TWEAKS (Where I brag about shit for the Nerds)
+
+- Now it's not leaving ghost lyrics on top of the terminal (Used a cutting-edge tech called ANSI lol)
+- The typing speed adjustments 
+- Better exit state handling and more optimized loop
+- 1 second between end of the song and genre menu to optimize reaction time on old PCs
+ 
 
 ## QA
 
