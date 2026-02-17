@@ -1,13 +1,13 @@
 # SHITTY JUKEBOX IS NOW IN ITS OWN REPO  
 - ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY
 - Current Version V3
-- - (V3.3 beta actually) (and yeah V3.3 is justa a voltage joke) 
+- - (V3.141592 beta actually) (yeah that's digits of pi yup you got it smart-ass)
 
 ## FEATURES
 
 - 10emo/rock songs (with 2 included metallica songs)
 - 10 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
-- 3 Motörhead songs for you to feel the speed metal/NWOBHM in your bones (just with lyrics for now)
+- 10 NWOBHM songs for you to feel the speed metal/golden era in your bones (just with lyrics for now)
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
@@ -18,17 +18,19 @@
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
 - New features will be added 'cuz why not?
 - **3 Types of lyrics printing option**
-- - RGB/Pale white choice for emo songs
+- - RGB/Pale white choice for emo songs (and for you nerds check the peridoic sin fade...I'll make you mathgasm for sure.)
 - - Forced RGB for Nightcore for obvious reasons
 - - Forced Bold white for NWOBHM songs   
 
 
 ## In Development Features
-- One more genre category : **DONE**  
-- CLI music playing (tbh I don't know if I can pull this off but eventually we'll see)
+- **Finished parts**
+- - One more genre category : **DONE**  
+- - Songs will be summed up to 10 + 10 songs in the new genre. **DONE**
+- **Still in Dev**
+- CLI music playing (tbh I don't know if I can pull this off but eventually we'll see) *Currently working On*
 - windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postpone a few days
 - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
-- Songs will be summed up to 10 + 10 songs in the new genre. %70 *DONE*
 
 
 ### TWEAKS (Where I brag about shit for the Nerds)
@@ -37,7 +39,7 @@
 - The typing speed adjustments 
 - Better exit state handling and more optimized loop
 - 1 second between end of the song and genre menu to optimize reaction time on old PCs
- 
+
 
 ## QA
 
@@ -46,6 +48,9 @@
 
 - Q:Is this a malware
 - A:Depends...malware for your brain but no not as a malware for computers since I don't know how to script them yet.
+
+- Q:Do I need to install anything else
+- A:For now nope...In the future -if needed- will be added in README.md
 
 - Q: Why are you doing this to yourself?
 - A:Bro you are talking to yourself in README pull yourself together.
@@ -59,7 +64,7 @@ cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 ./filename.o #Then have fun
 ```
 
-## winPORTsux for V2 
+## winPORTsux for V2 (OUTDATED AF) 
 - https://github.com/neurmancer/Basic-C-Examples/tree/winPORTsux/thingsThatSupposedToBasicButOverengineeredForNothing -> In the old repo will be added to here winPORTsux branch (Which I won't merge with main since it's sucks) when V4 be ready for first Linux then I'll port it to windows
 - Yes it'll have .exe I know you can't compile for shit.
 
