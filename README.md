@@ -3,6 +3,16 @@
 - Current Version V3
 - - (V3.141592 beta actually) (yeah that's digits of pi yup you got it smart-ass)
 
+## Table of Content (I start liking this shit.)
+
+* [Features](#features)
+* [In Development Features](#in-development-features)
+* [Tweaks](#tweaks-where-i-brag-about-shit-for-the-nerds)
+* [Q&A](#qa)
+* [Compile&Run](#compiling--running)
+* [OUTDATED Windows port](#winportsux-for-v2-outdated-af)
+* [Third-party requirements and legal shit(paperwork)](#third-party-app-needs-and-licenses-will-be-here-i-put-that-title-to-not-forget-and-this-text-is-to-long-for-a-title-and-its-self-aware)
+
 ## FEATURES
 
 - 10emo/rock songs (with 2 included metallica songs)
@@ -26,11 +36,11 @@
 ## In Development Features
 - **Finished parts**
 - - One more genre category : **DONE**  
-- - Songs will be summed up to 10 + 10 songs in the new genre. **DONE**
+- - Songs will be summed up to 10 + 10 songs in the new genre. **DONE** (added +1 nightcore song 18.02.2026)
 - **Still in Dev**
-- CLI music playing (tbh I don't know if I can pull this off but eventually we'll see) *Currently working On*
-- windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postpone a few days
-- Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
+- - CLI music playing (tbh I don't know if I can pull this off but eventually we'll see) *Currently working On*
+- - windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postpone a few days
+- - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
 
 
 ### TWEAKS (Where I brag about shit for the Nerds)

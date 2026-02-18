@@ -941,7 +941,106 @@ char *ADHDSongs[] = {
     "Angel of Darkness\n"
     "Angel of Darkness\n"
     "Don't follow your command\n"
-    "But I will fight and I will stand\n"
+    "But I will fight and I will stand\n",
+
+
+            //Pretty Little Psycho
+
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Walkin', talkin' like you know\n"
+    "I want your pretty little psycho\n"
+    "(Pretty little psycho)\n\n"
+
+    "I'm ready to go, I'm taking chances\n"
+    "Sippin' lust from champagne glasses\n"
+    "Gotta have you, I'm movin' closer\n"
+    "I won't take no for an answer\n"
+    "You're lookin' crazy, you're lookin' wrong\n"
+    "It looks like we're gonna get along\n"
+    "And once I've got you, it's a fact\n"
+    "Baby, there's no turning back\n\n"
+
+    "Make me, make me impressed\n"
+    "Make me, make me obsessed\n\n"
+
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Walkin', talkin' like you know\n"
+    "I want your pretty little psycho\n"
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Baby strike a pose\n"
+    "I want your pretty little psycho\n\n"
+
+    "Pretty little, pretty little, pretty little psycho\n"
+    "Pretty little, pretty little\n"
+    "Pretty little psycho\n"
+    "Pretty little, pretty little, pretty little psycho\n"
+    "Pretty little, pretty little\n"
+    "Pretty little psycho\n\n"
+
+    "Black lipstick just like a cat\n"
+    "Have you purrin' on your back\n"
+    "Tip the glass, now light it up\n"
+    "Rebel, rebel can't get enough\n"
+    "You're lookin' crazy, you're lookin' wrong\n"
+    "We look like we belong\n"
+    "And once I've got you, it's a fact\n"
+    "Baby, there's no turning back\n\n"
+
+    "Make me, make me impressed\n"
+    "Make me, make me obsessed\n\n"
+
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Walkin', talkin' like you know\n"
+    "I want your pretty little psycho\n"
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Baby strike a pose\n"
+    "I want your pretty little psycho\n\n"
+
+    "Pretty little, pretty little, pretty little psycho\n"
+    "Pretty little, pretty little\n"
+    "Pretty little psycho\n"
+    "Pretty little, pretty little, pretty little psycho\n"
+    "Pretty little, pretty little\n"
+    "Pretty little psycho\n\n"
+
+    "There's somethin' about you driving me mad\n"
+    "There's somethin' about you I've got to have\n"
+    "There's somethin' about you\n"
+    "There's somethin' about you\n"
+    "There's somethin' about you driving me mad\n"
+    "There's somethin' about you I've got to have\n"
+    "There's somethin' about you\n"
+    "There's somethin' about you\n\n"
+
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Walkin', talkin' like you know\n"
+    "I want your pretty little psycho\n"
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Baby strike a pose\n"
+    "I want your pretty little psycho\n\n"
+
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Walkin', talkin' like you know\n"
+    "I want your pretty little psycho\n"
+    "Oh, oh, oh\n"
+    "Oh, here we go\n"
+    "Baby strike a pose\n"
+    "I want your pretty little psycho\n\n"
+
+    "Pretty little, pretty little, pretty little psycho\n"
+    "Pretty little, pretty little\n"
+    "Pretty little psycho\n"
+    "Pretty little, pretty little, pretty little psycho\n"
+    "Pretty little, pretty little\n"
+    "Pretty little psycho\n"
     
 };
 
@@ -1384,7 +1483,8 @@ enum ADHDcore {
     LIGHT_IT_UP,
     PRETTY_RAVE_GIRL,
     ALL_I_EVER_WANTED,
-    ANGEL_OF_DARKNESS
+    ANGEL_OF_DARKNESS,
+    PRETTY_LITTLE_PSYCHO
 };
 
 enum Bangers {
@@ -1578,7 +1678,7 @@ songData nightcoreInput(void)
     songData songPrefs = {-1,1};
     char *nightcoreSongs[] = {"Angel with a Shotgun","Rockefeller Street",
             "Teeth","Thunder","Take a Hint","How to be a Heartbreaker",
-            "Light it Up","Pretty Rave Girl","All I Ever Wanted","Angel Of Darkness",
+            "Light it Up","Pretty Rave Girl","All I Ever Wanted","Angel Of Darkness","Pretty Little Psycho",
             NULL
     };
     int songCount = sizeof(nightcoreSongs)/sizeof(nightcoreSongs[0]);
