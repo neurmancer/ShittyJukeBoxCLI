@@ -35,6 +35,9 @@
 - - Forced Bold white for NWOBHM songs   
 
 
+![RGB RAM](https://media1.tenor.com/m/TfBhmHrm9wUAAAAC/anime-rgb.gif)
+
+
 ## In Development Features
 - **Finished parts**
 - - One more genre category : **DONE**  
