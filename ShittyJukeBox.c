@@ -29,6 +29,8 @@ typedef struct {
     int writerType; //Yeah no more isSeizuring or shit since I got more typers 
 }songData;
 
+
+void playShit(char *url);
 void clearIBuffer(void);
 void bold_typewriter(const char* song);
 void epilepsy_typewriter(const char* song);
@@ -97,30 +99,19 @@ int main(void)
                 selectedSong.songIndex -= SONG_OFFSET;
                 switch (genreChoice)
                 {
-                    //This is purely experimental and will be junky as fuck but I can't sleep withot trying
+                    //This is purely experimental and will be junky as fuck but I can't sleep withot trying (GJ past me I am taking it from here)
                     case 1:
-                        if (selectedSong.songIndex == 2)
+                        int pid = fork();
+                        if (pid == -1) { return(-13); } // errno of soul
+                        
+                        if (pid == 0)
                         {
-                            int pid = fork();
-                            if (pid == -1) {return(-13);} //-13 is bad gateway for soul        
-                            else
-                            {
-                                if (pid == 0)
-                                {
-                                    execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", myTherapySessionAudio[selectedSong.songIndex], "-loglevel", "8", NULL);
-                                    //Second test K|
-                                    //execlp("ffplay","ffplay","-nodisp","-autoexit","-rtbufsize","100M","https://drive.google.com/uc?export=download&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE","-loglevel","-0",NULL); //Again don't forget NULL this much
-                                }
-                                else 
-                                { 
-                                    writer(myTherapySession[selectedSong.songIndex]);
-                                    wait(NULL);
-                                }
-                            }       
+                                playShit(myTherapySessionAudio[selectedSong.songIndex]);
                         }
                         else
                         {
                             writer(myTherapySession[selectedSong.songIndex]);
+                            wait(NULL);
                         }
                         break;
                     case 2:
@@ -154,7 +145,17 @@ void sigintHandler(int sig) //Ctrl+C magic
 
         printf(WIPE_TERMINAL);
         usleep(5000);
-        epilepsy_typewriter(rickroll); //If you get this ctrl+c ain't saving you. 
+        int pid = fork();
+        if (pid == -1) { printf("Rickroll child fucked up and I can't return value in a void func\n"); } 
+        if (pid == 0)
+        {
+            playShit(rickrollAudio);
+        }
+        else
+        {
+            epilepsy_typewriter(rickroll);
+            wait(NULL);
+        } //If you get this ctrl+c ain't saving you. 
     }
     printf(FIX_FONT WIPE_TERMINAL);
     printf(WIPE_TOP GO_HOME);
@@ -432,6 +433,13 @@ void clearIBuffer(void)
     int c;
     while ((c = getchar()) != '\n' && c != EOF) { } 
 }
+
+
+void playShit(char *url)
+{
+    execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", url, "-loglevel", "8", NULL);
+}
+
 
 
 /*

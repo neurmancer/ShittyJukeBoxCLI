@@ -15,6 +15,8 @@
 
 ## FEATURES
 
+# NOW ALL THE EMO PLAYLIST IS WITH AUDIO FUCK YEAH (V4.1353Beta) 
+
 - 10emo/rock songs (with 2 included metallica songs)
 - 10 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
 - 10 NWOBHM songs for you to feel the speed metal/golden era in your bones (just with lyrics for now)

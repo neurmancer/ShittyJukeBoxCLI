@@ -1414,8 +1414,46 @@ char *NWOBHSongs[] = {
     
 };
 
-char *myTherapySessionAudio[] = {NULL,NULL,"https://drive.google.com/uc?export=open&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE"};
+char *myTherapySessionAudio[] = {
+    "https://drive.google.com/uc?export=open&id=1vzC0YESu0JxHRP6hxKO1TS54FOXHw3c5", //Bring Me To Life
+    "https://drive.google.com/uc?export=open&id=1Ea99sesm8Ho-gp08jaySqgwXB_-MR-oj", // Lithium Eva
+    "https://drive.google.com/uc?export=open&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE",//My immortal
+    "https://drive.google.com/uc?export=open&id=19tn3HqytmpEWBFNi2rlC4I7og1X6bSxy",//I (wanna) hate everything about you 
+    "https://drive.google.com/uc?export=open&id=1YdCiss7e9pFfuuhDxpAB91kjxflPOdw5",//Pain 
+    "https://drive.google.com/uc?export=open&id=1XHR_qNuP2VCISxJrhnzFqrNKhS8XpfeN",//Broken Dreams
+    "https://drive.google.com/uc?export=open&id=18G2SYGLKntyhzgLXZJ0LJdmkNkxpJf5E", //Unforgiven
+    "https://drive.google.com/uc?export=open&id=1CpFLSZwQliL9uDfYplewixTY4iuvlid4",//Fade To Black
+    "https://drive.google.com/uc?export=open&id=1fPDH35PpZqSxNUxW0Pxrakv5iSvKi8u1", //How you remind me
+    "https://drive.google.com/uc?export=open&id=1C-IcedC0m2aRJnGNpLztS-960AE4QIP4" //Lithium -Nirvana
+};
 
-char *ADHDSongsAudio[] = { };
+char *ADHDSongsAudio[] = {
+    
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id="
 
-char *NWOBHSongsAudio[] = { };
+ };
+
+char *NWOBHMSongsAudio[] = {
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id=",
+    "https://drive.google.com/uc?export=open&id="
+ };
+
+char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";
