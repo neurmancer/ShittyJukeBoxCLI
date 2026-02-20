@@ -35,7 +35,6 @@
 - - Forced Bold white for NWOBHM songs   
 
 
-![RGB RAM](rgbRam.gif)
 
 
 ## In Development Features
