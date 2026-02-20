@@ -5,7 +5,10 @@
 #include <signal.h>
 #include <time.h>
 #include <ctype.h>
+#include <sys/wait.h>
 #include "src/lyrics.h"
+
+
 //She Loves Purple,So Do I
 //define NORMAL_EMO_OFFSET   13  IT was a pleasure to work with you guys...but I learned structs :/
 //define SEIZURE_EMO_OFFSET  53  Goodbye infinite mode ideas via using infinite primes 1000000000000066600000000000001 you'll always live in my heart
@@ -138,10 +141,34 @@ int main(void)
                 selectedSong.songIndex -= SONG_OFFSET;
                 switch (genreChoice)
                 {
+                    //This is purely experimental and will be junky as fuck but I can't sleep withot trying
                     case 1:
-                        writer(myTherapySession[selectedSong.songIndex]);
+                        if (selectedSong.songIndex == 2)
+                        {
+                            int pid = fork();
+                            if (pid == -1) {return(-13);} //-13 is bad gateway for soul        
+                            else
+                            {
+                                if (pid == 0)
+                                {
+                                        execlp("ffplay" , "ffplay" ,"-nodisp", "-autoexit","https://drive.google.com/uc?export=open&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE","-loglevel","-8", NULL);
+                                    //Third test
+                                    //execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", "https://drive.google.com/uc?export=open&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE", "-loglevel", "8", NULL);
+                                    //Second test K|
+                                    //execlp("ffplay","ffplay","-nodisp","-autoexit","-rtbufsize","100M","https://drive.google.com/uc?export=download&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE","-loglevel","-0",NULL); //Again don't forget NULL this much
+                                }
+                                else 
+                                { 
+                                    writer(myTherapySession[selectedSong.songIndex]);
+                                    wait(NULL);
+                                }
+                            }       
+                        }
+                        else
+                        {
+                            writer(myTherapySession[selectedSong.songIndex]);
+                        }
                         break;
-                    
                     case 2:
                         writer(ADHDSongs[selectedSong.songIndex]);
                         break;
@@ -273,6 +300,7 @@ songData nightcoreInput(void)
         usleep(50000);
         i++;    
     }
+
     printf(FIX_FONT);
 
     printf("Please select a poison(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
@@ -370,12 +398,12 @@ void epilepsy_typewriter(const char* song) {
 
         printf("\033[38;2;%d;%d;%dm%c", r, g, b, *song);
         fflush(stdout);
-
+    //Fucking with usleep data old rates : 75000 and 23987
         if (*song == '\n') 
         {
-            usleep(75000);
+            usleep(120000);
         }
-        else {usleep(23987);}
+        else {usleep(300210);}
         song++;
         color_timer++;
     }
@@ -395,7 +423,7 @@ void bold_typewriter(const char* song)
         if (*song == '\n')
         {
             usleep(325000); 
-            printf("%c\a",*song);
+            printf("%c",*song);
         }
         else
         {
