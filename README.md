@@ -15,7 +15,7 @@
 
 ## FEATURES
 
-# NOW ALL THE EMO PLAYLIST IS WITH AUDIO FUCK YEAH (V4.1353Beta) 
+# NOW ALL THE EMO AND NIGHTCORE PLAYLISTS ARE WITH AUDIO!! FUCK YEAH (V4.1353Beta) 
 
 - 10emo/rock songs (with 2 included metallica songs)
 - 10 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
@@ -113,5 +113,3 @@ This project uses ffplay in the most cursed way possible. If FFmpeg foundation c
 
 If **Rick Astley** finds out about the rickroll brick, tell him I love him platonically and still have a cassette of 'Whenever You Need Somebody' album.
 
-
-- Test

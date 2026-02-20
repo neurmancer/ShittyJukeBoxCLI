@@ -1,3 +1,5 @@
+
+
 char *myTherapySession[] = { "How can you see into my eyes like open doors?\nLeading you down into my core\nWhere I've become so numb\nWithout a soul\nMy spirit's sleeping somewhere cold\nUntil you find it there and lead it back home\nWake me up inside (save me)\nCall my name and save me from the dark (wake me up)\nBid my blood to run (I can't wake up)\nBefore I come undone (save me)\nSave me from the nothing I've become\nNow that I know what I'm without\nYou can't just leave me\nBreathe into me and make me real\nBring (bring) me (me) to life\nWake me up inside (save me)\nCall my name and save me from the dark (wake me up)\nBid my blood to run (I can't wake up)\nBefore I come undone (save me)\nSave me from the nothing I've become\nBring me to life\nI've been living a lie\nThere's nothing inside\nBring me to life\nFrozen (frozen) inside without your touch\nWithout your love darling\nOnly (only) you are the life among the dead\nAll of this time I can't believe I couldn't see\nKept in the dark but you were there in front of me\nI've been sleeping a thousand years it seems\nGot to open my eyes to everything\nWithout a thought without a voice without a soul\nDon't let me die here\n(There must be something more) bring me to life\nWake me up inside (save me)\nCall my name and save me from the dark (wake me up)\nBid my blood to run (I can't wake up)\nBefore I come undone (save me)\nSave me from the nothing I've become\nBring me to life\nI've been living a lie\nThere's nothing inside\nBring me to life\n",
     
         //Lithium Eva
@@ -1429,18 +1431,18 @@ char *myTherapySessionAudio[] = {
 
 char *ADHDSongsAudio[] = {
     
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id="
-
+    "https://drive.google.com/uc?export=open&id=1QmFON5P2dDa0_0-Qwn_l6iPlNsdhyYQc", //Angel with a shotgun
+    "https://drive.google.com/uc?export=open&id=1mFC4ZYCDnyHU7kAkYi_ujsKwZGU_imBN",  //Rockefeller street
+    "https://drive.google.com/uc?export=open&id=1OW6MmzzRFk-fN7ztpcm-Zwm3LnB8KYJO", //Teeth
+    "https://drive.google.com/uc?export=open&id=1myR3WUpP7mtgBK62_6vFB7zmk-wbt5bP", //Thunder
+    "https://drive.google.com/uc?export=open&id=1uU2mjKzS-wUUxcwGJ4Dsv2tDOx0zfWeE", //Take a Hint
+    "https://drive.google.com/uc?export=open&id=1Ht6TLmpMc3xhN5euPZo5ecC4RJtfJrJu8-g-M9K", //How to be a Heartbreak
+    "https://drive.google.com/uc?export=open&id=165F_05Gmr-iz5gjTTAjcwaEB9pZpHWLz", //Light it UP MF
+    "https://drive.google.com/uc?export=open&id=1mHtT9xwhyjNZKxpPsza0UgUsQTol0kZf", //The OG Nightcore pretty rave girl
+    "https://drive.google.com/uc?export=open&id=1tYChoSq68A3IiyQ9A8oUe03PVOLfTAwd", //All I ever Wanted
+    "https://drive.google.com/uc?export=open&id=1sU39rFpMAb4ajAFvGAsGpu3oJCv540FH", // Angel of Darkness
+    "https://drive.google.com/uc?export=open&id=1AcSaE1naXCEZgP4RJVIx__Kv-Pg5D3Bf"  //Pretty Little Psycho (Me >///<)
+//                                                                                                               ω 
  };
 
 char *NWOBHMSongsAudio[] = {

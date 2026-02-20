@@ -88,6 +88,7 @@ int main(void)
     setvbuf(stdout,NULL,_IONBF,0);
     signal(SIGINT,sigintHandler);
 
+    int pid = 0;
 
     while (1) //Yeah I ain't giving up my infinite loop unless you use Ctrl+C to roll rickroll dice
     {
@@ -109,7 +110,7 @@ int main(void)
                 {
                     //This is purely experimental and will be junky as fuck but I can't sleep withot trying (GJ past me I am taking it from here)
                     case 1:
-                        int pid = fork();
+                        pid = fork();
                         if (pid == -1) { return(-13); } // errno of soul
                         
                         if (pid == 0)
@@ -122,10 +123,22 @@ int main(void)
                             wait(NULL);
                         }
                         break;
-                    case 2:
-                        writer(ADHDSongs[selectedSong.songIndex]);
-                        break;
                     
+                    case 2:
+                        pid = fork();
+                        if (pid == -1) { return(-13); } // errno of soul
+                        
+                        if (pid == 0)
+                        {
+                                playShit(ADHDSongsAudio[selectedSong.songIndex]);
+                        }
+                        else
+                        {
+                            writer(ADHDSongs[selectedSong.songIndex]);
+                            wait(NULL);
+                        }
+                        break;
+                   
                     case 3:
                         writer(NWOBHSongs[selectedSong.songIndex]);
                         break;
@@ -249,9 +262,19 @@ songData emoInput(void)
 songData nightcoreInput(void)
 {
     songData songPrefs = {-1,1};
-    char *nightcoreSongs[] = {"Angel with a Shotgun","Rockefeller Street",
-            "Teeth","Thunder","Take a Hint","How to be a Heartbreaker",
-            "Light it Up","Pretty Rave Girl","All I Ever Wanted","Angel Of Darkness","Pretty Little Psycho",
+    char *nightcoreSongs[] = {
+            
+            "Angel with a Shotgun",
+            "Rockefeller Street",
+            "Teeth",
+            "Thunder",
+            "Take a Hint",
+            "How to be a Heartbreaker",
+            "Light it Up",
+            "Pretty Rave Girl",
+            "All I Ever Wanted",
+            "Angel Of Darkness",
+            "Pretty Little Psycho",
             NULL
     };
     int songCount = sizeof(nightcoreSongs)/sizeof(nightcoreSongs[0]);
@@ -364,9 +387,9 @@ void epilepsy_typewriter(const char* song) {
     //Fucking with usleep data old rates : 75000 and 23987
         if (*song == '\n') 
         {
-            usleep(120000);
+            usleep(99000);
         }
-        else {usleep(300210);}
+        else {usleep(50210);}
         song++;
         color_timer++;
     }
