@@ -112,3 +112,6 @@ cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 This project uses ffplay in the most cursed way possible. If FFmpeg foundation comes knocking, tell 'em Arda said "thanks for the -loglevel 8 flag, it saved my ass".  
 
 If **Rick Astley** finds out about the rickroll brick, tell him I love him platonically and still have a cassette of 'Whenever You Need Somebody' album.
+
+
+- Test
