@@ -11,7 +11,7 @@
 * [Q&A](#qa)
 * [Compile&Run](#compiling--running)
 * [OUTDATED Windows port](#winportsux-for-v2-outdated-af)
-* [Third-party requirements and legal shit(paperwork)](#third-party-app-needs-and-licenses-will-be-here-i-put-that-title-to-not-forget-and-this-text-is-to-long-for-a-title-and-its-self-aware)
+* [Third-party requirements and legal shit(paperwork)](#third-party-app-needs-and-licenses-will-be-here-and-yeah-this-title-is-still-too-fucking-long-but-i-refuse-to-shorten-it-and-its-self-aware-of-the-situation)
 
 ## FEATURES
 
@@ -81,4 +81,32 @@ cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 - Yes it'll have .exe I know you can't compile for shit.
 
 
-## THIRD-PARTY APP NEEDS AND LICENSES WILL BE HERE I put that title to not forget and this text is to long for a title and it's self-aware
+## THIRD-PARTY APP NEEDS AND LICENSES WILL BE HERE and yeah this title is still too fucking long but I refuse to shorten it and it's self-aware of the situation
+
+
+ - **ffplay** (from FFmpeg): The poor bastard I yeet into a child process to actually play the songs because writing my own audio decoder sounded like too much work at 5 AM and my 12th day of programming.  
+  I don't own FFmpeg(fuck I wish I had tho), they don't own me(not physically but my soul is already theirs), but I do owe them my firstborn for making -nodisp -autoexit exist.
+
+  License: LGPL 2.1 or later (or GPL if you hate freedom). Go stare at https://ffmpeg.org/ if you're gonna get nerdy.
+
+  Usage: forked + execlp abuse + zero mercy. If it cracks and dies, blame Google drive not ffplay (nor my code)
+
+- **Google Drive links**: Yeah I'm streaming mp3s straight from my own cursed Drive folder because fuck local files and fuck .dlls even more.  
+
+  Not affiliated, not endorsed, probably violates 47 different TOS clauses. Don't @ me, it's for educational purposes (my education in not getting DMCA'd... yet). And don't act like you never used Napster or shit I mean this is EMO Jukebox made by a sleep-deprived teenager what you expect (I can't even afford a new keyboad lol)
+
+- If you are one of the artists that I yoinked your music to stream: 
+- - First, man... I fucking love your music thx for existing.
+- - Second, how tf you even find that repo?
+- - Third sorry for yoinking OwO (I'd delete if you catch me lulz)
+
+- If you are one of the record label that I yoinked the music you 'own' to stream: 
+- - Simply go fuck yourselves.
+
+- No other third-party bullshit required right now.  
+  If I ever add real audio libs or some cursed ncurses dependency, I'll update this wall of text. Until then: pure C + vibes + war crimes against buffering.
+
+**Legal disclaimer for the nerds who actually read this:**  
+This project uses ffplay in the most cursed way possible. If FFmpeg foundation comes knocking, tell 'em Arda said "thanks for the -loglevel 8 flag, it saved my ass".  
+
+If **Rick Astley** finds out about the rickroll brick, tell him I love him platonically and still have a cassette of 'Whenever You Need Somebody' album.

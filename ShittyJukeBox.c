@@ -42,52 +42,8 @@ int genreMenu(void);
 
 
 
-/*those enums will be mine to navigate through URLs when I got the ffplay working like parallel arrays cuz I can't be bothered by hashmaps and 
-    We are not python dict pussies here
-*/
 
-enum EmoSongList {
-    LIVE_SHELL,             //Yeah over dramatized but c'mon IT'S EMO
-    BRING_ME_TO_LIFE,
-    LITHIUM_EVA,
-    MY_IMMORTAL,
-    I_HATE_EVERYTHING_ABOUT_C,
-    PAIN,
-    BOULEVARD_OF_BROKEN_DREAMS,
-    UNFORGIVEN,
-    FADE_TO_BLACK,
-    HOW_YOU_REMIND_ME,
-    LITHIUM_NIRVANA
-};
 
-enum ADHDcore {
-    BLANK_SHELL,
-    ANGEL_WITH_A_SHOTGUN,
-    ROCKEFELLER_STREET,
-    TEETH,
-    THUNDER,
-    TAKE_A_HINT,
-    HOW_TO_BE_A_HB,
-    LIGHT_IT_UP,
-    PRETTY_RAVE_GIRL,
-    ALL_I_EVER_WANTED,
-    ANGEL_OF_DARKNESS,
-    PRETTY_LITTLE_PSYCHO
-};
-
-enum Bangers {
-    BULLET_FOR_MY_VALENTINE,            //Yeah band name as place holder
-    ACE_OF_SPADES,
-    OVERKILL,
-    TOO_LATE,
-    AM_I_EVIL,
-    IN_THE_HEAT,
-    DENIM_AND_LEATHER,
-    CRUSADER,
-    FIRE_IN_THE_SKY,
-    TROOPER,
-    PRISONER_OF_YOUR_EYES
-};
 
 typedef void (*WriterFunction)(const char *lyrics);
 
@@ -151,9 +107,7 @@ int main(void)
                             {
                                 if (pid == 0)
                                 {
-                                        execlp("ffplay" , "ffplay" ,"-nodisp", "-autoexit","https://drive.google.com/uc?export=open&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE","-loglevel","-8", NULL);
-                                    //Third test
-                                    //execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", "https://drive.google.com/uc?export=open&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE", "-loglevel", "8", NULL);
+                                    execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", myTherapySessionAudio[selectedSong.songIndex], "-loglevel", "8", NULL);
                                     //Second test K|
                                     //execlp("ffplay","ffplay","-nodisp","-autoexit","-rtbufsize","100M","https://drive.google.com/uc?export=download&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE","-loglevel","-0",NULL); //Again don't forget NULL this much
                                 }
