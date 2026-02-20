@@ -40,7 +40,7 @@
 - - One more genre category : **DONE**  
 - - Songs will be summed up to 10 + 10 songs in the new genre. **DONE** (added +1 nightcore song 18.02.2026)
 - **Still in Dev**
-- - CLI music playing (Well not perfect but I am cooking shit rn ngl. I left a demo. 3rd song of first playlist. My Immortal by Evanascene...jittery and cracking but even that felt like a victory at 4.56AM.) *Currently working On*
+- - CLI music playing (Well not perfect but I am cooking shit rn ngl. I left a demo. 3rd song of first playlist. My Immortal by Evanescence...jittery and cracking but even that felt like a victory at 4.56AM.) *Currently working On*
 
 - - windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postpone a few days
 - - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
@@ -57,7 +57,7 @@
 ## QA
 
 - Q: When will that be done?
-- A: Probably tomorrow if I don't sleep or next day at max.(It's been 2 days since I've said that and still working on)
+- A: Never...when I add shit other ideas are coming to my mind and I grind to add them too
 
 - Q:Is this a malware
 - A:Depends...malware for your brain but no not as a malware for computers since I don't know how to script them yet.

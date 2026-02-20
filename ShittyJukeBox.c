@@ -23,6 +23,14 @@
 #define SONG_OFFSET 1
 
 
+typedef struct {
+    char *title;
+    char *artist;
+    float duration;
+    //Will use in future just a prep for now
+}songMetaData;
+
+
 
 typedef struct {
     int songIndex;
