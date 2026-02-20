@@ -411,7 +411,7 @@ void typewriter(const char* song)
         if (*song == '\n')
         {
             usleep(320000); //I'm selecting those totally vibe based
-            printf("%c\a",*song);
+            printf("%c",*song);
         }
         else
         {
