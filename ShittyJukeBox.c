@@ -13,7 +13,7 @@
 //define NORMAL_EMO_OFFSET   13  IT was a pleasure to work with you guys...but I learned structs :/
 //define SEIZURE_EMO_OFFSET  53  Goodbye infinite mode ideas via using infinite primes 1000000000000066600000000000001 you'll always live in my heart
 #define SECOND 1000000 //Microseconds
-#define BOLD "\e[1m"
+#define BOLD_RED "\e[1;31m"
 #define FIX_FONT "\e[0m"
 #define WIPE_TERMINAL "\033[H\033[J"
 #define WIPE_TOP "\033[2J"
@@ -148,13 +148,17 @@ int main(void)
             char **selectedAudioArray = AudioDispatch[genreChoice];
             char **selectedTitleArray = TitleDispatch[genreChoice];
             double *selectedDurationArray = DurationDispatch[genreChoice];
-
+            
             MenuFunction genre = genre_menus[genreChoice];
             songMetaData selectedSong = genre(); 
+
+            
             if (selectedSong.songIndex == -1)
             {
                 return(2);
             } //As I said that's gonna help me
+            
+            
             else 
             {
                 //I'll optimize this shit too
@@ -195,7 +199,6 @@ int main(void)
 
 void sigintHandler(int sig) //Ctrl+C magic
 {
-    int fd[2];
     int gettingRickrolledOrNot = (rand() % 4)+1; //Never trust a computer's calculation use bracelets    -Sun Tzu (or Linus Torvalds IDK)
     if (gettingRickrolledOrNot == 3)
     {
@@ -232,7 +235,7 @@ songMetaData emoInput(void)
 
     int songCount = sizeof(depressed_titles) / sizeof(depressed_titles[0]);
     int i = 0;
-    printf(WIPE_TERMINAL BOLD);
+    printf(WIPE_TERMINAL BOLD_RED);
     while (depressed_titles[i] != NULL)
     {
         printf("%d)%s\n",i+SONG_OFFSET,depressed_titles[i]);
@@ -276,7 +279,7 @@ songMetaData emoInput(void)
         }
         else
         {
-            songPrefs.writerType = -1;
+            songPrefs.songIndex = -1;
             printf("Fuck you.Sincerely...\n");
             return(songPrefs);
         }
@@ -292,7 +295,7 @@ songMetaData nightcoreInput(void)
 
     int songCount = sizeof(nightcoreTitles)/sizeof(nightcoreTitles[0]);
     int i = 0;
-    printf(WIPE_TERMINAL BOLD);
+    printf(WIPE_TERMINAL BOLD_RED);
     while (nightcoreTitles[i] != NULL)
     {   
         printf("%d)%s\n",i+SONG_OFFSET,nightcoreTitles[i]);
@@ -326,7 +329,7 @@ songMetaData nwobhmInput(void)
 
     int songCount = sizeof(nwobhmTitles)/sizeof(nwobhmTitles[0]);
     int i = 0;
-    printf(WIPE_TERMINAL BOLD);
+    printf(WIPE_TERMINAL BOLD_RED);
     while (nwobhmTitles[i] != NULL)
     {   
         printf("%d)%s\n",i+SONG_OFFSET,nwobhmTitles[i]);
@@ -357,9 +360,9 @@ int genreMenu(void)
     int lengthOfCatalouge = (sizeof(genres)/sizeof(genres[0]))- SONG_OFFSET;
     int genrePick = -1;
     printf(WIPE_TERMINAL);
-    printf(BOLD "\t\t\t_-JUST A SHITTY JUKEBOX-_\n" FIX_FONT);
+    printf(BOLD_RED "\t\t\t_-JUST A SHITTY JUKEBOX-_\n" FIX_FONT);
     asciiPrinter();
-    printf(BOLD "Genres\n" FIX_FONT);
+    printf(BOLD_RED "Genres\n" FIX_FONT);
     for (int i = 0; genres[i] != NULL; i++)
     {
         printf("%d)%s\n",i+SONG_OFFSET,genres[i]);
@@ -404,7 +407,7 @@ void epilepsy_typewriter(const char* song,double duration) {
     //Fucking with usleep data old rates : 75000 and 23987
         if (*song == '\n') 
         {
-            usleep(delay*1.8); 
+            usleep(delay*4); 
         }
         
         usleep(delay/2); 
@@ -427,18 +430,18 @@ void bold_typewriter(const char* song,double duration)
     double delay = duration / totalChar;
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
-    printf(BOLD);
+    printf(BOLD_RED);
     usleep(last_three * SECOND);
     while (*song != '\0')
     {
         if (*song == '\n')
         {
-            usleep(delay*1.8); 
+            usleep(delay*4); 
             printf("%c",*song);
         }
         else if (*song == '\n' && *(song+1) == '\n')
         {
-            usleep(delay*1.8); 
+            usleep(delay*4); 
             printf("%c",*song);
             song++;
             printf("%c",*song);
@@ -465,15 +468,14 @@ void typewriter(const char* song,double duration)
 
     int totalChar = countPrintables(song);
     double delay = duration / totalChar;
-
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
-    usleep(last_three);
+    usleep(last_three * SECOND);
     while (*song != '\0')
     {
         if (*song == '\n')
         {
-            usleep(delay*1.8); //I'm selecting those totally vibe based
+            usleep(delay*4); //I'm selecting those totally vibe based
             printf("%c",*song);
         }
         else
@@ -484,7 +486,6 @@ void typewriter(const char* song,double duration)
         song++;
     }
     sleep(1);
-
 }
 
 void asciiPrinter()

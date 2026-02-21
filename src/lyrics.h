@@ -1511,11 +1511,11 @@ char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2Xr
 
 //Oh boy hard coding habits never die Now Imma fucking hard-code song lengths one by one
 
-double myTherapySessionLengths[] = {4.14018, 3.48000, 4.32015, 3.40012, 3.38009, 4.21012, 6.23055, 6.57089, 3.48004, 4.15009 };
+double myTherapySessionLengths[] = {3.54018, 3.40000, 4.03015, 3.40012, 3.24009, 3.43012, 6.10055, 4.57089, 3.33004, 4.10009 };
 
 
-double ADHDSongsLengths[] = {3.13008, 2.46013, 3.06007, 2.25002, 2.07011, 3.09005,2.46006, 2.39010, 2.25002, 3.00003,2.48000 };
+double ADHDSongsLengths[] = {3.12008, 2.41013, 2.53007, 2.07002, 2.04011, 2.57005,2.01006, 2.39010, 2.25002, 2.55003,2.48000 };
 
 
-double NWOBHSongsLengths[] = {2.46014, 5.17025, 3.22024, 7.21112, 4.55024, 5.19017, 7.39131, 3.37015, 4.23037, 7.11024};
+double NWOBHSongsLengths[] = {2.29014, 2.45025, 2.58024, 6.5621112, 3.55024, 5.11017, 7.25131, 3.37015, 3.57037, 6.55024};
 
