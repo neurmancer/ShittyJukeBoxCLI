@@ -15,10 +15,10 @@
 
 ## FEATURES
 
-# NOW ALL THE EMO AND NIGHTCORE PLAYLISTS ARE WITH AUDIO!! FUCK YEAH (V4.1353Beta) 
+# NOW ALL THE EMO AND NIGHTCORE PLAYLISTS ARE WITH AUDIO!! FUCK YEAH (V4.5) 
 
 - 10emo/rock songs (with 2 included metallica songs)
-- 10 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
+- 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
 - 10 NWOBHM songs for you to feel the speed metal/golden era in your bones (just with lyrics for now)
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
@@ -29,6 +29,7 @@
 - Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
 - New features will be added 'cuz why not?
+
 - **3 Types of lyrics printing option**
 - - RGB/Pale white choice for emo songs (and for you nerds check the peridoic sin fade...I'll make you mathgasm for sure.)
 - - Forced RGB for Nightcore for obvious reasons
@@ -41,11 +42,13 @@
 - **Finished parts**
 - - One more genre category : **DONE**  
 - - Songs will be summed up to 10 + 10 songs in the new genre. **DONE** (added +1 nightcore song 18.02.2026)
-- **Still in Dev**
-- - CLI music playing (Well not perfect but I am cooking shit rn ngl. I left a demo. 3rd song of first playlist. My Immortal by Evanescence...jittery and cracking but even that felt like a victory at 4.56AM.) *Currently working On*
+- - CLI music playing **FUCKING DONE**
 
-- - windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postpone a few days
-- - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
+> **Still in Dev**
+> - Better optimization  
+> - 'Headerlessness' (yeah I made that word up)
+> - Windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postponed 'till I feel like it
+> - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
 
 
 ### TWEAKS (Where I brag about shit for the Nerds)
@@ -54,6 +57,8 @@
 - The typing speed adjustments 
 - Better exit state handling and more optimized loop
 - 1 second between end of the song and genre menu to optimize reaction time on old PCs
+- Reduced reaction time 
+- Better verse seperation (only for NWOBHM for now) (and yeah I can misspell shit since it's 3.15AM)
 
 
 ## QA
@@ -65,7 +70,7 @@
 - A:Depends...malware for your brain but no not as a malware for computers since I don't know how to script them yet.
 
 - Q:Do I need to install anything else
-- A:For now nope...In the future -if needed- will be added in README.md
+- A:Yes ffmpeg for ffplay...-if needed- other dependencies will be added to here if needed
 
 - Q: Why are you doing this to yourself?
 - A:Bro you are talking to yourself in README pull yourself together.
@@ -79,6 +84,23 @@ cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 #To run
 ./filename.o #Then have fun
 ```
+
+## Dependencies
+
+```bash
+
+#For ubuntu/debian 
+sudo apt-get update && apt-get upgrade && apt-get install ffmpeg 
+
+#For Arch (use use NyArch btw UwO)
+sudo pacman -Syu && pacman -S ffmpeg 
+
+#For Fedora
+sudo dnf upgrade && dnf install ffmpeg 
+
+```
+
+
 
 ## winPORTsux for V2 (OUTDATED AF) 
 - https://github.com/neurmancer/Basic-C-Examples/tree/winPORTsux/thingsThatSupposedToBasicButOverengineeredForNothing -> In the old repo will be added to here winPORTsux branch (Which I won't merge with main since it's sucks) when V4 be ready for first Linux then I'll port it to windows

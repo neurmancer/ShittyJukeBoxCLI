@@ -1446,16 +1446,16 @@ char *ADHDSongsAudio[] = {
  };
 
 char *NWOBHMSongsAudio[] = {
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id=",
-    "https://drive.google.com/uc?export=open&id="
+    "https://drive.google.com/uc?export=open&id=1j6quK4yfQ-V4rpmDECUnWg5xglOeF22d", //Ace of Spades 
+    "https://drive.google.com/uc?export=open&id=1zjgn3CeieJk7Dwn6vUkn1aWrziKY0C3N", // Overkill
+    "https://drive.google.com/uc?export=open&id=1WBJrOQTFzlmkQ5z0Q_EBfvBTMcuXSK3J", // Too Late Too Late
+    "https://drive.google.com/uc?export=open&id=1hEIX3vW2nalBgn2V0gyzn4iHrDjmDglz", //Am I Evil (Nope...as I said jussst autistic as fuck.)
+    "https://drive.google.com/uc?export=open&id=1TA4Kpj3Oc_Cz70RUaMzlviL1uRwTf_IV", //In the heat of the night
+    "https://drive.google.com/uc?export=open&id=1hrL2x7x7SRdEeJdehbuwmSik_dJBcuGR", //Denim and Leather 
+    "https://drive.google.com/uc?export=open&id=10sDVNalQM0w6VEO21KmMYhmM73bnZzfP", //Crusader
+    "https://drive.google.com/uc?export=open&id=1MesOIRuHZqty4OqvFhEvqjJjMuKmu6T6", //Fire in The Sky
+    "https://drive.google.com/uc?export=open&id=1gKy2Juy8sBNvNUoZhSK--go2LSb1niv-", //The Trooper
+    "https://drive.google.com/uc?export=open&id=1S6Ikwiyt6q5fQBJiyi8cBPpg5btZXKb2"  // Prisoner of Your (Hazel) Eyes
  };
 
 char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";

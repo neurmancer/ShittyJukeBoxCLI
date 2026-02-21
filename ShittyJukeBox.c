@@ -27,6 +27,7 @@ typedef struct {
     char *title;
     char *artist;
     float duration;
+    char *url;
     //Will use in future just a prep for now
 }songMetaData;
 
@@ -126,7 +127,7 @@ int main(void)
                     
                     case 2:
                         pid = fork();
-                        if (pid == -1) { return(-13); } // errno of soul
+                        if (pid == -1) { return(-31); } // Soul of errno (get it?because it's the -13 but digits are reversed? C'Mon this was good)
                         
                         if (pid == 0)
                         {
@@ -140,7 +141,18 @@ int main(void)
                         break;
                    
                     case 3:
-                        writer(NWOBHSongs[selectedSong.songIndex]);
+                      pid = fork();
+                        if (pid == -1) { return(-53); } // errno of love
+                        
+                        if (pid == 0)
+                        {
+                                playShit(NWOBHMSongsAudio[selectedSong.songIndex]);
+                        }
+                        else
+                        {
+                            writer(NWOBHSongs[selectedSong.songIndex]);
+                            wait(NULL);
+                        }
                         break;
             
                 }
@@ -310,8 +322,16 @@ songData nwobhmInput(void)
 {
     songData songPrefs = {-1,2};
     char *nwobhmTitles[] = {
-        "Ace of Spades - Motörhead", "Overkill - Motörhead", "Too Late Too Late - Motörhead",
-        "Am I Evil - Diamondhead","In The Heat of The Night - Diamondhead","Denim&Leather - Saxon","Crusader - Saxon","Fire In The Sky - Saxon","The Trooper - Iron Maiden","Prisoner Of Your Eyes - Judas Priest", 
+        "Ace of Spades - Motörhead", 
+        "Overkill - Motörhead",
+         "Too Late Too Late - Motörhead",
+        "Am I Evil - Diamondhead",
+        "In The Heat of The Night - Diamondhead",
+        "Denim&Leather - Saxon",
+        "Crusader - Saxon",
+        "Fire In The Sky - Saxon",
+        "The Trooper - Iron Maiden",
+        "Prisoner Of Your Eyes - Judas Priest", 
         NULL
     }; //Not to future self...Don't forget NULL or you get core dump (like how she dumped you...but bright side:You found the bug under a min since you are used to get dumped)
 
