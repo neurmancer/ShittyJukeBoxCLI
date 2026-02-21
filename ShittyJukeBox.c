@@ -12,6 +12,7 @@
 //She Loves Purple,So Do I
 //define NORMAL_EMO_OFFSET   13  IT was a pleasure to work with you guys...but I learned structs :/
 //define SEIZURE_EMO_OFFSET  53  Goodbye infinite mode ideas via using infinite primes 1000000000000066600000000000001 you'll always live in my heart
+#define SECOND 1000000 //Microseconds
 #define BOLD "\e[1m"
 #define FIX_FONT "\e[0m"
 #define WIPE_TERMINAL "\033[H\033[J"
@@ -25,18 +26,17 @@
 
 typedef struct {
     char *title;
-    char *artist;
-    float duration;
+    char *lyrics;
     char *url;
+    int songIndex;
+    int writerType; 
+    float duration;
+ 
+    
     //Will use in future just a prep for now
 }songMetaData;
 
 
-
-typedef struct {
-    int songIndex;
-    int writerType; //Yeah no more isSeizuring or shit since I got more typers 
-}songData;
 
 
 void playShit(char *url);
@@ -46,19 +46,55 @@ void epilepsy_typewriter(const char* song);
 void typewriter(const char* song);
 void sigintHandler(int sig);
 void asciiPrinter(void);
-songData emoInput(void);
-songData nightcoreInput(void);
-songData nwobhmInput(void);
+songMetaData emoInput(void);
+songMetaData nightcoreInput(void);
+songMetaData nwobhmInput(void);
 int genreMenu(void);
 
 
 
 
+extern char *myTherapySession[];        // myTherapySession
+extern char *ADHDSongs[];  // ADHDSongs
+extern char *NWOBHSongs[];     // NWOBHSongs
+
+
+char **LyricsDispatch[] = {
+    NULL,
+    myTherapySession,
+    ADHDSongs,
+    NWOBHSongs
+};
+
+
+extern char *myTherapySessionAudio[];
+extern char *ADHDSongsAudio[];
+extern char *NWOBHMSongsAudio[];
+
+
+char **AudioDispatch[] = {
+    NULL,
+    myTherapySessionAudio,
+    ADHDSongsAudio,
+    NWOBHMSongsAudio
+};
+
+
+extern char *depressed_titles[];
+extern char *nightcoreTitles[];
+extern char *nwobhmTitles[];
+
+char **TitleDispatch[] = {
+    NULL,
+    depressed_titles,
+    nightcoreTitles,
+    nwobhmTitles
+};
 
 
 typedef void (*WriterFunction)(const char *lyrics);
 
-typedef songData (*MenuFunction)();
+typedef songMetaData (*MenuFunction)();
 
 WriterFunction writerType[] = {
     typewriter,
@@ -80,8 +116,7 @@ char *asciiArt[] = {"   ______________   ","  /  __________  \\"," |  | LITHIUM 
 char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal",NULL};
 
 
-
-
+songMetaData songPrefs = { };
 
 int main(void)
 {
@@ -95,9 +130,13 @@ int main(void)
     {
         int genreChoice = genreMenu();
         if (genreChoice) 
-        {            
+        {
+            char **selectedLyricsArray = LyricsDispatch[genreChoice]; //ADHD
+            char **selectedAudioArray = AudioDispatch[genreChoice];
+            char **selectedTitleArray = TitleDispatch[genreChoice];
+
             MenuFunction genre = genre_menus[genreChoice];
-            songData selectedSong = genre(); 
+            songMetaData selectedSong = genre(); 
             if (selectedSong.songIndex == -1)
             {
                 return(2);
@@ -105,58 +144,25 @@ int main(void)
             else 
             {
                 //I'll optimize this shit too
-                WriterFunction writer = writerType[selectedSong.writerType];
-                selectedSong.songIndex -= SONG_OFFSET;
-                switch (genreChoice)
+                WriterFunction writer = writerType[selectedSong.writerType]; //Writer : Assigned 
+                selectedSong.songIndex -= SONG_OFFSET; //OFF-Set set here so no off by one from now on in arrays
+                selectedSong.lyrics = selectedLyricsArray[selectedSong.songIndex]; //Lyrics gotten
+                selectedSong.url = selectedAudioArray[selectedSong.songIndex]; // Audio checked too
+                selectedSong.title = selectedTitleArray[selectedSong.songIndex];
+                pid = fork();
+                if (pid == -1) { return(-13); } //Errno of Love    
+                
+                if (pid == 0)
                 {
-                    //This is purely experimental and will be junky as fuck but I can't sleep withot trying (GJ past me I am taking it from here)
-                    case 1:
-                        pid = fork();
-                        if (pid == -1) { return(-13); } // errno of soul
-                        
-                        if (pid == 0)
-                        {
-                                playShit(myTherapySessionAudio[selectedSong.songIndex]);
-                        }
-                        else
-                        {
-                            writer(myTherapySession[selectedSong.songIndex]);
-                            wait(NULL);
-                        }
-                        break;
-                    
-                    case 2:
-                        pid = fork();
-                        if (pid == -1) { return(-31); } // Soul of errno (get it?because it's the -13 but digits are reversed? C'Mon this was good)
-                        
-                        if (pid == 0)
-                        {
-                                playShit(ADHDSongsAudio[selectedSong.songIndex]);
-                        }
-                        else
-                        {
-                            writer(ADHDSongs[selectedSong.songIndex]);
-                            wait(NULL);
-                        }
-                        break;
-                   
-                    case 3:
-                      pid = fork();
-                        if (pid == -1) { return(-53); } // errno of love
-                        
-                        if (pid == 0)
-                        {
-                                playShit(NWOBHMSongsAudio[selectedSong.songIndex]);
-                        }
-                        else
-                        {
-                            writer(NWOBHSongs[selectedSong.songIndex]);
-                            wait(NULL);
-                        }
-                        break;
-            
+                    playShit(selectedSong.url);
                 }
-            
+                else
+                {
+                    printf(WIPE_TERMINAL "Current Song:%s\n",selectedSong.title);
+                    usleep(SECOND * 1.75);
+                    writer(selectedSong.lyrics);
+                    wait(NULL);
+                }
             }
             printf(WIPE_TOP GO_HOME); //Clear the top and go (1,1)
         }
@@ -197,25 +203,13 @@ void sigintHandler(int sig) //Ctrl+C magic
 }
 
 
-songData emoInput(void)
+songMetaData emoInput(void)
 {
    
-    songData songPrefs;
+
     songPrefs.songIndex = -1;
     songPrefs.writerType = 0;
-    const char *depressed_titles[] = {
-        "Bring Me To Life - Evanescence",
-        "Lithium - Evanescence",
-        "My Immortal - Evanescence",
-        "I Hate Everything About You - Three Days Grace",
-        "Pain - Three Days Grace",
-        "Boulevard of Broken Dreams - Green Day",
-        "Unforgiven - Metallica",
-        "Fade To Black - Metallica",
-        "How You Remind Me - Nickelback",
-        "Lithium - Nirvana",
-        NULL 
-    };
+
     int songCount = sizeof(depressed_titles) / sizeof(depressed_titles[0]);
     int i = 0;
     printf(WIPE_TERMINAL BOLD);
@@ -237,10 +231,10 @@ songData emoInput(void)
         return(songPrefs);
     } 
 
-
+    else
     {
         clearIBuffer();
-        
+        songPrefs.title = depressed_titles[songPrefs.songIndex-SONG_OFFSET];
         char reply;
         printf("Want it to be RGB?(y/n):");
         scanf("%c",&reply);
@@ -271,30 +265,17 @@ songData emoInput(void)
 }
 
 
-songData nightcoreInput(void)
+songMetaData nightcoreInput(void)
 {
-    songData songPrefs = {-1,1};
-    char *nightcoreSongs[] = {
-            
-            "Angel with a Shotgun",
-            "Rockefeller Street",
-            "Teeth",
-            "Thunder",
-            "Take a Hint",
-            "How to be a Heartbreaker",
-            "Light it Up",
-            "Pretty Rave Girl",
-            "All I Ever Wanted",
-            "Angel Of Darkness",
-            "Pretty Little Psycho",
-            NULL
-    };
-    int songCount = sizeof(nightcoreSongs)/sizeof(nightcoreSongs[0]);
+    songPrefs.songIndex = -1;
+    songPrefs.writerType = 0;
+
+    int songCount = sizeof(nightcoreTitles)/sizeof(nightcoreTitles[0]);
     int i = 0;
     printf(WIPE_TERMINAL BOLD);
-    while (nightcoreSongs[i] != NULL)
+    while (nightcoreTitles[i] != NULL)
     {   
-        printf("%d)%s\n",i+SONG_OFFSET,nightcoreSongs[i]);
+        printf("%d)%s\n",i+SONG_OFFSET,nightcoreTitles[i]);
         usleep(50000);
         i++;    
     }
@@ -318,22 +299,10 @@ songData nightcoreInput(void)
     }
 }
 
-songData nwobhmInput(void)
+songMetaData nwobhmInput(void)
 {
-    songData songPrefs = {-1,2};
-    char *nwobhmTitles[] = {
-        "Ace of Spades - Motörhead", 
-        "Overkill - Motörhead",
-         "Too Late Too Late - Motörhead",
-        "Am I Evil - Diamondhead",
-        "In The Heat of The Night - Diamondhead",
-        "Denim&Leather - Saxon",
-        "Crusader - Saxon",
-        "Fire In The Sky - Saxon",
-        "The Trooper - Iron Maiden",
-        "Prisoner Of Your Eyes - Judas Priest", 
-        NULL
-    }; //Not to future self...Don't forget NULL or you get core dump (like how she dumped you...but bright side:You found the bug under a min since you are used to get dumped)
+    songPrefs.songIndex = -1;
+    songPrefs.writerType = 0;
 
     int songCount = sizeof(nwobhmTitles)/sizeof(nwobhmTitles[0]);
     int i = 0;
@@ -362,7 +331,6 @@ songData nwobhmInput(void)
         return(songPrefs);
     }
 }
-
 
 int genreMenu(void)
 {

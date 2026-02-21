@@ -43,13 +43,12 @@
 - - One more genre category : **DONE**  
 - - Songs will be summed up to 10 + 10 songs in the new genre. **DONE** (added +1 nightcore song 18.02.2026)
 - - CLI music playing **FUCKING DONE**
+- - Better optimization **DONE**  
 
 > **Still in Dev**
-> - Better optimization  
 > - 'Headerlessness' (yeah I made that word up)
 > - Windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postponed 'till I feel like it
-> - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify)
-
+> - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify) *In Progress*
 
 ### TWEAKS (Where I brag about shit for the Nerds)
 
@@ -59,7 +58,7 @@
 - 1 second between end of the song and genre menu to optimize reaction time on old PCs
 - Reduced reaction time 
 - Better verse seperation (only for NWOBHM for now) (and yeah I can misspell shit since it's 3.15AM)
-
+- I made it literally plug and play if you know how dispatch tables are working you can plug your own urls,titles,lyrics and it will run just fine. I single handedly achieved object omnipotence(I'LL BRAG OFC THIS IS MY 13TH DAY OF PROGRAMMING. I FEEL LIKE A CYBER-GOD RN)
 
 ## QA
 
@@ -92,7 +91,7 @@ cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 #For ubuntu/debian 
 sudo apt-get update && apt-get upgrade && apt-get install ffmpeg 
 
-#For Arch (use use NyArch btw UwO)
+#For Arch (I use NyArch btw OwO)
 sudo pacman -Syu && pacman -S ffmpeg 
 
 #For Fedora

@@ -1416,6 +1416,56 @@ char *NWOBHSongs[] = {
     
 };
 
+
+
+char *depressed_titles[] = {
+    "Bring Me To Life - Evanescence",
+    "Lithium - Evanescence",
+    "My Immortal - Evanescence",
+    "I Hate Everything About You - Three Days Grace",
+    "Pain - Three Days Grace",
+    "Boulevard of Broken Dreams - Green Day",
+    "Unforgiven - Metallica",
+    "Fade To Black - Metallica",
+    "How You Remind Me - Nickelback",
+    "Lithium - Nirvana",
+    NULL 
+};
+
+
+char *nightcoreTitles[] = {        
+    "Angel with a Shotgun",
+    "Rockefeller Street",
+    "Teeth",
+    "Thunder",
+    "Take a Hint",
+    "How to be a Heartbreaker",
+    "Light it Up",
+    "Pretty Rave Girl",
+    "All I Ever Wanted",
+    "Angel Of Darkness",
+    "Pretty Little Psycho",
+    NULL
+};
+
+
+char *nwobhmTitles[] = {
+    "Ace of Spades - Motörhead", 
+    "Overkill - Motörhead",
+     "Too Late Too Late - Motörhead",
+    "Am I Evil - Diamondhead",
+    "In The Heat of The Night - Diamondhead",
+    "Denim&Leather - Saxon",
+    "Crusader - Saxon",
+    "Fire In The Sky - Saxon",
+    "The Trooper - Iron Maiden",
+    "Prisoner Of Your Eyes - Judas Priest", 
+    NULL
+}; //Not to future self...Don't forget NULL or you get core dump (like how she dumped you...but bright side:You found the bug under a min since you are used to get dumped)
+
+
+
+
 char *myTherapySessionAudio[] = {
     "https://drive.google.com/uc?export=open&id=1vzC0YESu0JxHRP6hxKO1TS54FOXHw3c5", //Bring Me To Life
     "https://drive.google.com/uc?export=open&id=1Ea99sesm8Ho-gp08jaySqgwXB_-MR-oj", // Lithium Eva
@@ -1459,3 +1509,4 @@ char *NWOBHMSongsAudio[] = {
  };
 
 char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";
+
