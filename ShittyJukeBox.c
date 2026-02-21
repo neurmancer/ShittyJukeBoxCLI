@@ -37,7 +37,6 @@ typedef struct {
 
 
 
-void playShit(char *url);
 void clearIBuffer(void);
 void bold_typewriter(const char* song,double duration);
 void epilepsy_typewriter(const char* song,double duration);
@@ -47,6 +46,7 @@ void asciiPrinter(void);
 songMetaData emoInput(void);
 songMetaData nightcoreInput(void);
 songMetaData nwobhmInput(void);
+int playShit(char *url);
 int genreMenu(void);
 int countPrintables(const char *lyrics);
 
@@ -136,6 +136,8 @@ int main(void)
     signal(SIGINT,sigintHandler);
 
     int pid = 0;
+    //Yeah I do fucking need IPC FOR SOME REASON 
+    //Note for future-self 0->Read      1->Write
 
     while (1) //Yeah I ain't giving up my infinite loop unless you use Ctrl+C to roll rickroll dice
     {
@@ -173,7 +175,7 @@ int main(void)
                 }
                 else
                 {
-                    printf(WIPE_TERMINAL "Current Song:%s\n",selectedSong.title);
+                    printf(WIPE_TERMINAL "Current Song: %s\n",selectedSong.title);
                     usleep(SECOND * 2.5);
                     writer(selectedSong.lyrics,selectedSong.duration);
                     wait(NULL);
@@ -193,6 +195,7 @@ int main(void)
 
 void sigintHandler(int sig) //Ctrl+C magic
 {
+    int fd[2];
     int gettingRickrolledOrNot = (rand() % 4)+1; //Never trust a computer's calculation use bracelets    -Sun Tzu (or Linus Torvalds IDK)
     if (gettingRickrolledOrNot == 3)
     {
@@ -200,11 +203,13 @@ void sigintHandler(int sig) //Ctrl+C magic
         printf(WIPE_TERMINAL); //Rickroll 3.32
         usleep(5000);
         int pid = fork();
-        if (pid == -1) { printf("Rickroll child fucked up and I can't return value in a void func\n"); } 
+        if (pid == -1) { printf("Rickroll child fucked up and I can't return value in a void func\n");exit(-1987);} //yeah album date of Whenever you need somebody
         if (pid == 0)
         {
+
             playShit(rickrollAudio);
         }
+
         else
         {
             epilepsy_typewriter(rickroll,3.32);
@@ -491,9 +496,11 @@ void clearIBuffer(void)
 }
 
 
-void playShit(char *url)
+int playShit(char *url)
 {
-    execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", url, "-loglevel", "8", NULL);
+    int errno = execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", url, "-loglevel", "8", NULL);
+    if (errno == -1) { return(-7); }
+    return(0);
 }
 
 
