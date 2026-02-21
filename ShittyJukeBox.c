@@ -32,8 +32,6 @@ typedef struct {
     int writerType; 
     float duration;
  
-    
-    //Will use in future just a prep for now
 }songMetaData;
 
 
@@ -105,7 +103,7 @@ float *DurationDispatch[] = {
 };
 
 
-typedef void (*WriterFunction)(const char *lyrics);
+typedef void (*WriterFunction)(const char *lyrics,float duration);
 
 typedef songMetaData (*MenuFunction)();
 
@@ -177,7 +175,7 @@ int main(void)
                 {
                     printf(WIPE_TERMINAL "Current Song:%s\n",selectedSong.title);
                     usleep(SECOND * 1.75);
-                    writer(selectedSong.lyrics);
+                    writer(selectedSong.lyrics,selectedSong.duration);
                     wait(NULL);
                 }
             }
@@ -380,6 +378,10 @@ void epilepsy_typewriter(const char* song,float duration) {
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(250000);
+    duration-=0.5;
+    duration *= SECOND;
+    float delay = duration / 60;
+   
     // hide cursor clear screen and shit.
     long color_timer = 0;
     while (*song != '\0') {
@@ -392,9 +394,9 @@ void epilepsy_typewriter(const char* song,float duration) {
     //Fucking with usleep data old rates : 75000 and 23987
         if (*song == '\n') 
         {
-            usleep(99000);
+            usleep((3*delay)/5); 
         }
-        else {usleep(50210);}
+        usleep((2*delay)/5); 
         song++;
         color_timer++;
     }
@@ -405,6 +407,9 @@ void epilepsy_typewriter(const char* song,float duration) {
 
 void bold_typewriter(const char* song,float duration)
 {
+    duration-=0.5;
+    duration *= SECOND;
+    float delay = duration / 60;
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     printf(BOLD);
@@ -413,13 +418,13 @@ void bold_typewriter(const char* song,float duration)
     {
         if (*song == '\n')
         {
-            usleep(325000); 
+            usleep((3*delay)/5); 
             printf("%c",*song);
         }
         else
         {
             printf("%c",*song);
-            usleep(12*1200); 
+           usleep((2*delay)/5); 
         }
         song++;
     }
@@ -431,6 +436,9 @@ void bold_typewriter(const char* song,float duration)
 
 void typewriter(const char* song,float duration)
 {
+    duration-=0.5;
+    duration *= SECOND;
+    float delay = duration / 60;
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(250000);
@@ -438,13 +446,13 @@ void typewriter(const char* song,float duration)
     {
         if (*song == '\n')
         {
-            usleep(320000); //I'm selecting those totally vibe based
+            usleep((3*delay)/5); //I'm selecting those totally vibe based
             printf("%c",*song);
         }
         else
         {
             printf("%c",*song);
-            usleep(8*1440); //1440p montior vibes...
+            usleep((2*delay)/5); //1440p montior vibes...
         }
         song++;
     }
