@@ -174,7 +174,7 @@ int main(void)
                 else
                 {
                     printf(WIPE_TERMINAL "Current Song:%s\n",selectedSong.title);
-                    usleep(SECOND * 1.75);
+                    usleep(SECOND * 2.5);
                     writer(selectedSong.lyrics,selectedSong.duration);
                     wait(NULL);
                 }
@@ -283,7 +283,7 @@ songMetaData emoInput(void)
 songMetaData nightcoreInput(void)
 {
     songPrefs.songIndex = -1;
-    songPrefs.writerType = 0;
+    songPrefs.writerType = 1;
 
     int songCount = sizeof(nightcoreTitles)/sizeof(nightcoreTitles[0]);
     int i = 0;
@@ -317,7 +317,7 @@ songMetaData nightcoreInput(void)
 songMetaData nwobhmInput(void)
 {
     songPrefs.songIndex = -1;
-    songPrefs.writerType = 0;
+    songPrefs.writerType = 2;
 
     int songCount = sizeof(nwobhmTitles)/sizeof(nwobhmTitles[0]);
     int i = 0;
@@ -399,7 +399,6 @@ void epilepsy_typewriter(const char* song,double duration) {
             usleep(delay*2.5); 
         }
         
-        printf("%c",*song);
         usleep(delay/1.2); 
         song++;
         color_timer++;
@@ -425,6 +424,14 @@ void bold_typewriter(const char* song,double duration)
             usleep(delay*2.5); 
             printf("%c",*song);
         }
+        else if (*song == '\n' && *(song+1) == '\n')
+        {
+            usleep(delay*2.5); 
+            printf("%c",*song);
+            song++;
+            printf("%c",*song);
+        }
+        
         else
         {
             printf("%c",*song);
