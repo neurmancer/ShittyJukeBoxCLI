@@ -41,9 +41,9 @@ typedef struct {
 
 void playShit(char *url);
 void clearIBuffer(void);
-void bold_typewriter(const char* song);
-void epilepsy_typewriter(const char* song);
-void typewriter(const char* song);
+void bold_typewriter(const char* song,float duration);
+void epilepsy_typewriter(const char* song,float duration);
+void typewriter(const char* song,float duration);
 void sigintHandler(int sig);
 void asciiPrinter(void);
 songMetaData emoInput(void);
@@ -92,6 +92,19 @@ char **TitleDispatch[] = {
 };
 
 
+extern float myTherapySessionLengths[];
+extern float ADHDSongsLengths[];
+extern float NWOBHSongsLengths[];
+
+
+float *DurationDispatch[] = {
+    NULL,
+    myTherapySessionLengths,
+    ADHDSongsLengths,
+    NWOBHSongsLengths
+};
+
+
 typedef void (*WriterFunction)(const char *lyrics);
 
 typedef songMetaData (*MenuFunction)();
@@ -134,6 +147,7 @@ int main(void)
             char **selectedLyricsArray = LyricsDispatch[genreChoice]; //ADHD
             char **selectedAudioArray = AudioDispatch[genreChoice];
             char **selectedTitleArray = TitleDispatch[genreChoice];
+            float *selectedDurationArray = DurationDispatch[genreChoice];
 
             MenuFunction genre = genre_menus[genreChoice];
             songMetaData selectedSong = genre(); 
@@ -148,7 +162,10 @@ int main(void)
                 selectedSong.songIndex -= SONG_OFFSET; //OFF-Set set here so no off by one from now on in arrays
                 selectedSong.lyrics = selectedLyricsArray[selectedSong.songIndex]; //Lyrics gotten
                 selectedSong.url = selectedAudioArray[selectedSong.songIndex]; // Audio checked too
-                selectedSong.title = selectedTitleArray[selectedSong.songIndex];
+                selectedSong.title = selectedTitleArray[selectedSong.songIndex]; //Title drop
+                selectedSong.duration = selectedDurationArray[selectedSong.songIndex]; //Duration handled
+
+
                 pid = fork();
                 if (pid == -1) { return(-13); } //Errno of Love    
                 
@@ -182,7 +199,7 @@ void sigintHandler(int sig) //Ctrl+C magic
     if (gettingRickrolledOrNot == 3)
     {
 
-        printf(WIPE_TERMINAL);
+        printf(WIPE_TERMINAL); //Rickroll 3.32
         usleep(5000);
         int pid = fork();
         if (pid == -1) { printf("Rickroll child fucked up and I can't return value in a void func\n"); } 
@@ -192,7 +209,7 @@ void sigintHandler(int sig) //Ctrl+C magic
         }
         else
         {
-            epilepsy_typewriter(rickroll);
+            epilepsy_typewriter(rickroll,3.32);
             wait(NULL);
         } //If you get this ctrl+c ain't saving you. 
     }
@@ -359,7 +376,7 @@ int genreMenu(void)
 }
 
 
-void epilepsy_typewriter(const char* song) {
+void epilepsy_typewriter(const char* song,float duration) {
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(250000);
@@ -386,7 +403,7 @@ void epilepsy_typewriter(const char* song) {
     sleep(1);
 }
 
-void bold_typewriter(const char* song)
+void bold_typewriter(const char* song,float duration)
 {
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
@@ -412,7 +429,7 @@ void bold_typewriter(const char* song)
 
 }
 
-void typewriter(const char* song)
+void typewriter(const char* song,float duration)
 {
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);

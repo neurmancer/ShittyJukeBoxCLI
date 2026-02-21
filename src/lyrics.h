@@ -1510,3 +1510,13 @@ char *NWOBHMSongsAudio[] = {
 
 char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";
 
+
+//Oh boy hard coding habits never die Now Imma fucking hard-code song lengths one by one
+
+float myTherapySessionLengths[] = {4.14, 3.48, 4.32, 3.40, 3.38, 4.21, 6.23, 6.57, 3.48, 4.15 };
+
+
+float ADHDSongsLengths[] = {3.13, 2.46, 3.06, 2.25, 2.07, 3.09,2.46, 2.39, 2.25, 3.00,2.48 };
+
+
+float NWOBHSongsLengths[] = {2.46, 5.17, 3.22, 7.21, 4.55, 5.19, 7.39, 3.37, 4.23, 7.11};
