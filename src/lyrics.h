@@ -1484,7 +1484,7 @@ char *ADHDSongsAudio[] = {
     "https://drive.google.com/uc?export=open&id=1OW6MmzzRFk-fN7ztpcm-Zwm3LnB8KYJO", //Teeth
     "https://drive.google.com/uc?export=open&id=1myR3WUpP7mtgBK62_6vFB7zmk-wbt5bP", //Thunder
     "https://drive.google.com/uc?export=open&id=1uU2mjKzS-wUUxcwGJ4Dsv2tDOx0zfWeE", //Take a Hint
-    "https://drive.google.com/uc?export=open&id=1Ht6TLmpMc3xhN5euPZo5ecC4RJtfJrJu8-g-M9K", //How to be a Heartbreak
+    "https://drive.google.com/uc?export=open&id=1AcytXQetZIAHnfpg7parij8JTmKTSKiT", //How to be a Heartbreak
     "https://drive.google.com/uc?export=open&id=165F_05Gmr-iz5gjTTAjcwaEB9pZpHWLz", //Light it UP MF
     "https://drive.google.com/uc?export=open&id=1mHtT9xwhyjNZKxpPsza0UgUsQTol0kZf", //The OG Nightcore pretty rave girl
     "https://drive.google.com/uc?export=open&id=1tYChoSq68A3IiyQ9A8oUe03PVOLfTAwd", //All I ever Wanted
