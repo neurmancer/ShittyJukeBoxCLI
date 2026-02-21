@@ -404,10 +404,10 @@ void epilepsy_typewriter(const char* song,double duration) {
     //Fucking with usleep data old rates : 75000 and 23987
         if (*song == '\n') 
         {
-            usleep(delay*2.5); 
+            usleep(delay*1.8); 
         }
         
-        usleep(delay/1.2); 
+        usleep(delay/2); 
         song++;
         color_timer++;
     }
@@ -417,6 +417,10 @@ void epilepsy_typewriter(const char* song,double duration) {
 
 void bold_typewriter(const char* song,double duration)
 {
+
+    int fraction = (int) (duration*100000) % 100000;
+    int last_three = fraction % 1000;
+   
     duration *= (SECOND*60);
 
     int totalChar = countPrintables(song);
@@ -424,17 +428,17 @@ void bold_typewriter(const char* song,double duration)
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     printf(BOLD);
-    usleep(250000);
+    usleep(last_three * SECOND);
     while (*song != '\0')
     {
         if (*song == '\n')
         {
-            usleep(delay*2.5); 
+            usleep(delay*1.8); 
             printf("%c",*song);
         }
         else if (*song == '\n' && *(song+1) == '\n')
         {
-            usleep(delay*2.5); 
+            usleep(delay*1.8); 
             printf("%c",*song);
             song++;
             printf("%c",*song);
@@ -443,7 +447,7 @@ void bold_typewriter(const char* song,double duration)
         else
         {
             printf("%c",*song);
-            usleep(delay/1.2); 
+            usleep(delay/2); 
         }
         song++;
     }
@@ -454,6 +458,8 @@ void bold_typewriter(const char* song,double duration)
 
 void typewriter(const char* song,double duration)
 {
+    int fraction = (int) (duration*100000) % 100000;
+    int last_three = fraction % 1000;
 
     duration *= (SECOND*60);
 
@@ -462,18 +468,18 @@ void typewriter(const char* song,double duration)
 
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
-    usleep(250000);
+    usleep(last_three);
     while (*song != '\0')
     {
         if (*song == '\n')
         {
-            usleep(delay*2); //I'm selecting those totally vibe based
+            usleep(delay*1.8); //I'm selecting those totally vibe based
             printf("%c",*song);
         }
         else
         {
             printf("%c",*song);
-            usleep(delay/1.2);      //Totally vibe based as I said just felt right 
+            usleep(delay/2);      //Totally vibe based as I said just felt right 
         }
         song++;
     }
