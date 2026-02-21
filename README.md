@@ -19,7 +19,7 @@
 
 - 10emo/rock songs (with 2 included metallica songs)
 - 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
-- 10 NWOBHM songs for you to feel the speed metal/golden era in your bones (just with lyrics for now)
+- 10 NWOBHM songs for you to feel the speed metal/golden era in your bones
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
@@ -28,6 +28,7 @@
 - WindowsPORT has it's own branch called winPORTsux which I won't merge(and since I started to C 10 days ago. That port is possible thanks to Grok(taught me what IFNDEF is))
 - Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
+- Roughly synced lyrics with audio(again, I am not fucking spotify)
 - New features will be added 'cuz why not?
 
 - **3 Types of lyrics printing option**
