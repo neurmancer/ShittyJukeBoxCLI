@@ -1,7 +1,6 @@
 # SHITTY JUKEBOX IS NOW IN ITS OWN REPO  
-- ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY
-- Current Version V3
-- - (V3.141592 beta actually) (yeah that's digits of pi yup you got it smart-ass)
+- ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY (And since I update readmes without an editor and at fucking 3AMish don't expect shakespeareian english or not even proper englsih)
+- Current Version V4.5
 
 ## Table of Content (I start liking this shit.)
 
@@ -10,12 +9,13 @@
 * [Tweaks](#tweaks-where-i-brag-about-shit-for-the-nerds)
 * [Q&A](#qa)
 * [Compile&Run](#compiling--running)
+* [Depenencies](#dependencies)
 * [OUTDATED Windows port](#winportsux-for-v2-outdated-af)
 * [Third-party requirements and legal shit(paperwork)](#third-party-app-needs-and-licenses-will-be-here-and-yeah-this-title-is-still-too-fucking-long-but-i-refuse-to-shorten-it-and-its-self-aware-of-the-situation)
 
 ## FEATURES
 
-# NOW ALL THE EMO AND NIGHTCORE PLAYLISTS ARE WITH AUDIO!! FUCK YEAH (V4.5) 
+# NOW ALL THE PLAYLISTS ARE WITH AUDIO!! FUCK YEAH (V4.5) 
 
 - 10emo/rock songs (with 2 included metallica songs)
 - 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
@@ -31,7 +31,7 @@
 - New features will be added 'cuz why not?
 
 - **3 Types of lyrics printing option**
-- - RGB/Pale white choice for emo songs (and for you nerds check the peridoic sin fade...I'll make you mathgasm for sure.)
+- - RGB/Pale white choice for emo songs (and for you nerds check the periodic sin fade...I'll make you mathgasm for sure.)
 - - Forced RGB for Nightcore for obvious reasons
 - - Forced Bold white for NWOBHM songs   
 
