@@ -34,7 +34,7 @@
 - - RGB/Pale white choice for emo songs (and for you nerds check the periodic sin fade...I'll make you mathgasm for sure.)
 - - Forced RGB for Nightcore for obvious reasons
 - - Forced Bold white for NWOBHM songs   
-
+- - Slightly better dynamic lyrics timing (but still in dev)
 
 
 

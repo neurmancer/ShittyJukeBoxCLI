@@ -30,7 +30,7 @@ typedef struct {
     char *url;
     int songIndex;
     int writerType; 
-    float duration;
+    double duration;
  
 }songMetaData;
 
@@ -39,16 +39,16 @@ typedef struct {
 
 void playShit(char *url);
 void clearIBuffer(void);
-void bold_typewriter(const char* song,float duration);
-void epilepsy_typewriter(const char* song,float duration);
-void typewriter(const char* song,float duration);
+void bold_typewriter(const char* song,double duration);
+void epilepsy_typewriter(const char* song,double duration);
+void typewriter(const char* song,double duration);
 void sigintHandler(int sig);
 void asciiPrinter(void);
 songMetaData emoInput(void);
 songMetaData nightcoreInput(void);
 songMetaData nwobhmInput(void);
 int genreMenu(void);
-
+int countPrintables(const char *lyrics);
 
 
 
@@ -103,7 +103,7 @@ float *DurationDispatch[] = {
 };
 
 
-typedef void (*WriterFunction)(const char *lyrics,float duration);
+typedef void (*WriterFunction)(const char *lyrics,double duration);
 
 typedef songMetaData (*MenuFunction)();
 
@@ -374,13 +374,15 @@ int genreMenu(void)
 }
 
 
-void epilepsy_typewriter(const char* song,float duration) {
+void epilepsy_typewriter(const char* song,double duration) {
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(250000);
-    duration-=0.5;
-    duration *= SECOND;
-    float delay = duration / 60;
+    
+    duration *= (SECOND*60);
+
+    int totalChar = countPrintables(song);
+    double delay = duration / totalChar;
    
     // hide cursor clear screen and shit.
     long color_timer = 0;
@@ -394,22 +396,24 @@ void epilepsy_typewriter(const char* song,float duration) {
     //Fucking with usleep data old rates : 75000 and 23987
         if (*song == '\n') 
         {
-            usleep((3*delay)/5); 
+            usleep(delay*2.5); 
         }
-        usleep((2*delay)/5); 
+        
+        printf("%c",*song);
+        usleep(delay/1.2); 
         song++;
         color_timer++;
     }
     printf("\033[0m"); // reset colors
-    printf(WIPE_TERMINAL);
     sleep(1);
 }
 
-void bold_typewriter(const char* song,float duration)
+void bold_typewriter(const char* song,double duration)
 {
-    duration-=0.5;
-    duration *= SECOND;
-    float delay = duration / 60;
+    duration *= (SECOND*60);
+
+    int totalChar = countPrintables(song);
+    double delay = duration / totalChar;
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     printf(BOLD);
@@ -418,27 +422,29 @@ void bold_typewriter(const char* song,float duration)
     {
         if (*song == '\n')
         {
-            usleep((3*delay)/5); 
+            usleep(delay*2.5); 
             printf("%c",*song);
         }
         else
         {
             printf("%c",*song);
-           usleep((2*delay)/5); 
+            usleep(delay/1.2); 
         }
         song++;
     }
     printf(FIX_FONT);
-    printf(WIPE_TERMINAL);
     sleep(1);
 
 }
 
-void typewriter(const char* song,float duration)
+void typewriter(const char* song,double duration)
 {
-    duration-=0.5;
-    duration *= SECOND;
-    float delay = duration / 60;
+
+    duration *= (SECOND*60);
+
+    int totalChar = countPrintables(song);
+    double delay = duration / totalChar;
+
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(250000);
@@ -446,17 +452,16 @@ void typewriter(const char* song,float duration)
     {
         if (*song == '\n')
         {
-            usleep((3*delay)/5); //I'm selecting those totally vibe based
+            usleep(delay*2); //I'm selecting those totally vibe based
             printf("%c",*song);
         }
         else
         {
             printf("%c",*song);
-            usleep((2*delay)/5); //1440p montior vibes...
+            usleep(delay/1.2);      //Totally vibe based as I said just felt right 
         }
         song++;
     }
-    printf(WIPE_TERMINAL);
     sleep(1);
 
 }
@@ -484,6 +489,21 @@ void playShit(char *url)
     execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", url, "-loglevel", "8", NULL);
 }
 
+
+int countPrintables(const char *lyrics)
+{
+    int charCount = 0;
+
+    while (*lyrics != '\0')
+    {
+        if (*lyrics != '\n')
+        {
+            charCount++;
+        }
+        lyrics++;
+    }
+    return(charCount);
+}
 
 
 /*
