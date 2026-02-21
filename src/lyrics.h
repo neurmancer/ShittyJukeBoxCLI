@@ -998,8 +998,8 @@ char *ADHDSongs[] = {
     "There's somethin' about you\n"
     "There's somethin' about you\n\n"
 
-    "Oh, oh, oh\n"
-    "Oh, here we go\n"
+    "Oh, oh, oh  \n"
+    "Oh, here we go                 \n"
     "Walkin', talkin' like you know\n"
     "I want your pretty little psycho\n"
     "Oh, oh, oh\n"
@@ -1464,13 +1464,11 @@ char *nwobhmTitles[] = {
 }; //Not to future self...Don't forget NULL or you get core dump (like how she dumped you...but bright side:You found the bug under a min since you are used to get dumped)
 
 
-
-
 char *myTherapySessionAudio[] = {
     "https://drive.google.com/uc?export=open&id=1vzC0YESu0JxHRP6hxKO1TS54FOXHw3c5", //Bring Me To Life
     "https://drive.google.com/uc?export=open&id=1Ea99sesm8Ho-gp08jaySqgwXB_-MR-oj", // Lithium Eva
     "https://drive.google.com/uc?export=open&id=1_bPQGDr58Sk_gZLP_FgB-0O7RMi5f6sE",//My immortal
-    "https://drive.google.com/uc?export=open&id=19tn3HqytmpEWBFNi2rlC4I7og1X6bSxy",//I (wanna) hate everything about you 
+    "https://drive.google.com/uc?export=open&id=19XGnFxFeJG68XmTbckq5_BpfkIK5udey",//I (wanna) hate everything about you 
     "https://drive.google.com/uc?export=open&id=1YdCiss7e9pFfuuhDxpAB91kjxflPOdw5",//Pain 
     "https://drive.google.com/uc?export=open&id=1XHR_qNuP2VCISxJrhnzFqrNKhS8XpfeN",//Broken Dreams
     "https://drive.google.com/uc?export=open&id=18G2SYGLKntyhzgLXZJ0LJdmkNkxpJf5E", //Unforgiven
@@ -1513,10 +1511,11 @@ char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2Xr
 
 //Oh boy hard coding habits never die Now Imma fucking hard-code song lengths one by one
 
-float myTherapySessionLengths[] = {4.14, 3.48, 4.32, 3.40, 3.38, 4.21, 6.23, 6.57, 3.48, 4.15 };
+double myTherapySessionLengths[] = {4.14018, 3.48000, 4.32015, 3.40012, 3.38009, 4.21012, 6.23055, 6.57089, 3.48004, 4.15009 };
 
 
-float ADHDSongsLengths[] = {3.13, 2.46, 3.06, 2.25, 2.07, 3.09,2.46, 2.39, 2.25, 3.00,2.48 };
+double ADHDSongsLengths[] = {3.13008, 2.46013, 3.06007, 2.25002, 2.07011, 3.09005,2.46006, 2.39010, 2.25002, 3.00003,2.48 };
 
 
-float NWOBHSongsLengths[] = {2.46, 5.17, 3.22, 7.21, 4.55, 5.19, 7.39, 3.37, 4.23, 7.11};
+double NWOBHSongsLengths[] = {2.46, 5.17, 3.22, 7.21, 4.55, 5.19, 7.39, 3.37, 4.23, 7.11};
+

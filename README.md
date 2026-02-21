@@ -48,7 +48,7 @@
 > **Still in Dev**
 > - 'Headerlessness' (yeah I made that word up)
 > - Windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postponed 'till I feel like it
-> - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify) *In Progress*
+> - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify[Still got way to go but I'm cooking rn ngl fr fr(yeah I used every slang word I know)]) *In Progress*
 > - Shitty prime idea just got evolved and I got batshit crazy ideas for syncing
 
 ### TWEAKS (Where I brag about shit for the Nerds)

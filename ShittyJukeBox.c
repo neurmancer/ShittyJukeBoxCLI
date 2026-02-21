@@ -90,12 +90,12 @@ char **TitleDispatch[] = {
 };
 
 
-extern float myTherapySessionLengths[];
-extern float ADHDSongsLengths[];
-extern float NWOBHSongsLengths[];
+extern double myTherapySessionLengths[];
+extern double ADHDSongsLengths[];
+extern double NWOBHSongsLengths[];
 
 
-float *DurationDispatch[] = {
+double *DurationDispatch[] = {
     NULL,
     myTherapySessionLengths,
     ADHDSongsLengths,
@@ -147,7 +147,7 @@ int main(void)
             char **selectedLyricsArray = LyricsDispatch[genreChoice]; //ADHD
             char **selectedAudioArray = AudioDispatch[genreChoice];
             char **selectedTitleArray = TitleDispatch[genreChoice];
-            float *selectedDurationArray = DurationDispatch[genreChoice];
+            double *selectedDurationArray = DurationDispatch[genreChoice];
 
             MenuFunction genre = genre_menus[genreChoice];
             songMetaData selectedSong = genre(); 
@@ -212,7 +212,7 @@ void sigintHandler(int sig) //Ctrl+C magic
 
         else
         {
-            epilepsy_typewriter(rickroll,3.32);
+            epilepsy_typewriter(rickroll,3.32019);
             wait(NULL);
         } //If you get this ctrl+c ain't saving you. 
     }
@@ -383,12 +383,15 @@ void epilepsy_typewriter(const char* song,double duration) {
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(250000);
-    
-    duration *= (SECOND*60);
 
+    int fraction = (int) (duration*100000) % 100000;
+    int last_three = fraction % 1000;
+
+    duration *= (SECOND*60);
+    
     int totalChar = countPrintables(song);
     double delay = duration / totalChar;
-   
+    usleep(SECOND*last_three);
     // hide cursor clear screen and shit.
     long color_timer = 0;
     while (*song != '\0') {
