@@ -1,6 +1,6 @@
 # SHITTY JUKEBOX IS NOW IN ITS OWN REPO  
 - ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY (And since I update readmes without an editor and at fucking 3AMish don't expect shakespeareian english or not even proper englsih)
-- Current Version V4.5
+- Current Version V5
 
 ## Table of Content (I start liking this shit.)
 
@@ -14,8 +14,7 @@
 * [Third-party requirements and legal shit(paperwork)](#third-party-app-needs-and-licenses-will-be-here-and-yeah-this-title-is-still-too-fucking-long-but-i-refuse-to-shorten-it-and-its-self-aware-of-the-situation)
 
 ## FEATURES
-
-# NOW ALL THE PLAYLISTS ARE WITH AUDIO!! FUCK YEAH (V4.5) 
+ 
 
 - 10emo/rock songs (with 2 included metallica songs)
 - 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
@@ -46,14 +45,7 @@
 - - CLI music playing **FUCKING DONE**
 - - Better optimization **DONE**  
 
-> **Still in Dev**
-> - 'Headerlessness' (yeah I made that word up) *Postponed*
-> - Windows port(still fuk u windows I am doing it to learn. Purely pragmatistic reasons) Postponed 'till I feel like it
-> - Lyrics sync ups with songs(total length not word by word, I am not fucking spotify[Still got way to go but I'm cooking rn ngl fr fr(yeah I used every slang word I know)]) *In Progress*
-> - Shuffle Play
-> - Interrupt play/retun 
-> - Queueing 
-> More genre and songs
+
 
 ### TWEAKS (Where I brag about shit for the Nerds)
 
