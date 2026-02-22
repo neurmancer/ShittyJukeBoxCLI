@@ -502,21 +502,22 @@ void bold_typewriter(const char* song,double duration)
 
 void typewriter(const char* song,double duration)
 {
+    LyricsParser parsedLyrics = countPrintables(song);
+    int charCount;
     int fraction = (int) (duration*100000) % 100000;
     int last_three = fraction % 1000;
-
-    duration *= (SECOND*60);
-
-    LyricsParser parsedLyrics = countPrintables(song);
    
+    duration *= (SECOND*60);
     double lineDelay = duration / parsedLyrics.newLineCount;
     double charDelay = duration / parsedLyrics.printableCharCount;
+    
 
-   
+
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
+
     usleep(last_three * SECOND);
-    int charCount;
+    
     while (*song != '\0')
     {
         charCount++;
@@ -530,10 +531,34 @@ void typewriter(const char* song,double duration)
             {
                 usleep(SECOND);
             }
+            printf("%c",*song);
             charCount = 0;
         }
-        usleep((2*charDelay)/3);
+
+        else if (*song == '\n' && *(song+1) == '\n')
+        {
+            if (lineDelay-(charDelay*charCount) > 0)
+            {
+                usleep(lineDelay-(charDelay*charCount));
+            }
+            else
+            {
+                usleep(SECOND);
+            }
+            charCount = 0; 
+            printf("%c",*song);
+            song++;
+            printf("%c",*song);
+        }
+        
+        else
+        {
+            printf("%c",*song);
+            usleep((2*charDelay)/3); 
+        }
+        song++;
     }
+
     sleep(1);
 }
 
