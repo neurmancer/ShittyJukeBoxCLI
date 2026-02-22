@@ -35,6 +35,11 @@ typedef struct {
 }songMetaData;
 
 
+typedef struct {
+
+    int printableCharCount;
+    int newLineCount;
+}LyricsParser;
 
 
 void clearIBuffer(void);
@@ -48,9 +53,10 @@ songMetaData nightcoreInput(void);
 songMetaData nwobhmInput(void);
 int playShit(char *url);
 int genreMenu(void);
-int countPrintables(const char *lyrics);
+LyricsParser countPrintables(const char *lyrics);
 
-
+time_t currentTime; 
+struct tm *parsedTime;
 
 extern char *myTherapySession[];        // myTherapySession
 extern char *ADHDSongs[];  // ADHDSongs
@@ -386,14 +392,18 @@ void epilepsy_typewriter(const char* song,double duration) {
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(250000);
+    int charCount = 0; 
+    LyricsParser parsedLyrics = countPrintables(song);
 
     int fraction = (int) (duration*100000) % 100000;
     int last_three = fraction % 1000;
-
+    //in seconds
+    
     duration *= (SECOND*60);
     
-    int totalChar = countPrintables(song);
-    double delay = duration / totalChar;
+    double lineDelay = duration / parsedLyrics.newLineCount;
+    double charDelay = duration / parsedLyrics.printableCharCount;
+
     usleep(SECOND*last_three);
     // hide cursor clear screen and shit.
     long color_timer = 0;
@@ -404,13 +414,23 @@ void epilepsy_typewriter(const char* song,double duration) {
 
         printf("\033[38;2;%d;%d;%dm%c", r, g, b, *song);
         fflush(stdout);
+
+
     //Fucking with usleep data old rates : 75000 and 23987
+        charCount++;
         if (*song == '\n') 
         {
-            usleep(delay*4); 
+            if (lineDelay-(charDelay*charCount) > 0)
+            {
+                usleep(lineDelay-(charDelay*charCount));
+            }
+            else
+            {
+                usleep(SECOND);
+            }
+            charCount = 0;
         }
-        
-        usleep(delay/2); 
+        usleep((2*charDelay)/3); 
         song++;
         color_timer++;
     }
@@ -420,28 +440,49 @@ void epilepsy_typewriter(const char* song,double duration) {
 
 void bold_typewriter(const char* song,double duration)
 {
-
+    LyricsParser parsedLyrics = countPrintables(song);
+    int charCount;
     int fraction = (int) (duration*100000) % 100000;
     int last_three = fraction % 1000;
    
     duration *= (SECOND*60);
+    double lineDelay = duration / parsedLyrics.newLineCount;
+    double charDelay = duration / parsedLyrics.printableCharCount;
+    
 
-    int totalChar = countPrintables(song);
-    double delay = duration / totalChar;
+
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     printf(BOLD_RED);
     usleep(last_three * SECOND);
     while (*song != '\0')
     {
-        if (*song == '\n')
+        charCount++;
+        if (*song == '\n') 
         {
-            usleep(delay*4); 
+            if (lineDelay-(charDelay*charCount) > 0)
+            {
+                usleep(lineDelay-(charDelay*charCount));
+            }
+            else
+            {
+                usleep(SECOND);
+            }
             printf("%c",*song);
+            charCount = 0;
         }
+
         else if (*song == '\n' && *(song+1) == '\n')
         {
-            usleep(delay*4); 
+            if (lineDelay-(charDelay*charCount) > 0)
+            {
+                usleep(lineDelay-(charDelay*charCount));
+            }
+            else
+            {
+                usleep(SECOND);
+            }
+            charCount = 0; 
             printf("%c",*song);
             song++;
             printf("%c",*song);
@@ -450,7 +491,7 @@ void bold_typewriter(const char* song,double duration)
         else
         {
             printf("%c",*song);
-            usleep(delay/2); 
+            usleep((2*charDelay)/3); 
         }
         song++;
     }
@@ -466,24 +507,32 @@ void typewriter(const char* song,double duration)
 
     duration *= (SECOND*60);
 
-    int totalChar = countPrintables(song);
-    double delay = duration / totalChar;
+    LyricsParser parsedLyrics = countPrintables(song);
+   
+    double lineDelay = duration / parsedLyrics.newLineCount;
+    double charDelay = duration / parsedLyrics.printableCharCount;
+
+   
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
     usleep(last_three * SECOND);
+    int charCount;
     while (*song != '\0')
     {
-        if (*song == '\n')
+        charCount++;
+        if (*song == '\n') 
         {
-            usleep(delay*4); //I'm selecting those totally vibe based
-            printf("%c",*song);
+            if (lineDelay-(charDelay*charCount) > 0)
+            {
+                usleep(lineDelay-(charDelay*charCount));
+            }
+            else
+            {
+                usleep(SECOND);
+            }
+            charCount = 0;
         }
-        else
-        {
-            printf("%c",*song);
-            usleep(delay/2);      //Totally vibe based as I said just felt right 
-        }
-        song++;
+        usleep((2*charDelay)/3);
     }
     sleep(1);
 }
@@ -514,21 +563,25 @@ int playShit(char *url)
 }
 
 
-int countPrintables(const char *lyrics)
+
+LyricsParser countPrintables(const char *lyrics)
 {
-    int charCount = 0;
+    LyricsParser parsedLyrics = {0,0};
 
     while (*lyrics != '\0')
     {
         if (*lyrics != '\n')
         {
-            charCount++;
+            parsedLyrics.printableCharCount++;
+        }
+        else
+        {
+            parsedLyrics.newLineCount++;
         }
         lyrics++;
     }
-    return(charCount);
+    return(parsedLyrics);
 }
-
 
 /*
 
