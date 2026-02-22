@@ -66,7 +66,7 @@
 - A:Depends...malware for your brain but no not as a malware for computers since I don't know how to script them yet.
 
 - Q:Do I need to install anything else
-- A:Yes ffmpeg for ffplay...-if needed- other dependencies will be added to here if needed
+- A:Yes ffmpeg for ffplay...-if needed- other dependencies will be added to here
 
 - Q: Why are you doing this to yourself?
 - A:Bro you are talking to yourself in README pull yourself together.
@@ -100,7 +100,7 @@ sudo dnf upgrade && dnf install ffmpeg
 
 ## winPORTsux for V2 (OUTDATED AF) 
 - https://github.com/neurmancer/Basic-C-Examples/tree/winPORTsux/thingsThatSupposedToBasicButOverengineeredForNothing -> In the old repo will be added to here winPORTsux branch (Which I won't merge with main since it's sucks) when V4 be ready for first Linux then I'll port it to windows
-- Yes it'll have .exe I know you can't compile for shit.
+
 
 
 ## THIRD-PARTY APP NEEDS AND LICENSES WILL BE HERE and yeah this title is still too fucking long but I refuse to shorten it and it's self-aware of the situation
