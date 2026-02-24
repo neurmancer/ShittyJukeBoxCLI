@@ -139,6 +139,7 @@ int main(void)
 {
     srand(time(NULL));
     setvbuf(stdout,NULL,_IONBF,0);
+    
     struct sigaction sa = { 0 };
     sa.sa_handler = &sigintHandler;
     sigaction(SIGINT,&sa,NULL);
