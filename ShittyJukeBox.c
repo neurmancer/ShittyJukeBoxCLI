@@ -139,7 +139,9 @@ int main(void)
 {
     srand(time(NULL));
     setvbuf(stdout,NULL,_IONBF,0);
-    signal(SIGINT,sigintHandler);
+    struct sigaction sa = { 0 };
+    sa.sa_handler = &sigintHandler;
+    sigaction(SIGINT,&sa,NULL);
 
     int pid = 0;
     //Yeah I do fucking need IPC FOR SOME REASON 
