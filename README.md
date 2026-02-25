@@ -27,26 +27,18 @@
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
 - Unfortunetly not uses prime numbers to determine if you want RGB or not anymore since I've learned structs
 - Now apperantly it got it's own windows branch which I'll provide with .exe file too since Win users don't know what a compiler is. but it is in another repo and outdated for now (link will be at the end for the old win repo)
-- WindowsPORT has it's own branch called winPORTsux which I won't merge(and since I started to C 10 days ago. That port is possible thanks to Grok(taught me what IFNDEF is))
+- WindowsPORT has it's own branch called winPORTsux which I won't merge
+
 - Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
 - Roughly synced lyrics with audio(again, I am not fucking spotify)
 - New features will be added 'cuz why not?
 
 - **3 Types of lyrics printing option**
-- - RGB/Pale white choice for emo songs (and for you nerds check the periodic sin fade...I'll make you mathgasm for sure.)
+- - RGB/Pale white choice for emo songs (and for you nerds check the periodic sin fade...It'll make you mathgasm for sure.)
 - - Forced RGB for Nightcore for obvious reasons
 - - Forced Bold red for NWOBHM songs   
 - - Slightly better dynamic lyrics timing (but still in dev)
-
-
-
-## In Development Features
-- **Finished parts**
-- - One more genre category : **DONE**  
-- - Songs will be summed up to 10 + 10 songs in the new genre. **DONE** (added +1 nightcore song 18.02.2026)
-- - CLI music playing **FUCKING DONE**
-- - Better optimization **DONE**  
 
 
 
