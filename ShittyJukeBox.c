@@ -6,6 +6,7 @@
 #include <time.h>
 #include <ctype.h>
 #include <sys/wait.h>
+#include <sys/ioctl.h>
 #include "src/lyrics.h"
 
 
@@ -23,6 +24,8 @@
 #define FREQ 0.4
 #define SONG_OFFSET 1
 
+
+struct winsize window;
 
 typedef struct {
     char *title;
@@ -139,7 +142,9 @@ int main(void)
 {
     srand(time(NULL));
     setvbuf(stdout,NULL,_IONBF,0);
-    
+
+    ioctl(STDOUT_FILENO,TIOCGWINSZ,&window);
+
     struct sigaction sa = { 0 };
     sa.sa_handler = &sigintHandler;
     sigaction(SIGINT,&sa,NULL);
@@ -407,6 +412,8 @@ void epilepsy_typewriter(const char* song,double duration) {
     double lineDelay = duration / parsedLyrics.newLineCount;
     double charDelay = duration / parsedLyrics.printableCharCount;
 
+
+
     usleep(SECOND*last_three);
     // hide cursor clear screen and shit.
     long color_timer = 0;
@@ -610,6 +617,8 @@ LyricsParser countPrintables(const char *lyrics)
     }
     return(parsedLyrics);
 }
+
+
 
 /*
 
