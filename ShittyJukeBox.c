@@ -50,6 +50,7 @@ void bold_typewriter(const char* song,double duration);
 void epilepsy_typewriter(const char* song,double duration);
 void typewriter(const char* song,double duration);
 void sigintHandler(int sig);
+void sigWINCHHandler(int sig);
 void asciiPrinter(void);
 songMetaData emoInput(void);
 songMetaData nightcoreInput(void);
@@ -143,11 +144,16 @@ int main(void)
     srand(time(NULL));
     setvbuf(stdout,NULL,_IONBF,0);
 
-    ioctl(STDOUT_FILENO,TIOCGWINSZ,&window);
+ 
 
     struct sigaction sa = { 0 };
     sa.sa_handler = &sigintHandler;
     sigaction(SIGINT,&sa,NULL);
+
+    struct sigaction sa2 = { 0 };
+    sa2.sa_handler = &sigWINCHHandler;
+    sigaction(SIGWINCH,&sa2,NULL);
+
 
     int pid = 0;
     //Yeah I do fucking need IPC FOR SOME REASON 
@@ -618,7 +624,10 @@ LyricsParser countPrintables(const char *lyrics)
     return(parsedLyrics);
 }
 
-
+void sigWINCHHandler(int sig)
+{
+    ioctl(STDOUT_FILENO,TIOCGWINSZ,&window);
+}
 
 /*
 
