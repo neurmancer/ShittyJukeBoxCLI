@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include "src/lyrics.h"
 
+/*Hiii...me from future I feel so fucked up but here we are */
 
 //She Loves Purple,So Do I
 //define NORMAL_EMO_OFFSET   13  IT was a pleasure to work with you guys...but I learned structs :/

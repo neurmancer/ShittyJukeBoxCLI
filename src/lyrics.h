@@ -435,7 +435,73 @@ char *myTherapySession[] = { "How can you see into my eyes like open doors?\nLea
     "I like it, I'm not gonna crack\n"
     "I miss you, I'm not gonna crack\n"
     "I love you, I'm not gonna crack\n"
-    "I killed you, I'm not gonna crack\n"
+    "I killed you, I'm not gonna crack\n"\
+
+        //Fuck me but yes I am this fucking weak
+
+    
+    "Time, it needs time\n"
+    "To win back your love again\n"
+    "I will be there\n"
+    "I will be there\n"
+    "Love, only love\n"
+    "Can bring back your love someday\n"
+    "I will be there\n"
+    "I will be there\n"
+    "Fight, babe, I'll fight\n"
+    "To win back your love again\n"
+    "I will be there\n"
+    "I will be there\n"
+    "Love, only love\n"
+    "Can bring down the wall someday\n"
+    "I will be there\n"
+    "I will be there\n"
+    "If we'd go again\n"
+    "All the way from the start\n"
+    "I would try to change\n"
+    "Things that killed our love\n"
+    "Your pride has built a wall\n"
+    "So strong that I can't get through\n"
+    "Is there really no chance\n"
+    "To start once again?\n"
+    "I'm loving you\n"
+    "And try, baby, try\n"
+    "To trust in my love again\n"
+    "I will be there\n"
+    "I will be there\n"
+    "Love, our love\n"
+    "Shouldn't be thrown away\n"
+    "I will be there\n"
+    "I will be there\n"
+    "If we'd go again\n"
+    "All the way from the start\n"
+    "I would try to change\n"
+    "Things that killed our love\n"
+    "Your pride has built a wall\n"
+    "So strong that I can't get through\n"
+    "Is there really no chance\n"
+    "To start once again?\n"
+    "If we'd go again\n"
+    "All the way from the start\n"
+    "I would try to change\n"
+    "Things that killed our love\n"
+    "Yes, I've hurt your pride\n"
+    "And I know what you've been through\n"
+    "You should give me a chance\n"
+    "This can't be the end\n"
+    "I'm still loving you\n"
+    "I'm still loving you\n"
+    "I'm still loving you, I need your love\n"
+    "I'm still loving you\n"
+    "Still loving you, baby\n"
+    "I'm still loving you\n"
+    "I need your love\n"
+    "I'm still loving you\n"
+    "I need your love\n"
+    "I need your love\n"
+    "I need your love\n"
+    "Still loving you\n"
+
 };
 
 
@@ -1413,6 +1479,12 @@ char *NWOBHSongs[] = {
     "Trapped in time\n"
     "I cannot leave you\n"
     "I'm just a prisoner of your eyes\n"
+
+
+
+
+
+
     
 };
 
@@ -1429,6 +1501,7 @@ char *depressed_titles[] = {
     "Fade To Black - Metallica",
     "How You Remind Me - Nickelback",
     "Lithium - Nirvana",
+    "Still Loving You - Scorpions",
     NULL 
 };
 
@@ -1474,7 +1547,8 @@ char *myTherapySessionAudio[] = {
     "https://drive.google.com/uc?export=open&id=18G2SYGLKntyhzgLXZJ0LJdmkNkxpJf5E", //Unforgiven
     "https://drive.google.com/uc?export=open&id=1CpFLSZwQliL9uDfYplewixTY4iuvlid4",//Fade To Black
     "https://drive.google.com/uc?export=open&id=1fPDH35PpZqSxNUxW0Pxrakv5iSvKi8u1", //How you remind me
-    "https://drive.google.com/uc?export=open&id=1C-IcedC0m2aRJnGNpLztS-960AE4QIP4" //Lithium -Nirvana
+    "https://drive.google.com/uc?export=open&id=1C-IcedC0m2aRJnGNpLztS-960AE4QIP4", //Lithium -Nirvana
+    "https://drive.google.com/uc?export=open&id=10XGgVvBJJkP6XLux0OhKcqzENPZ07nF0"
 };
 
 char *ADHDSongsAudio[] = {
@@ -1511,7 +1585,7 @@ char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2Xr
 
 //Oh boy hard coding habits never die Now Imma fucking hard-code song lengths one by one
 
-double myTherapySessionLengths[] = {3.54018, 3.40000, 4.03015, 3.40012, 3.24009, 3.43012, 6.10055, 4.57089, 3.33004, 4.10009 };
+double myTherapySessionLengths[] = {3.54018, 3.40000, 4.03015, 3.40012, 3.24009, 3.43012, 6.10055, 4.57089, 3.33004, 4.10009, 6.43022};
 
 
 double ADHDSongsLengths[] = {3.12008, 2.41013, 2.53007, 2.07002, 2.04011, 2.57005,2.01006, 2.39010, 2.25002, 2.55003,2.48000 };
