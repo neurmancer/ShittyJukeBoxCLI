@@ -55,8 +55,7 @@
 ## QA
 
 - Q: When will that be done?
-- A: Never...when I add shit other ideas are coming to my mind and I grind to add them too
-
+- A: Never...when I add shit other ideas are coming to my mind and I grind to add them too and THAT'S JUST WHAT'S HAPPENING NOW HI! FROM 3 MONTHS LATER
 - Q:Is this a malware
 - A:Depends...malware for your brain but no not as a malware for computers since I don't know how to script them yet.
 
