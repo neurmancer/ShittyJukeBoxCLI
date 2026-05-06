@@ -41,6 +41,14 @@
 - - Slightly better dynamic lyrics timing (but still in dev)
 
 
+#### In Development Features
+
+-  Well...firstly, Hi again (After 3 Months)...let's start
+- Pause&Resume feature
+- More songs...
+- Probably I'll use curl to do some weird shit
+- Song Queuing (I hate this word) if I learn linked lists or shit
+
 
 ### TWEAKS (Where I brag about shit for the Nerds)
 
