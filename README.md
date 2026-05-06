@@ -43,6 +43,7 @@
 
 #### In Development Features
 
+- My Sanity
 -  Well...firstly, Hi again (After 3 Months)...let's start
 - Pause&Resume feature
 - More songs...
