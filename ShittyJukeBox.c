@@ -120,7 +120,8 @@ double *DurationDispatch[] = {
     NULL,
     myTherapySessionLengths,
     ADHDSongsLengths,
-    NWOBHSongsLengths
+    NWOBHSongsLengths,
+    WhiteGirlPopLengths
 };
 
 
@@ -134,15 +135,6 @@ WriterFunction writerType[] = {
     bold_typewriter
 };
 
-
-
-MenuFunction genre_menus[] = {
-    NULL, //Since we start getting input from 1-n basically index shifting...and yeah I started to comment actual important shit to keep track funny ones will be when I enter flow state 
-    emoInput,
-    nightcoreInput,
-    nwobhmInput,
-    WhiteGirlPopInput,
-};
 
 
 
@@ -188,7 +180,6 @@ int main(void)
             char **selectedTitleArray = TitleDispatch[genreChoice];
             double *selectedDurationArray = DurationDispatch[genreChoice];
             
-            MenuFunction genre = genre_menus[genreChoice];
             songMetaData selectedSong = genreInput(genreChoice); 
 
             
@@ -265,136 +256,6 @@ void sigintHandler(int sig) //Ctrl+C magic
     printf(WIPE_TOP GO_HOME);
     printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD); //Don't worry bro got your cursor back
     exit(0);
-}
-
-
-songMetaData emoInput(void)
-{
-   
-
-    songPrefs.songIndex = -1;
-    songPrefs.writerType = 0;
-
-    int songCount = sizeof(depressed_titles) / sizeof(depressed_titles[0]);
-    int i = 0;
-    printf(WIPE_TERMINAL BOLD_RED);
-    while (depressed_titles[i] != NULL)
-    {
-        printf("%d)%s\n",i+SONG_OFFSET,depressed_titles[i]);
-        usleep(55555);
-        i++;
-    }
-    printf(FIX_FONT);
-    printf("Please select a song(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET); //-1 Because of NULL -                                                      
-    //Program -for some reason- doesn't know how to handle just an 'enter' stroke please don't > /// < 
-    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount) 
-    {
-        clearIBuffer();
-
-        printf("Bro...either try not to be a idiot or Delta the fuck out\n"); //Delta as in displacement a 'Naive' way to GTFO...(not physics 101 flex)
-        songPrefs.songIndex = -1;
-        return(songPrefs);
-    } 
-
-    else
-    {
-        clearIBuffer();
-        songPrefs.title = depressed_titles[songPrefs.songIndex-SONG_OFFSET];
-        char reply;
-        printf("Want it to be RGB?(y/n):");
-        scanf("%c",&reply);
-        if (reply < 'n'){reply += 32;}
-        
-        if(reply == 'y' || reply == 'n')
-        {
-            switch (reply)
-            {
-                case 'y':
-                    songPrefs.writerType = 1;
-                    return(songPrefs);
-                    break;
-                
-                default:
-                    return(songPrefs);
-                    break;
-            }
-        }
-        else
-        {
-            songPrefs.songIndex = -1;
-            printf("Fuck you.Sincerely...\n");
-            return(songPrefs);
-        }
-        
-    }
-}
-
-
-songMetaData nightcoreInput(void)
-{
-    songPrefs.songIndex = -1;
-    songPrefs.writerType = 1;
-
-    int songCount = sizeof(nightcoreTitles)/sizeof(nightcoreTitles[0]);
-    int i = 0;
-    printf(WIPE_TERMINAL BOLD_RED);
-    while (nightcoreTitles[i] != NULL)
-    {   
-        printf("%d)%s\n",i+SONG_OFFSET,nightcoreTitles[i]);
-        usleep(50000);
-        i++;    
-    }
-
-    printf(FIX_FONT);
-
-    printf("Please select a poison(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
-    //Program -for some reason- doesn't know how to handle just an 'enter' stroke please don't > /// < 
-    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
-    {
-
-        clearIBuffer();
-
-        printf("Bro...either try not to be a idiot or Delta the fuck out\n"); //Delta as in displacement a 'Naive' way to GTFO yeah yeah what ever.
-        songPrefs.songIndex = -1;
-        return(songPrefs);
-    } 
-    else
-    {
-        return(songPrefs);
-    }
-}
-
-songMetaData nwobhmInput(void)
-{
-    songPrefs.songIndex = -1;
-    songPrefs.writerType = 2;
-
-    int songCount = sizeof(nwobhmTitles)/sizeof(nwobhmTitles[0]);
-    int i = 0;
-    printf(WIPE_TERMINAL BOLD_RED);
-    while (nwobhmTitles[i] != NULL)
-    {   
-        printf("%d)%s\n",i+SONG_OFFSET,nwobhmTitles[i]);
-        usleep(50000);
-        i++;    
-    }
-    printf(FIX_FONT);
-
-    printf("Please select a poison(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
-    //Still...program doesn't know how to handle just entering please don't.     > /// < 
-    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
-    {
-        // NEw shiny fucntion to clear buffer OwO
-        clearIBuffer();
-
-        printf("Bro...either try not to be a idiot or Delta the fuck out\n"); 
-        songPrefs.songIndex = -1;
-        return(songPrefs);
-    } 
-    else
-    {
-        return(songPrefs);
-    }
 }
 
 
