@@ -15,6 +15,7 @@
 //define SEIZURE_EMO_OFFSET  53  Goodbye infinite mode ideas via using infinite primes 1000000000000066600000000000001 you'll always live in my heart
 #define SECOND 1000000 //Microseconds
 #define BOLD_RED "\e[1;31m"
+#define BOLD_PURPLE "\e[1;35m" //You know why this is here...
 #define FIX_FONT "\e[0m"
 #define WIPE_TERMINAL "\033[H\033[J"
 #define WIPE_TOP "\033[2J"
@@ -56,6 +57,7 @@ songMetaData emoInput(void);
 songMetaData nightcoreInput(void);
 songMetaData nwobhmInput(void);
 songMetaData WhiteGirlPopInput(void);
+songMetaData genreInput(int getGenre);
 int playShit(char *url);
 int genreMenu(void);
 LyricsParser countPrintables(const char *lyrics);
@@ -383,6 +385,41 @@ songMetaData nwobhmInput(void)
     }
 }
 
+
+songMetaData genreInput(int getGenre)
+{
+    songPrefs.songIndex = -1;
+    songPrefs.writerType = 0;
+    int i = 0;
+
+    char **titleArray = TitleDispatch[getGenre];
+    int songCount = sizeof(titleArray)/sizeof(titleArray[0]);
+    printf(WIPE_TERMINAL BOLD_PURPLE);
+    while (titleArray != NULL ) {
+        
+        printf("%d)%s\n",i+SONG_OFFSET,titleArray[i]);
+        usleep(50000);
+        i++;  
+    }
+
+    printf("Please select a poison(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
+    //Still...program doesn't know how to handle just entering please don't.     > /// < 
+    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
+    {
+        // New shiny fucntion to clear buffer OwO
+        clearIBuffer();
+
+        printf("Bro...either try not to be a idiot or Delta the fuck out\n"); 
+        songPrefs.songIndex = -1;
+        return(songPrefs);
+    } 
+    else
+    {
+        return(songPrefs);
+    }
+
+
+}
 
 
 songMetaData WhiteGirlPopInput(void)

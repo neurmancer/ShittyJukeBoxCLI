@@ -2142,7 +2142,7 @@ char *nwobhmTitles[] = {
     "The Trooper - Iron Maiden",
     "Prisoner Of Your Eyes - Judas Priest", 
     NULL
-}; //Not to future self...Don't forget NULL or you get core dump (like how she dumped you...but bright side:You found the bug under a min since you are used to get dumped)
+}; //Note to future self...Don't forget NULL or you'll get core dump (like how she dumped you...but bright side:You found the bug under a min since you are used to get dumped)
 
 char *WhiteGirlPopTitles[] = {
     "Toxic - Britney Spears",
