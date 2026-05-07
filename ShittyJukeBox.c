@@ -83,14 +83,15 @@ char **LyricsDispatch[] = {
 extern char *myTherapySessionAudio[];
 extern char *ADHDSongsAudio[];
 extern char *NWOBHMSongsAudio[];
-
+extern char *WhiteGirlPopAudio[];
 
 
 char **AudioDispatch[] = {
     NULL,
     myTherapySessionAudio,
     ADHDSongsAudio,
-    NWOBHMSongsAudio
+    NWOBHMSongsAudio,
+    WhiteGirlPopAudio
 };
 
 
@@ -112,6 +113,7 @@ char **TitleDispatch[] = {
 extern double myTherapySessionLengths[];
 extern double ADHDSongsLengths[];
 extern double NWOBHSongsLengths[];
+extern double WhiteGirlPopLengths[];
 
 
 double *DurationDispatch[] = {
@@ -150,7 +152,7 @@ char *asciiArt[] = {
 };
 
 char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal","White Girl Pop",NULL};
-char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold Red",NULL};
+char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold Red"};
 
 
 songMetaData songPrefs = { };
@@ -423,7 +425,6 @@ songMetaData genreInput(int getGenre)
         clearIBuffer();
 
         printf("Bro...either try not to be a idiot or Delta the fuck out\n"); 
-        songPrefs.songIndex = -1;
         return(songPrefs);
     } 
     else
@@ -435,6 +436,7 @@ songMetaData genreInput(int getGenre)
                 if (scanf(" %c",&rgbSelection) != 1) {
                     clearIBuffer();
                     printf("Just y or n...I mean C'mon that wasn't this hard...");
+                    songPrefs.songIndex = -1;
                     break;
                 }            
                 else {
@@ -454,20 +456,20 @@ songMetaData genreInput(int getGenre)
                 }
             
             case 4:
-                int i = 0;
-                int scanfHolder = 0; //still 0 initilazing muscle memory still on fire
-                int sizeOfTypeWriterArray = sizeof(writerTypes)/sizeof(writerTypes[0]);//IDK if this is so overexplanatory or shitty but Shitty is the brand at this point
-                printf(BOLD_RED); 
-                while (writerTypes[i] != NULL) {
-                    printf("%s\n",writerTypes);
-                    usleep(SECOND/2);
+                int writerArraySize = sizeof(writerTypes) / sizeof(writerTypes[0]);
+                printf(WIPE_TERMINAL BOLD_RED);
+                for (short i = 0;i < writerArraySize; i++) {
+                    printf("%d)%s\n",i+1,writerTypes[i]);
                 }
-                printf(FIX_FONT,"Select a typewriter 1-%d :",sizeOfTypeWriterArray);
-                if((scanf("%d",&scanfHolder)) != 1 || scanfHolder < 1 || scanfHolder > sizeOfTypeWriterArray)
-                {
-                    printf("Delta.\n");
+                printf(FIX_FONT);
+                printf("Select a writer bruh: ");
+                if (scanf(" %d",&songPrefs.writerType) != 1 || songPrefs.writerType < 1 || songPrefs.writerType > writerArraySize ) {
+                    printf("Bro just learn to count up to %d or delta the fuck out\n",writerArraySize);
+                    songPrefs.writerType = 0;
                 }
-                songPrefs.writerType = scanfHolder-SONG_OFFSET;
+                songPrefs.writerType-=SONG_OFFSET;
+                break;
+
             default:
                 songPrefs.writerType = getGenre-SONG_OFFSET;
                 break;

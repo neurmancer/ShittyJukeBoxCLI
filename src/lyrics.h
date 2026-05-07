@@ -2198,6 +2198,18 @@ char *NWOBHMSongsAudio[] = {
     "https://drive.google.com/uc?export=open&id=1S6Ikwiyt6q5fQBJiyi8cBPpg5btZXKb2"  // Prisoner of Your (Hazel) Eyes
  };
 
+ char *WhiteGirlPopAudio[] = {
+    "https://drive.google.com/uc?export=open&id=1p1r9InaIGQYSbouOabUicTRJw2phNTfq", //Toxic (Me) 
+    "https://drive.google.com/uc?export=open&id=1vICbwuedVzN-k5nt3wc5hIZECTCZyMRE", //Gimme More
+    "https://drive.google.com/uc?export=open&id=1AI1qJxkp73IxiYuUrg11U07MkRYoPTQb", // Oop I Did It Again (added another genre)
+    "https://drive.google.com/uc?export=open&id=1L3JPUMiqoykptsdTkF8xzRoOHouyGrbn", //S&M (suffer & modify)
+    "https://drive.google.com/uc?export=open&id=1Yx_n1dMvqmZBtweq4yRkReiAy9pl7b5q", //Call Me Maybe
+    "https://drive.google.com/uc?export=open&id=1XOlk2SbEp8YEQSIm0kLlmyQ59m9WJgfw", //Bad Romance 
+    "https://drive.google.com/uc?export=open&id=1Jo37Lza4Z8caEuWU0mmm1GTdLY1reMye", //Judas 
+    "https://drive.google.com/uc?export=open&id=1rbxz8r20K8FFt5_aDJDp6cFwu9TwuZwP", //If U Seek Amy
+    "https://drive.google.com/uc?export=open&id=1o0-CpP0r-ATeY_EDvYAaehfi4--4_yii", //I Kissed A Girl
+ };
+
 char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";
 
 /*  What we do when C starts bitching? WE ADD MORE DISPATCH TABLES!!!!LESSS GO!*/
@@ -2213,3 +2225,4 @@ double ADHDSongsLengths[] = {3.12008, 2.41013, 2.53007, 2.07002, 2.04011, 2.5700
 
 double NWOBHSongsLengths[] = {2.29014, 2.45025, 2.58024, 6.5621112, 3.55024, 5.11017, 7.25131, 3.37015, 3.57037, 6.55024};
 
+double WhiteGirlPopLengths[] = {3.32013,4.01002,3.31013,4.05001,3.19005,5.08014,4.07001,3.46006,3.04004};
