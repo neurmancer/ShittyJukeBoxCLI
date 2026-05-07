@@ -157,6 +157,7 @@ songMetaData songPrefs = { };
 
 int main(void)
 {
+    /*
     srand(time(NULL));
     setvbuf(stdout,NULL,_IONBF,0);
 
@@ -227,7 +228,10 @@ int main(void)
         printf(WIPE_TERMINAL);
     }
     
-    
+    */
+
+    //In my debugging era... UnU
+
     return(0);
 }
 
@@ -455,7 +459,7 @@ songMetaData genreInput(int getGenre)
                 int sizeOfTypeWriterArray = sizeof(writerTypes)/sizeof(writerTypes[0]);//IDK if this is so overexplanatory or shitty but Shitty is the brand at this point
                 printf(BOLD_RED); 
                 while (writerTypes[i] != NULL) {
-                    printf("%s\n");
+                    printf("%s\n",writerTypes);
                     usleep(SECOND/2);
                 }
                 printf(FIX_FONT,"Select a typewriter 1-%d :",sizeOfTypeWriterArray);
