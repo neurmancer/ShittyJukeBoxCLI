@@ -83,7 +83,7 @@
 #To compile use:
 cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 #To run
-./filename.o #Then have fun
+./filename.out #Then have fun
 ```
 
 ## Dependencies
