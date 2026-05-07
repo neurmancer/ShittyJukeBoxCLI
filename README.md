@@ -22,7 +22,7 @@
 - 10emo/rock songs (with 2 included metallica songs)
 - 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
 - 10 NWOBHM songs for you to feel the speed metal/golden era in your bones
-- 9 freshly added  white girl pop lyrics and arranged the dispatch tables but it dumps core if you try for now(For nerds:The audio and duration array doesn't exist yet so it is just a dangling pointer causing core dump lol. I'll fix it tomorrow don't you worry bro...and I know I know it should've been in the dev branch but it's 3.20AM and that's too much work after 10 hours of shift at real job so...deal with it)
+- 9 freshly added  white girl pop bangers to vibe at night after crying into emo songs and gave you the free will of writer choice all the writer options are available for pop enjoyers
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
@@ -48,7 +48,7 @@
 - Everything... I am trying to change the Genre Input menus and honestly it started to change me instead...
 -  Well...firstly, Hi again (After 3 Months)...let's start
 - Pause&Resume feature
-- More songs... (Whitegirl pop...probably Britney Spears will overtake it)
+- More songs... (Whitegirl pop...probably Britney Spears will overtake it) *DONE AND OVERTAKEN*
 - I'll add more songs till every genre gets their 20 songs
 - Probably I'll use curl to do some weird shit
 - Song Queuing (I hate this word) if I learn linked lists or shit
@@ -62,7 +62,7 @@
 - 1 second between end of the song and genre menu to optimize reaction time on old PCs
 - Reduced reaction time 
 - Better verse seperation (only for NWOBHM for now) (and yeah I can misspell shit since it's 3.15AM)
-- I made it literally plug and play if you know how dispatch tables are working you can plug your own urls,titles,lyrics and it will run just fine. I single handedly achieved object omnipotence(I'LL BRAG OFC THIS IS MY 13TH DAY OF PROGRAMMING. I FEEL LIKE A CYBER-GOD RN)
+- I made it literally plug and play if you know how dispatch tables are working you can plug your own urls,titles,lyrics and it will run just fine. I single handedly achieved object omnipotence(I'LL BRAG OFC THIS IS MY 13TH DAY OF PROGRAMMING. I FEEL LIKE A CYBER-GOD RN(and after 2 months of burn-out I forgot and relearned it lol old me was hyping way more than I do rn))
 
 ## QA
 
@@ -105,8 +105,7 @@ sudo dnf upgrade && dnf install ffmpeg
 
 
 ## winPORTsux for V2 (OUTDATED AF) 
-- https://github.com/neurmancer/Basic-C-Examples/tree/winPORTsux/thingsThatSupposedToBasicButOverengineeredForNothing -> In the old repo will be added to here winPORTsux branch (Which I won't merge with main since it's sucks) when V4 be ready for first Linux then I'll port it to windows
-
+- https://github.com/neurmancer/Basic-C-Examples/tree/winPORTsux/thingsThatSupposedToBasicButOverengineeredForNothing -> In the old repo will be added to here winPORTsux branch (Which I won't merge with main since it sucks) (after 2 months break update: ffplay and forking process is a bitch in windows (as expected tho) so I won't even attempt go install WSL for fuck sake)
 
 
 ## THIRD-PARTY APP NEEDS AND LICENSES WILL BE HERE and yeah this title is still too fucking long but I refuse to shorten it and it's self-aware of the situation

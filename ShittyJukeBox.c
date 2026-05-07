@@ -54,10 +54,6 @@ void typewriter(const char* song,double duration);
 void sigintHandler(int sig);
 void sigWINCHHandler(int sig);
 void asciiPrinter(void);
-songMetaData emoInput(void);
-songMetaData nightcoreInput(void);
-songMetaData nwobhmInput(void);
-songMetaData WhiteGirlPopInput(void);
 songMetaData genreInput(int getGenre);
 int playShit(char *url);
 int genreMenu(void);
@@ -340,67 +336,6 @@ songMetaData genreInput(int getGenre)
     return(songPrefs);
 }
 
-
-songMetaData WhiteGirlPopInput(void)
-{
-   
-
-    songPrefs.songIndex = -1;
-    songPrefs.writerType = 0;
-
-    int songCount = sizeof(WhiteGirlPopTitles) / sizeof(WhiteGirlPopTitles[0]);
-    int i = 0;
-    printf(WIPE_TERMINAL BOLD_RED);
-    while (WhiteGirlPopTitles[i] != NULL)
-    {
-        printf("%d)%s\n",i+SONG_OFFSET,WhiteGirlPopTitles[i]);
-        usleep(55555);
-        i++;
-    }
-    printf(FIX_FONT);
-    printf("Please select a song(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET); //-1 Because of NULL -                                                      
-    //Program -for some reason- doesn't know how to handle just an 'enter' stroke please don't > /// < 
-    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount) 
-    {
-        clearIBuffer();
-
-        printf("Bro...either try not to be a idiot or Delta the fuck out\n"); //Delta as in displacement a 'Naive' way to GTFO...(not physics 101 flex)
-        songPrefs.songIndex = -1;
-        return(songPrefs);
-    } 
-
-    else
-    {
-        clearIBuffer();
-        songPrefs.title = WhiteGirlPopTitles[songPrefs.songIndex-SONG_OFFSET];
-        char reply;
-        printf("Want it to be RGB?(y/n):");
-        scanf("%c",&reply);
-        if (reply < 'n'){reply += 32;}
-        
-        if(reply == 'y' || reply == 'n')
-        {
-            switch (reply)
-            {
-                case 'y':
-                    songPrefs.writerType = 1;
-                    return(songPrefs);
-                    break;
-                
-                default:
-                    return(songPrefs);
-                    break;
-            }
-        }
-        else
-        {
-            songPrefs.songIndex = -1;
-            printf("Fuck you.Sincerely...\n");
-            return(songPrefs);
-        }
-        
-    }
-}
 
 
 int genreMenu(void)
