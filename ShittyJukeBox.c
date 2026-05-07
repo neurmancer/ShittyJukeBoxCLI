@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
+#include <ctype.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include "src/lyrics.h"
@@ -131,6 +132,8 @@ WriterFunction writerType[] = {
     bold_typewriter
 };
 
+
+
 MenuFunction genre_menus[] = {
     NULL, //Since we start getting input from 1-n basically index shifting...and yeah I started to comment actual important shit to keep track funny ones will be when I enter flow state 
     emoInput,
@@ -139,12 +142,15 @@ MenuFunction genre_menus[] = {
     WhiteGirlPopInput,
 };
 
+
+
 char *asciiArt[] = {
     "   ______________   ","  /  __________  \\"," |  | LITHIUM  |  | "," |  |----------|  | "," |  | TEETH    |  | "," |  |__________|  |",
     "|  _   ____   _  |", " | (O) |____| (O) |","|  Coin [50c]    |", " |________________|"
 };
 
 char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal","White Girl Pop",NULL};
+char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold Red"};
 
 
 songMetaData songPrefs = { };
@@ -402,7 +408,10 @@ songMetaData genreInput(int getGenre)
         i++;  
     }
 
-    printf("Please select a poison(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
+
+    const char *intro = "Pick your poison(1-%d) or Ctrl+C to exit:";
+
+    printf(intro,songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
     //Still...program doesn't know how to handle just entering please don't.     > /// < 
     if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
     {
@@ -415,10 +424,40 @@ songMetaData genreInput(int getGenre)
     } 
     else
     {
-        return(songPrefs);
+        switch (getGenre) {
+            case 0:
+                char rgbSelection = ' ';
+                printf("Wanna RGB? (y/n): ");
+                if (scanf(" %c",&rgbSelection) != 1) {
+                    clearIBuffer();
+                    printf("Just y or n...I mean C'mon that wasn't this hard...");
+                    break;
+                }            
+                else {
+                    rgbSelection = tolower(rgbSelection);
+                    if (rgbSelection == 'y') {
+                        songPrefs.writerType = 1;
+                    }
+                    else if (rgbSelection == 'n') {
+                        songPrefs.writerType = 0;
+                    }
+
+                    else 
+                    {
+                        printf("Bro... just Y OR N duh...");
+                    }
+                    break;
+                }
+            
+            case 4:
+                printf()
+
+            default:
+                songPrefs.writerType = getGenre-SONG_OFFSET;
+                break;
+        }
     }
-
-
+    return(songPrefs);
 }
 
 
