@@ -22,6 +22,7 @@
 - 10emo/rock songs (with 2 included metallica songs)
 - 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
 - 10 NWOBHM songs for you to feel the speed metal/golden era in your bones
+- 9 freshly added  white girl pop lyrics and arranged the dispatch tables but it dumps core if you try for now(For nerds:The audio and duration array doesn't exist yet so it is just a dangling pointer causing core dump lol. I'll fix it tomorrow don't you worry bro...and I know I know it should've been in the dev branch but it's 3.20AM and that's too much work after 10 hours of shift at real job so...deal with it)
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
@@ -46,7 +47,8 @@
 - My Sanity
 -  Well...firstly, Hi again (After 3 Months)...let's start
 - Pause&Resume feature
-- More songs...
+- More songs... (Whitegirl pop...probably Britney Spears will overtake it)
+- I'll add more songs till every genre gets their 20 songs
 - Probably I'll use curl to do some weird shit
 - Song Queuing (I hate this word) if I learn linked lists or shit
 

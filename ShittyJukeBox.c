@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
-#include <ctype.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include "src/lyrics.h"
@@ -56,6 +55,7 @@ void asciiPrinter(void);
 songMetaData emoInput(void);
 songMetaData nightcoreInput(void);
 songMetaData nwobhmInput(void);
+songMetaData WhiteGirlPopInput(void);
 int playShit(char *url);
 int genreMenu(void);
 LyricsParser countPrintables(const char *lyrics);
@@ -66,19 +66,21 @@ struct tm *parsedTime;
 extern char *myTherapySession[];        // myTherapySession
 extern char *ADHDSongs[];  // ADHDSongs
 extern char *NWOBHSongs[];     // NWOBHSongs
-
+extern char *WhiteGirlPop[];   //WhiteGirlPop cuz why not? We're happy Emos...
 
 char **LyricsDispatch[] = {
     NULL,
     myTherapySession,
     ADHDSongs,
-    NWOBHSongs
+    NWOBHSongs,
+    WhiteGirlPop,
 };
 
 
 extern char *myTherapySessionAudio[];
 extern char *ADHDSongsAudio[];
 extern char *NWOBHMSongsAudio[];
+
 
 
 char **AudioDispatch[] = {
@@ -92,12 +94,15 @@ char **AudioDispatch[] = {
 extern char *depressed_titles[];
 extern char *nightcoreTitles[];
 extern char *nwobhmTitles[];
+extern char *WhiteGirlPopTitles[];
+
 
 char **TitleDispatch[] = {
     NULL,
     depressed_titles,
     nightcoreTitles,
-    nwobhmTitles
+    nwobhmTitles,
+    WhiteGirlPopTitles
 };
 
 
@@ -128,14 +133,16 @@ MenuFunction genre_menus[] = {
     NULL, //Since we start getting input from 1-n basically index shifting...and yeah I started to comment actual important shit to keep track funny ones will be when I enter flow state 
     emoInput,
     nightcoreInput,
-    nwobhmInput
+    nwobhmInput,
+    WhiteGirlPopInput,
 };
 
-char *asciiArt[] = {"   ______________   ","  /  __________  \\"," |  | LITHIUM  |  | "," |  |----------|  | "," |  | TEETH    |  | "," |  |__________|  |",
+char *asciiArt[] = {
+    "   ______________   ","  /  __________  \\"," |  | LITHIUM  |  | "," |  |----------|  | "," |  | TEETH    |  | "," |  |__________|  |",
     "|  _   ____   _  |", " | (O) |____| (O) |","|  Coin [50c]    |", " |________________|"
 };
 
-char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal",NULL};
+char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal","White Girl Pop",NULL};
 
 
 songMetaData songPrefs = { };
@@ -375,6 +382,70 @@ songMetaData nwobhmInput(void)
         return(songPrefs);
     }
 }
+
+
+
+songMetaData WhiteGirlPopInput(void)
+{
+   
+
+    songPrefs.songIndex = -1;
+    songPrefs.writerType = 0;
+
+    int songCount = sizeof(WhiteGirlPopTitles) / sizeof(WhiteGirlPopTitles[0]);
+    int i = 0;
+    printf(WIPE_TERMINAL BOLD_RED);
+    while (WhiteGirlPopTitles[i] != NULL)
+    {
+        printf("%d)%s\n",i+SONG_OFFSET,WhiteGirlPopTitles[i]);
+        usleep(55555);
+        i++;
+    }
+    printf(FIX_FONT);
+    printf("Please select a song(1-%d) or Ctrl+C to exit:",songCount-SONG_OFFSET); //-1 Because of NULL -                                                      
+    //Program -for some reason- doesn't know how to handle just an 'enter' stroke please don't > /// < 
+    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount) 
+    {
+        clearIBuffer();
+
+        printf("Bro...either try not to be a idiot or Delta the fuck out\n"); //Delta as in displacement a 'Naive' way to GTFO...(not physics 101 flex)
+        songPrefs.songIndex = -1;
+        return(songPrefs);
+    } 
+
+    else
+    {
+        clearIBuffer();
+        songPrefs.title = WhiteGirlPopTitles[songPrefs.songIndex-SONG_OFFSET];
+        char reply;
+        printf("Want it to be RGB?(y/n):");
+        scanf("%c",&reply);
+        if (reply < 'n'){reply += 32;}
+        
+        if(reply == 'y' || reply == 'n')
+        {
+            switch (reply)
+            {
+                case 'y':
+                    songPrefs.writerType = 1;
+                    return(songPrefs);
+                    break;
+                
+                default:
+                    return(songPrefs);
+                    break;
+            }
+        }
+        else
+        {
+            songPrefs.songIndex = -1;
+            printf("Fuck you.Sincerely...\n");
+            return(songPrefs);
+        }
+        
+    }
+}
+
 
 int genreMenu(void)
 {
