@@ -51,7 +51,6 @@
 - More songs... (Whitegirl pop...probably Britney Spears will overtake it) *DONE AND OVERTAKEN*
 - I'll add more songs till every genre gets their 20 songs
 - Song Queuing (I hate this word) if I learn linked lists or shit
-
 - _Probably I'll use curl to do some weird shit_ *Cancelled(Due to me being afraid of reviving SkyNet instead)* 
 
 

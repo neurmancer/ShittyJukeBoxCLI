@@ -233,7 +233,9 @@ int main(void)
             printf(WIPE_TOP GO_HOME); //Clear the top and go (1,1)
         }
         else {return(1);} //Menu Error Code (from that point I'll act like every error starting from 1-n to determine shit easier)
+        BoldWriterColor = -1;
         printf(WIPE_TERMINAL);
+        
     }
     
 
@@ -437,7 +439,7 @@ void epilepsy_typewriter(const char* song,double duration) {
         song++;
         color_timer++;
     }
-    printf("\033[0m"); // reset colors
+    printf(FIX_FONT); // reset colors
     sleep(1);
 }
 
@@ -562,6 +564,7 @@ void typewriter(const char* song,double duration)
     }
 
     sleep(1);
+    printf(FIX_FONT);
 }
 
 void asciiPrinter()
