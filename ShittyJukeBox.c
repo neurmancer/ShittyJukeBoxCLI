@@ -157,7 +157,7 @@ songMetaData songPrefs = { };
 
 int main(void)
 {
-    /*
+    
     srand(time(NULL));
     setvbuf(stdout,NULL,_IONBF,0);
 
@@ -228,7 +228,7 @@ int main(void)
         printf(WIPE_TERMINAL);
     }
     
-    */
+
 
     //In my debugging era... UnU
 
@@ -400,22 +400,22 @@ songMetaData genreInput(int getGenre)
 {
     songPrefs.songIndex = -1;
     songPrefs.writerType = 0;
-    int i = 0;
+    int iter = 0; //I know I fucking used 'i' in somewhere in globabl scope so I don't wanna overwrite it (or I am just trippin')
 
     char **titleArray = TitleDispatch[getGenre];
-    int songCount = sizeof(titleArray)/sizeof(titleArray[0]);
+    
     printf(WIPE_TERMINAL BOLD_PURPLE);
-    while (i < songCount) {
+    while ( titleArray[iter] != NULL) {
         
-        printf("%d)%s\n",i+SONG_OFFSET,titleArray[i]);
+        printf("%d)%s\n",iter+SONG_OFFSET,titleArray[iter]);
         usleep(50000);
-        i++;  
+        iter++;  
     }
-
-
+    int songCount = iter;
+    
     const char *intro = "Pick your poison(1-%d) or Ctrl+C to exit:";
 
-    printf(intro,songCount-SONG_OFFSET);   // +1 comes from the NULL                                                    
+    printf(intro,iter);   // +1 comes from the NULL                                                    
     //Still...program doesn't know how to handle just entering please don't.     > /// < 
     if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
     {
@@ -429,7 +429,7 @@ songMetaData genreInput(int getGenre)
     else
     {
         switch (getGenre) {
-            case 0:
+            case 1:
                 char rgbSelection = ' ';
                 printf("Wanna RGB? (y/n): ");
                 if (scanf(" %c",&rgbSelection) != 1) {
@@ -765,6 +765,7 @@ int playShit(char *url)
 {
     int errno = execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", url, "-loglevel", "8", NULL);
     if (errno == -1) { return(-7); }
+    /*If you were to ask me how tf I came up with those flags...I'd say 'Random bullshit go! besides I read all the fucking man ffplay for 4 hours...'*/
     return(0);
 }
 

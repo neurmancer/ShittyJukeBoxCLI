@@ -2150,7 +2150,7 @@ char *WhiteGirlPopTitles[] = {
     "Bad Romance - Lady Gaga",
     "Judas - Lady Gaga",
     "If U Seek Amy - Britney Spears",
-    "I Kissed A Girl - Britney Ketty Parry", //I sure did lol
+    "I Kissed A Girl - Kety Parry", //I sure did lol
     NULL
 };
 
@@ -2199,6 +2199,8 @@ char *NWOBHMSongsAudio[] = {
  };
 
 char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";
+
+/*  What we do when C starts bitching? WE ADD MORE DISPATCH TABLES!!!!LESSS GO!*/
 
 
 //Oh boy hard coding habits never die Now Imma fucking hard-code song lengths one by one

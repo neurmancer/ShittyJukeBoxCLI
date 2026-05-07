@@ -1,6 +1,6 @@
 # SHITTY JUKEBOX IS NOW IN ITS OWN REPO  
 - ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY (And since I update readmes without an editor and at fucking 3AMish don't expect shakespeareian english or not even proper englsih)
-- Current Version **√29**
+- Current Version **√30**
 
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
 
