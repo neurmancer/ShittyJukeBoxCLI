@@ -150,7 +150,7 @@ char *asciiArt[] = {
 };
 
 char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal","White Girl Pop",NULL};
-char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold Red"};
+char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold Red",NULL};
 
 
 songMetaData songPrefs = { };
@@ -186,7 +186,7 @@ int main(void)
             double *selectedDurationArray = DurationDispatch[genreChoice];
             
             MenuFunction genre = genre_menus[genreChoice];
-            songMetaData selectedSong = genre(); 
+            songMetaData selectedSong = genreInput(genreChoice); 
 
             
             if (selectedSong.songIndex == -1)
@@ -401,7 +401,7 @@ songMetaData genreInput(int getGenre)
     char **titleArray = TitleDispatch[getGenre];
     int songCount = sizeof(titleArray)/sizeof(titleArray[0]);
     printf(WIPE_TERMINAL BOLD_PURPLE);
-    while (titleArray != NULL ) {
+    while (i < songCount) {
         
         printf("%d)%s\n",i+SONG_OFFSET,titleArray[i]);
         usleep(50000);
@@ -450,13 +450,26 @@ songMetaData genreInput(int getGenre)
                 }
             
             case 4:
-                printf()
-
+                int i = 0;
+                int scanfHolder = 0; //still 0 initilazing muscle memory still on fire
+                int sizeOfTypeWriterArray = sizeof(writerTypes)/sizeof(writerTypes[0]);//IDK if this is so overexplanatory or shitty but Shitty is the brand at this point
+                printf(BOLD_RED); 
+                while (writerTypes[i] != NULL) {
+                    printf("%s\n");
+                    usleep(SECOND/2);
+                }
+                printf(FIX_FONT,"Select a typewriter 1-%d :",sizeOfTypeWriterArray);
+                if((scanf("%d",&scanfHolder)) != 1 || scanfHolder < 1 || scanfHolder > sizeOfTypeWriterArray)
+                {
+                    printf("Delta.\n");
+                }
+                songPrefs.writerType = scanfHolder-SONG_OFFSET;
             default:
                 songPrefs.writerType = getGenre-SONG_OFFSET;
                 break;
         }
     }
+    printf(FIX_FONT);
     return(songPrefs);
 }
 
