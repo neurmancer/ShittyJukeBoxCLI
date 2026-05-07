@@ -15,8 +15,12 @@
 //define NORMAL_EMO_OFFSET   13  IT was a pleasure to work with you guys...but I learned structs :/
 //define SEIZURE_EMO_OFFSET  53  Goodbye infinite mode ideas via using infinite primes 1000000000000066600000000000001 you'll always live in my heart
 #define SECOND 1000000 //Microseconds
-#define BOLD_RED "\e[1;31m"
-#define BOLD_PURPLE "\e[1;35m" //You know why this is here...
+#define BOLD_RED "\e[1;91m"
+#define BOLD_BLACK "\e[1;90m"	//and I won't evne fucking use this  
+#define BOLD_RED "\e[1;91m"	
+#define BOLD_PURPLE "\e[1;95m"
+
+
 #define FIX_FONT "\e[0m"
 #define WIPE_TERMINAL "\033[H\033[J"
 #define WIPE_TOP "\033[2J"
@@ -46,7 +50,11 @@ typedef struct {
     int newLineCount;
 }LyricsParser;
 
+/*  What we do when C starts bitching? WE ADD MORE GLOBAL VARS !!!!LESSS GO!*/
+int BoldWriterColor = -1;
 
+
+void colorPicker(void);
 void clearIBuffer(void);
 void bold_typewriter(const char* song,double duration);
 void epilepsy_typewriter(const char* song,double duration);
@@ -120,6 +128,17 @@ double *DurationDispatch[] = {
     WhiteGirlPopLengths
 };
 
+char *Colors[] = {
+            NULL,
+            "Red",
+        	"Green",
+        	"Yellow",
+        	"Blue",
+        	"Purple",
+        	"Cyan",
+            "White",
+        };
+
 
 typedef void (*WriterFunction)(const char *lyrics,double duration);
 
@@ -140,7 +159,7 @@ char *asciiArt[] = {
 };
 
 char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal","White Girl Pop",NULL};
-char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold Red"};
+char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold X (pick your own color)"};
 
 
 songMetaData songPrefs = { };
@@ -312,6 +331,8 @@ songMetaData genreInput(int getGenre)
                     break;
                 }
             
+                break;
+
             case 4:
                 int writerArraySize = sizeof(writerTypes) / sizeof(writerTypes[0]);
                 printf(WIPE_TERMINAL BOLD_RED);
@@ -325,6 +346,9 @@ songMetaData genreInput(int getGenre)
                     songPrefs.writerType = 0;
                 }
                 songPrefs.writerType-=SONG_OFFSET;
+                if (songPrefs.writerType == 2) {
+                    colorPicker();
+                }
                 break;
 
             default:
@@ -427,12 +451,11 @@ void bold_typewriter(const char* song,double duration)
     duration *= (SECOND*60);
     double lineDelay = duration / parsedLyrics.newLineCount;
     double charDelay = duration / parsedLyrics.printableCharCount;
-    
-
+    printf(BOLD_RED);
 
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
-    printf(BOLD_RED);
+    printf("\e[1;9%dm",BoldWriterColor);
     usleep(last_three * SECOND);
     while (*song != '\0')
     {
@@ -592,6 +615,29 @@ void sigWINCHHandler(int sig)
 {
     ioctl(STDOUT_FILENO,TIOCGWINSZ,&window);
 }
+
+
+void colorPicker(void)
+{
+
+    if (BoldWriterColor == -1) {
+
+            
+            printf(BOLD_RED);
+        for (int i = 1; i < sizeof(Colors)/sizeof(Colors[1]);i++) {
+            printf("%d)%s\n",i,Colors[i]);
+        }
+        printf(FIX_FONT);
+        printf("Pick your color: ");
+        if(scanf("%d",&BoldWriterColor) != 1 || BoldWriterColor < 1 || BoldWriterColor > (sizeof(Colors)/sizeof(Colors[1])-SONG_OFFSET))
+        {
+            printf("You'll get red bitch");
+            BoldWriterColor = 1;
+        }
+    }
+    
+}
+
 
 /*
 
