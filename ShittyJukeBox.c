@@ -387,7 +387,7 @@ int genreMenu(void)
     if (pidGenre == -1) { printf("Fork just exploded :/ \n");return (genrePick); }
     if (pidGenre == 0) 
     {
-        usleep(SECOND*30);
+        usleep(SECOND*60);
         kill(getppid(),SIGTERM);
         printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD FIX_FONT WIPE_TERMINAL);
         playShit(roast);
@@ -453,7 +453,7 @@ void epilepsy_typewriter(const char* song,double duration) {
             }
             charCount = 0;
         }
-        usleep((1*charDelay)/3); 
+        usleep((2*charDelay)/3); 
         song++;
         color_timer++;
     }
