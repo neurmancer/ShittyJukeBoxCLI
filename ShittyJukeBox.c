@@ -371,9 +371,10 @@ int genreMenu(void)
     
     printf("Select one genre to see its special menu(1-%d):",lengthOfCatalouge);
     int pidGenre = fork();
+    if (pidGenre == -1) { printf("Fork just exploded :/ \n");return (genrePick); }
     if (pidGenre == 0) 
     {
-        usleep(SECOND*15);
+        usleep(SECOND*30);
         kill(getppid(),SIGTERM);
         printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD FIX_FONT WIPE_TERMINAL);
         playShit(roast);

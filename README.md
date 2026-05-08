@@ -29,10 +29,10 @@
 - Unfortunetly not uses prime numbers to determine if you want RGB or not anymore since I've learned structs
 - Now apperantly it got it's own windows branch which I'll provide with .exe file too since Win users don't know what a compiler is. but it is in another repo and outdated for now (link will be at the end for the old win repo)
 - WindowsPORT has it's own branch called winPORTsux which I won't merge
-
 - Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
 - Roughly synced lyrics with audio(again, I am not fucking spotify)
+- I personally roast you with my broken grammer if you take too long to pick a genre lol
 - New features will be added 'cuz why not?
 
 - **3 Types of lyrics printing option**
