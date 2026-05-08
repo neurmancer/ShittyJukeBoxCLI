@@ -289,6 +289,19 @@ songMetaData genreInput(int getGenre)
     //Still...program doesn't know how to handle just entering please don't.     > /// < 
     if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
     {
+        if (songPrefs.songIndex == 1368953) {
+            int pid = fork();
+            if (pid == -1) { exit(-1);}
+            if (pid == 0)
+            {playShit(MeaLux);}
+            else {
+                printf("This one is personal\n");
+                sleep(SECOND*1.5);
+                printf(WIPE_TERMINAL BOLD_PURPLE);
+                printf("Current Track: Mea Lux - Ad Lucem Meum");
+                wait(NULL);
+            } 
+        }
         // New shiny fucntion to clear buffer OwO
         clearIBuffer();
 
