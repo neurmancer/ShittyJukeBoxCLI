@@ -2226,3 +2226,16 @@ double ADHDSongsLengths[] = {3.12008, 2.41013, 2.53007, 2.07002, 2.04011, 2.5700
 double NWOBHSongsLengths[] = {2.29014, 2.45025, 2.58024, 6.5621112, 3.55024, 5.11017, 7.25131, 3.37015, 3.57037, 6.55024};
 
 double WhiteGirlPopLengths[] = {3.32013,4.01002,3.31013,4.05001,3.19005,5.08014,4.07001,3.46006,3.04004};
+
+
+char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal","White Girl Pop",NULL};
+
+typedef struct {
+    char *title;
+    char *lyrics;
+    char *url;
+    int songIndex;
+    int writerType; 
+    double duration;
+ 
+}songMetaData;

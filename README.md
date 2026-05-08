@@ -45,7 +45,7 @@
 #### In Development Features
 
 - My Sanity
-- Everything... I am trying to change the Genre Input menus and honestly it started to change me instead...
+- *Everything... I am trying to change the Genre Input menus and honestly it started to change me instead...* *Done* I united them in one genre menu
 -  Well...firstly, Hi again (After 3 Months)...let's start
 - Pause&Resume feature
 - More songs... (Whitegirl pop...probably Britney Spears will overtake it) *DONE AND OVERTAKEN*

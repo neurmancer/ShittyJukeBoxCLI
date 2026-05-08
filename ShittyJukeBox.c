@@ -7,9 +7,9 @@
 #include <ctype.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
-#include "src/lyrics.h"
+#include "src/songdata.h"
 
-/*Hiii...me from future I feel so fucked up but here we are */
+/*Hiii...me from future I feel so fucked up (mentally) but here we are for therapy that costs nothing but a little price of my sanity */
 
 //She Loves Purple,So Do I
 //define NORMAL_EMO_OFFSET   13  IT was a pleasure to work with you guys...but I learned structs :/
@@ -17,7 +17,6 @@
 #define SECOND 1000000 //Microseconds
 #define BOLD_RED "\e[1;91m"
 #define BOLD_BLACK "\e[1;90m"	//and I won't evne fucking use this  
-#define BOLD_RED "\e[1;91m"	
 #define BOLD_PURPLE "\e[1;95m"
 
 
@@ -33,15 +32,6 @@
 
 struct winsize window;
 
-typedef struct {
-    char *title;
-    char *lyrics;
-    char *url;
-    int songIndex;
-    int writerType; 
-    double duration;
- 
-}songMetaData;
 
 
 typedef struct {
@@ -62,12 +52,15 @@ void typewriter(const char* song,double duration);
 void sigintHandler(int sig);
 void sigWINCHHandler(int sig);
 void asciiPrinter(void);
+
 songMetaData genreInput(int getGenre);
+
 int playShit(char *url);
 int genreMenu(void);
+
 LyricsParser countPrintables(const char *lyrics);
 
-time_t currentTime; 
+time_t currentTime = 0; 
 struct tm *parsedTime;
 
 extern char *myTherapySession[];        // myTherapySession
@@ -139,7 +132,6 @@ char *Colors[] = {
             "White",
         };
 
-
 typedef void (*WriterFunction)(const char *lyrics,double duration);
 
 typedef songMetaData (*MenuFunction)();
@@ -150,7 +142,7 @@ WriterFunction writerType[] = {
     bold_typewriter
 };
 
-
+extern char *genres[];
 
 
 char *asciiArt[] = {
@@ -158,11 +150,11 @@ char *asciiArt[] = {
     "|  _   ____   _  |", " | (O) |____| (O) |","|  Coin [50c]    |", " |________________|"
 };
 
-char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal","White Girl Pop",NULL};
+
 char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold X (pick your own color)"};
 
 
-songMetaData songPrefs = { };
+
 
 int main(void)
 {
@@ -179,7 +171,6 @@ int main(void)
     struct sigaction sa2 = { 0 };
     sa2.sa_handler = &sigWINCHHandler;
     sigaction(SIGWINCH,&sa2,NULL);
-
 
     int pid = 0;
     //Yeah I do fucking need IPC FOR SOME REASON 
@@ -239,9 +230,6 @@ int main(void)
     }
     
 
-
-    //In my debugging era... UnU
-
     return(0);
 }
 
@@ -278,6 +266,8 @@ void sigintHandler(int sig) //Ctrl+C magic
 
 songMetaData genreInput(int getGenre)
 {
+    songMetaData songPrefs = {0};
+
     songPrefs.songIndex = -1;
     songPrefs.writerType = 0;
     int iter = 0; //I know I fucking used 'i' in somewhere in globabl scope so I don't wanna overwrite it (or I am just trippin')
@@ -329,6 +319,7 @@ songMetaData genreInput(int getGenre)
                     else 
                     {
                         printf("Bro... just Y OR N duh...");
+                        clearIBuffer();
                     }
                     break;
                 }
@@ -346,6 +337,7 @@ songMetaData genreInput(int getGenre)
                 if (scanf(" %d",&songPrefs.writerType) != 1 || songPrefs.writerType < 1 || songPrefs.writerType > writerArraySize ) {
                     printf("Bro just learn to count up to %d or delta the fuck out\n",writerArraySize);
                     songPrefs.writerType = 0;
+                    clearIBuffer();
                 }
                 songPrefs.writerType-=SONG_OFFSET;
                 if (songPrefs.writerType == 2) {
@@ -403,7 +395,7 @@ void epilepsy_typewriter(const char* song,double duration) {
     //in seconds
     
     duration *= (SECOND*60);
-    
+    if (parsedLyrics.newLineCount == 0) {parsedLyrics.newLineCount = 1;}
     double lineDelay = duration / parsedLyrics.newLineCount;
     double charDelay = duration / parsedLyrics.printableCharCount;
 
@@ -431,11 +423,11 @@ void epilepsy_typewriter(const char* song,double duration) {
             }
             else
             {
-                usleep(SECOND);
+                usleep(SECOND*0.95);
             }
             charCount = 0;
         }
-        usleep((2*charDelay)/3); 
+        usleep((1*charDelay)/3); 
         song++;
         color_timer++;
     }
@@ -475,22 +467,6 @@ void bold_typewriter(const char* song,double duration)
             printf("%c",*song);
             charCount = 0;
         }
-
-        else if (*song == '\n' && *(song+1) == '\n')
-        {
-            if (lineDelay-(charDelay*charCount) > 0)
-            {
-                usleep(lineDelay-(charDelay*charCount));
-            }
-            else
-            {
-                usleep(SECOND);
-            }
-            charCount = 0; 
-            printf("%c",*song);
-            song++;
-            printf("%c",*song);
-        }
         
         else
         {
@@ -507,7 +483,7 @@ void bold_typewriter(const char* song,double duration)
 void typewriter(const char* song,double duration)
 {
     LyricsParser parsedLyrics = countPrintables(song);
-    int charCount;
+    int charCount = 0;
     int fraction = (int) (duration*100000) % 100000;
     int last_three = fraction % 1000;
    
@@ -618,6 +594,7 @@ void sigWINCHHandler(int sig)
 {
     ioctl(STDOUT_FILENO,TIOCGWINSZ,&window);
 }
+
 
 
 void colorPicker(void)
