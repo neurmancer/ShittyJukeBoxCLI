@@ -2211,6 +2211,7 @@ char *NWOBHMSongsAudio[] = {
  };
 
 char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";
+char *roast = "https://drive.google.com/uc?export=open&id=1LXCZzIJ_LR9Thw8-M2oVnKfYCHUn5obY";
 
 /*  What we do when C starts bitching? WE ADD MORE DISPATCH TABLES!!!!LESSS GO!*/
 

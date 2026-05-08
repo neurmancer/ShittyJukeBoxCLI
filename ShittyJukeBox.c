@@ -16,7 +16,7 @@
 //define SEIZURE_EMO_OFFSET  53  Goodbye infinite mode ideas via using infinite primes 1000000000000066600000000000001 you'll always live in my heart
 #define SECOND 1000000 //Microseconds
 #define BOLD_RED "\e[1;91m"
-#define BOLD_BLACK "\e[1;90m"	//and I won't evne fucking use this  
+#define BOLD_BLACK "\e[1;90m"	//and I won't even fucking use this  
 #define BOLD_PURPLE "\e[1;95m"
 
 
@@ -370,15 +370,27 @@ int genreMenu(void)
     }
     
     printf("Select one genre to see its special menu(1-%d):",lengthOfCatalouge);
-    if (scanf("%d",&genrePick) != 1 || genrePick < 1 || genrePick > lengthOfCatalouge)
-    {   
-        clearIBuffer();
-        printf("Bro how hard can it be to pick 1 or 2? Delta...\n");
-        return(0); 
-    }
-    else
+    int pidGenre = fork();
+    if (pidGenre == 0) 
     {
-        return(genrePick);
+        usleep(SECOND*15);
+        kill(getppid(),SIGTERM);
+        printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD FIX_FONT WIPE_TERMINAL);
+        playShit(roast);
+    }
+    else {        
+        if (scanf("%d",&genrePick) != 1 || genrePick < 1 || genrePick > lengthOfCatalouge)
+        {   
+            clearIBuffer();
+            printf("Bro how hard can it be to pick 1 or 2? Delta...\n");
+            kill(pidGenre, SIGTERM);
+            return(0); 
+        }
+        else
+        {
+            kill(pidGenre, SIGTERM);
+            return(genrePick);
+        }
     }
 }
 
