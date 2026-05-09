@@ -461,7 +461,7 @@ void epilepsy_typewriter(const char* song,double duration) {
         color_timer++;
     }
     printf(FIX_FONT); // reset colors
-    sleep(1);
+    usleep(SECOND*7.5);
 }
 
 void bold_typewriter(const char* song,double duration)
@@ -505,7 +505,7 @@ void bold_typewriter(const char* song,double duration)
         song++;
     }
     printf(FIX_FONT);
-    sleep(1);
+    usleep(SECOND*7.5);
 
 }
 
@@ -568,7 +568,7 @@ void typewriter(const char* song,double duration)
         song++;
     }
 
-    sleep(1);
+    usleep(SECOND*7.5);
     printf(FIX_FONT);
 }
 
