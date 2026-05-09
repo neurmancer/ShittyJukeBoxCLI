@@ -68,6 +68,9 @@ extern char *ADHDSongs[];  // ADHDSongs
 extern char *NWOBHSongs[];     // NWOBHSongs
 extern char *WhiteGirlPop[];   //WhiteGirlPop cuz why not? We're happy Emos...
 
+
+//Here we go...Poor Man's OOP in C
+
 char **LyricsDispatch[] = {
     NULL,
     myTherapySession,
@@ -296,7 +299,7 @@ songMetaData genreInput(int getGenre)
             {playShit(MeaLux);}
             else {
                 printf("This one is personal\n");
-                sleep(SECOND*1.5);
+                usleep(SECOND*1.5);
                 printf(WIPE_TERMINAL BOLD_PURPLE);
                 printf("Current Track: Mea Lux - Ad Lucem Meum");
                 wait(NULL);
