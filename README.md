@@ -22,7 +22,7 @@
 - 10emo/rock songs (with 2 included metallica songs)
 - 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
 - 10 NWOBHM songs for you to feel the speed metal/golden era in your bones
-- 9 freshly added  white girl pop bangers to vibe at night after crying into emo songs and gave you the free will of writer choice all the writer options are available for pop enjoyers
+- 10 freshly added  white girl pop bangers to vibe at night after crying into emo songs and gave you the free will of writer choice all the writer options are available for pop enjoyers (9+1...I just added Baby one more time 2 mins ago)
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
 - %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
