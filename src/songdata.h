@@ -2092,7 +2092,59 @@ char *WhiteGirlPop[] = {
     "It felt so wrong, it felt so right\n"
     "Don't mean I'm in love tonight\n"
     "I kissed a girl and I liked it\n"
-    "I liked it\n"
+    "I liked it\n",
+
+        //10 - ...Baby One More Time - Britney Spears
+    "Oh, baby, baby\n"
+    "Oh, baby, baby\n\n"
+    "Oh, baby, baby\n"
+    "How was I supposed to know\n"
+    "That somethin' wasn't right here?\n"
+    "Oh, baby, baby\n"
+    "I shouldn't have let you go\n"
+    "And now you're out of sight, yeah\n\n"
+    "Show me how you want it to be\n"
+    "Tell me, baby, 'cause I need to know now\n"
+    "Oh, because\n\n"
+    "My loneliness is killin' me (And I)\n"
+    "I must confess, I still believe (Still believe)\n"
+    "When I'm not with you, I lose my mind\n"
+    "Give me a sign\n"
+    "Hit me, baby, one more time\n\n"
+    "Oh, baby, baby\n"
+    "The reason I breathe is you (Oh yeah)\n"
+    "Boy, you got me blinded\n"
+    "Oh, pretty baby\n"
+    "There's nothing that I wouldn't do\n"
+    "It's not the way I planned it\n\n"
+    "Show me how you want it to be\n"
+    "Tell me, baby, 'cause I need to know now\n"
+    "Oh, because\n\n"
+    "My loneliness is killin' me (And I)\n"
+    "I must confess, I still believe (Still believe)\n"
+    "When I'm not with you, I lose my mind\n"
+    "Give me a sign\n"
+    "Hit me, baby, one more time\n\n"
+    "Oh, baby, baby (Oh)\n"
+    "Oh, baby, baby (Yeah, yeah)\n\n"
+    "Oh, baby, baby\n"
+    "How was I supposed to know?\n"
+    "Oh, pretty baby\n"
+    "I shouldn't have let you go\n"
+    "I must confess that my loneliness is killin' me now\n"
+    "Don't you know I still believe\n"
+    "That you will be here and give me a sign?\n"
+    "Hit me, baby, one more time\n\n"
+    "My loneliness is killin' me (And I)\n"
+    "I must confess, I still believe (Still believe)\n"
+    "When I'm not with you, I lose my mind\n"
+    "Give me a sign\n"
+    "Hit me, baby, one more time\n\n"
+    "I must confess that my loneliness (My loneliness is killin' me)\n"
+    "Is killin' me now (I must confess, I still believe)\n"
+    "Don't you know I still believe (When I'm not with you, I lose my mind)\n"
+    "That you will be here and give me a sign?\n"
+    "Hit me, baby, one more time\n",
 
 };
 char *depressed_titles[] = {
@@ -2151,6 +2203,7 @@ char *WhiteGirlPopTitles[] = {
     "Judas - Lady Gaga",
     "If U Seek Amy - Britney Spears",
     "I Kissed A Girl - Kety Parry", //I sure did lol
+    "...Baby One More Time - Britney Spears",
     NULL
 };
 
@@ -2208,6 +2261,7 @@ char *NWOBHMSongsAudio[] = {
     "https://drive.google.com/uc?export=open&id=1Jo37Lza4Z8caEuWU0mmm1GTdLY1reMye", //Judas 
     "https://drive.google.com/uc?export=open&id=1rbxz8r20K8FFt5_aDJDp6cFwu9TwuZwP", //If U Seek Amy
     "https://drive.google.com/uc?export=open&id=1o0-CpP0r-ATeY_EDvYAaehfi4--4_yii", //I Kissed A Girl
+    "https://drive.google.com/uc?export=open&id=11VbU4WSPnkc-0szpSDAmLeKa96VebmK2U", //Baby one more time (one more time...one more push the greener the github heatmap the happier I am(nah I am not just a mild satisfaction it is))
  };
 
 char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";
@@ -2226,7 +2280,7 @@ double ADHDSongsLengths[] = {3.12008, 2.41013, 2.53007, 2.07002, 2.04011, 2.5700
 
 double NWOBHSongsLengths[] = {2.29014, 2.45025, 2.58024, 6.5621112, 3.55024, 5.11017, 7.25131, 3.37015, 3.57037, 6.55024};
 
-double WhiteGirlPopLengths[] = {3.32013,4.01002,3.31013,4.05001,3.19005,5.08014,4.07001,3.46006,3.04004};
+double WhiteGirlPopLengths[] = {3.32013,4.01002,3.31013,4.05001,3.19005,5.08014,4.07001,3.46006,3.04004,3.30002};
 
 
 char *genres[] = {"2000s Emo Music","2000s Nightcore ADHD","New Wave of British Heavy Metal","White Girl Pop",NULL};
