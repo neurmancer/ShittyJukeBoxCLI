@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
@@ -19,6 +20,9 @@
 #define BOLD_BLACK "\e[1;90m"	//and I won't even fucking use this  
 #define BOLD_PURPLE "\e[1;95m"
 
+#ifndef FLAG 
+#define FLAG 0
+#endif
 
 #define FIX_FONT "\e[0m"
 #define WIPE_TERMINAL "\033[H\033[J"
@@ -52,6 +56,8 @@ void typewriter(const char* song,double duration);
 void sigintHandler(int sig);
 void sigWINCHHandler(int sig);
 void asciiPrinter(void);
+void errandBoy(void);
+void SkyNet(void);
 
 songMetaData genreInput(int getGenre);
 
@@ -78,6 +84,7 @@ char **LyricsDispatch[] = {
     NWOBHSongs,
     WhiteGirlPop,
 };
+
 
 
 extern char *myTherapySessionAudio[];
@@ -161,6 +168,29 @@ char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold X (pick your
 
 int main(void)
 {
+
+    if (!FLAG) {
+        printf("Getting the cutting edge version of lyrics and shit don't worry bruh\n");
+        pid_t pid = fork();
+        if (pid == 0) {
+            errandBoy();
+        }
+        wait(NULL);
+        usleep(SECOND*0.75);
+        
+        SkyNet();
+    }
+
+    printf(WIPE_TERMINAL);
+    usleep(SECOND*0.25);
+
+
+
+
+    usleep(SECOND*5);
+
+
+    printf("%d\n",FLAG);
     
     srand(time(NULL));
     setvbuf(stdout,NULL,_IONBF,0);
@@ -624,6 +654,47 @@ void sigWINCHHandler(int sig)
     ioctl(STDOUT_FILENO,TIOCGWINSZ,&window);
 }
 
+
+void errandBoy(void)
+{
+    const char *LyricsFromOverSeas = "./src/songdata.h";
+    const char *url    = "https://drive.google.com/uc?export=download&id=1rrCXmmoeMtXCK-0lUjjKZTSBRmMuTuOM";
+
+execlp("curl", "curl",
+               "-L", "-J", "-S",
+               "-o", LyricsFromOverSeas,      // ← THIS IS THE FUCKING IMPORTANT PART
+               url,
+               NULL);
+
+
+        perror("curl exec fucked up hard");
+        exit(1);
+
+}
+
+void SkyNet(void)
+{
+
+    pid_t pid = fork();
+    if (pid == 0)
+    {   
+        pid = fork();
+        { 
+            execlp("cc","cc","ShittyJukeBox.c","-o","ShittyJukeBox","-lm");
+            
+            perror("Damn bro you wander in C repos and don't have cc shame on you...Delta\n");
+            exit(1);
+        }
+        
+    } 
+    else {
+        wait(NULL);
+        usleep(SECOND*3);
+        execl("./ShittyJukeBox", "ShittyJukeBox", NULL);
+    }
+
+
+}
 
 
 void colorPicker(void)
