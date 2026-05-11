@@ -172,6 +172,7 @@ int main(void)
     if (!FLAG) {
         printf("Getting the cutting edge version of lyrics and shit don't worry bruh\n");
         pid_t pid = fork();
+        if (pid == -1) {return (-689);}
         if (pid == 0) {
             errandBoy();
         }
@@ -183,7 +184,6 @@ int main(void)
 
     printf(WIPE_TERMINAL);
     usleep(SECOND*0.25);
-
 
 
 
@@ -333,14 +333,18 @@ songMetaData genreInput(int getGenre)
                 printf(WIPE_TERMINAL BOLD_PURPLE);
                 printf("Current Track: Mea Lux - Ad Lucem Meum");
                 wait(NULL);
+                
             } 
         }
         // New shiny fucntion to clear buffer OwO
-        clearIBuffer();
+        else {
+            clearIBuffer();
 
-        printf("Bro...either try not to be a idiot or Delta the fuck out\n"); 
-        return(songPrefs);
-    } 
+            printf("Bro...either try not to be a idiot or Delta the fuck out\n"); 
+            return(songPrefs);
+    
+        }
+        } 
     else
     {
         switch (getGenre) {
@@ -676,6 +680,11 @@ void SkyNet(void)
 {
 
     pid_t pid = fork();
+    if (pid == -1)
+    {
+        printf("Something fucked hard\n");
+        exit(1);
+    }
     if (pid == 0)
     {   
         pid = fork();
