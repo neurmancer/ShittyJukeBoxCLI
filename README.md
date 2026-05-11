@@ -19,26 +19,40 @@
 ## FEATURES
  
 
-- 10emo/rock songs (with 2 included metallica songs)
+- 14emo/rock songs (with 2 included metallica songs)
 - 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
+
 - 10 NWOBHM songs for you to feel the speed metal/golden era in your bones
+
 - 10 freshly added  white girl pop bangers to vibe at night after crying into emo songs and gave you the free will of writer choice all the writer options are available for pop enjoyers (9+1...I just added Baby one more time 2 mins ago)
+
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
+
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
-- %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done
+
+- %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done(Hostage negotiations for your terminal with Rick Astley is open to discuss)
+
 - Unfortunetly not uses prime numbers to determine if you want RGB or not anymore since I've learned structs
+
 - Now apperantly it got it's own windows branch which I'll provide with .exe file too since Win users don't know what a compiler is. but it is in another repo and outdated for now (link will be at the end for the old win repo)
+
 - WindowsPORT has it's own branch called winPORTsux which I won't merge
+
 - Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
+
 - Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
+
 - Roughly synced lyrics with audio(again, I am not fucking spotify)
+
 - I personally roast you with my broken grammer if you take too long to pick a genre lol
+
 - New features will be added 'cuz why not?
 
 - **3 Types of lyrics printing option**
 - - RGB/Pale white choice for emo songs (and for you nerds check the periodic sin fade...It'll make you mathgasm for sure.)
 - - Forced RGB for Nightcore for obvious reasons
-- - Forced Bold red for NWOBHM songs   
+- - Forced Bold red for NWOBHM songs  
+- - Free Will for the White Girl Pop enjoyers...pick your writer and pick your color!  
 - - Slightly better dynamic lyrics timing (but still in dev)
 
 
@@ -49,9 +63,11 @@
 -  Well...firstly, Hi again (After 3 Months)...let's start
 - Pause&Resume feature
 - More songs... (Whitegirl pop...probably Britney Spears will overtake it) *DONE AND OVERTAKEN*
-- I'll add more songs till every genre gets their 20 songs
+- > Well added a few more(At 2.30AM...12.05.2026 and lol 5 and 12...if those were the adjacent and opposite of a triangle hypotenuse would be 13 ***wink wink***) those being:
+- - Don't Fear the Reaper (HIM cover not the OG...it's emo duh),I don't love you, I never told you what I do for a living both by MCR(if you are here you now the band don't make me spell it aloud)
+- I'll add more songs till every genre gets their 20 songs  - *In Progress* -
 - Song Queuing (I hate this word) if I learn linked lists or shit
-- _Probably I'll use curl to do some weird shit_ *Cancelled(Due to me being afraid of reviving SkyNet instead)* *PSYCH I JUST DID IT NOW IT CAN RECOMPILE IT FUCKING SELF MID RUN AND songdata.h is just to gaslight the compiler*  
+> Probably I'll use curl to do some weird shit *Cancelled(Due to me being afraid of reviving SkyNet instead)* *PSYCH I JUST DID IT NOW IT CAN RECOMPILE IT FUCKING SELF MID RUN AND songdata.h is just to gaslight the compiler*  
 
 
 ### TWEAKS (Where I brag about shit for the Nerds)
