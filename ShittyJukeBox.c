@@ -187,13 +187,6 @@ int main(void)
 
 
 
-<<<<<<< HEAD
-    usleep(SECOND*5);
-=======
-
->>>>>>> dev
-
-
     printf("%d\n",FLAG);
     
     srand(time(NULL));
