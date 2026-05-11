@@ -170,7 +170,7 @@ int main(void)
 {
 
     if (!FLAG) {
-        printf("Getting the cutting edge version of lyrics and shit don't worry bruh\n");
+        printf("Getting the cutting edge version of lyrics and shit don't worry bruh\n\n\n");
         pid_t pid = fork();
         if (pid == -1) {return (-689);}
         if (pid == 0) {
@@ -187,7 +187,11 @@ int main(void)
 
 
 
+<<<<<<< HEAD
     usleep(SECOND*5);
+=======
+
+>>>>>>> dev
 
 
     printf("%d\n",FLAG);
