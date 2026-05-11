@@ -51,7 +51,7 @@
 - More songs... (Whitegirl pop...probably Britney Spears will overtake it) *DONE AND OVERTAKEN*
 - I'll add more songs till every genre gets their 20 songs
 - Song Queuing (I hate this word) if I learn linked lists or shit
-- _Probably I'll use curl to do some weird shit_ *Cancelled(Due to me being afraid of reviving SkyNet instead)* 
+- _Probably I'll use curl to do some weird shit_ *Cancelled(Due to me being afraid of reviving SkyNet instead)* *PSYCH I JUST DID IT NOW IT CAN RECOMPILE IT FUCKING SELF MID RUN AND songdata.h is just to gaslight the compiler*  
 
 
 ### TWEAKS (Where I brag about shit for the Nerds)
@@ -72,7 +72,7 @@
 - A:Depends...malware for your brain but no not as a malware for computers since I don't know how to script them yet.
 
 - Q:Do I need to install anything else
-- A:Yes ffmpeg for ffplay...-if needed- other dependencies will be added to here
+- A:Yes ffmpeg for ffplay and curl to fucking revive SkyNet...-if needed- other dependencies will be added to here
 
 - Q: Why are you doing this to yourself?
 - A:Bro you are talking to yourself in README pull yourself together.
@@ -93,13 +93,18 @@ cc/gcc ShittyJukeBox -o filename.out -lm #for math lib
 
 #For ubuntu/debian 
 sudo apt-get update && apt-get upgrade && apt-get install ffmpeg 
+sudo apt-get install clang #I mean you use C and no cc? Duh...
+sudo apt-get install curl
 
 #For Arch (I use NyArch btw OwO)
 sudo pacman -Syu && pacman -S ffmpeg 
+sudo pacman -S clang
+sudo pacman -S curl
 
 #For Fedora
 sudo dnf upgrade && dnf install ffmpeg 
-
+sudo dnf install clang
+sudo dnf install curl
 ```
 
 
@@ -120,6 +125,9 @@ sudo dnf upgrade && dnf install ffmpeg
 
 - **Google Drive links**: Yeah I'm streaming mp3s straight from my own cursed Drive folder because fuck local files and fuck .dlls even more.  
 
+- **Curl** The latest victim of my relentless frenzy...just yote(yeah 'yeet' is an irregular verb and here is the past version of it ) the bloated lyrics to the said drive so curl can be a good errand boy and fetch it to me
+
+
   Not affiliated, not endorsed, probably violates 47 different TOS clauses. Don't @ me, it's for educational purposes (my education in not getting DMCA'd... yet). And don't act like you never used Napster or shit I mean this is EMO Jukebox made by a sleep-deprived teenager what you expect (I can't even afford a new keyboad lol)
 
 - If you are one of the artists that I yoinked your music to stream: 
@@ -134,7 +142,7 @@ sudo dnf upgrade && dnf install ffmpeg
   If I ever add real audio libs or some cursed ncurses dependency, I'll update this wall of text. Until then: pure C + vibes + war crimes against buffering.
 
 **Legal disclaimer for the nerds who actually read this:**  
-This project uses ffplay in the most cursed way possible. If FFmpeg foundation comes knocking, tell 'em Arda said "thanks for the -loglevel 8 flag, it saved my ass".  
+This project uses ffplay in the most cursed way possible. If FFmpeg foundation comes knocking, tell 'em Arda said "thanks for the -loglevel 8 flag, it saved my ass" as well as curl..for making -o exists I also owe them my second born.  
 
 If **Rick Astley** finds out about the rickroll brick, tell him I love him platonically and still have a cassette of 'Whenever You Need Somebody' album.
 
