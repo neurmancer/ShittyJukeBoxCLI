@@ -689,11 +689,9 @@ void SkyNet(void)
     } 
     else {
         wait(NULL);
-        usleep(SECOND*3);
+        usleep(SECOND*1.5);
         execl("./ShittyJukeBox", "ShittyJukeBox", NULL);
     }
-
-
 }
 
 
