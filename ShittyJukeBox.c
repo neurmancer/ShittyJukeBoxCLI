@@ -10,6 +10,7 @@
 #include <sys/ioctl.h>
 #include "src/songdata.h"
 
+
 /*Hiii...me from future I feel so fucked up (mentally) but here we are for therapy that costs nothing but a little price of my sanity */
 
 //She Loves Purple,So Do I
@@ -30,11 +31,9 @@
 #define GO_HOME "\033[H"
 #define VANISH_CURSOR "\033[?25l"
 #define BRING_BACK_THE_CURSOR_FROM_THE_DEAD "\033[?25h" //Yeah I know it doesn't need to be that dramatic nor that long but C'MON WE ARE BUILDING A EMO JUKEBOX, DUH.
-#define FREQ 0.4
-#define SONG_OFFSET 1
-
-
-struct winsize window;
+#define FREQ 0.6
+#define OFFSET 1
+#define GENRE_SIZE sizeof(allGenres)/sizeof(allGenres[0])
 
 
 
@@ -44,7 +43,7 @@ typedef struct {
     int newLineCount;
 }LyricsParser;
 
-/*  What we do when C starts bitching? WE ADD MORE GLOBAL VARS !!!!LESSS GO!*/
+/*  What we do when C starts bitching? WE ADD MORE GLOBAL VARS !!!!LESSS GO!...or refactor almost every logic shit...yeah that's a pain in the ass - me from 13 hours in the future*/
 int BoldWriterColor = -1;
 
 
@@ -54,82 +53,27 @@ void bold_typewriter(const char* song,double duration);
 void epilepsy_typewriter(const char* song,double duration);
 void typewriter(const char* song,double duration);
 void sigintHandler(int sig);
-void sigWINCHHandler(int sig);
 void asciiPrinter(void);
 void errandBoy(void);
 void SkyNet(void);
 
-songMetaData genreInput(int getGenre);
+genreMetaData genreSelection(void);//I named those more obvious since I fucking deleted the wrong fucking function for fuck sake and I gotta rebuild 2 fucking different fucntions again
+songMetaData songSelection(int selectedGenre); //AAAAAAAAAAAA I am at the edge of fucking either committing arson or suidice AAAAH OwO
+
 
 int playShit(char *url);
-int genreMenu(void);
+int safe_scanf(int min,int max);
 
 LyricsParser countPrintables(const char *lyrics);
 
-time_t currentTime = 0; 
-struct tm *parsedTime;
 
-extern char *myTherapySession[];        // myTherapySession
-extern char *ADHDSongs[];  // ADHDSongs
-extern char *NWOBHSongs[];     // NWOBHSongs
-extern char *WhiteGirlPop[];   //WhiteGirlPop cuz why not? We're happy Emos...
-
-
-//Here we go...Poor Man's OOP in C
-
-char **LyricsDispatch[] = {
-    NULL,
-    myTherapySession,
-    ADHDSongs,
-    NWOBHSongs,
-    WhiteGirlPop,
-};
+extern genreMetaData allGenres[];
+extern char *roast;
 
 
 
-extern char *myTherapySessionAudio[];
-extern char *ADHDSongsAudio[];
-extern char *NWOBHMSongsAudio[];
-extern char *WhiteGirlPopAudio[];
 
 
-char **AudioDispatch[] = {
-    NULL,
-    myTherapySessionAudio,
-    ADHDSongsAudio,
-    NWOBHMSongsAudio,
-    WhiteGirlPopAudio
-};
-
-
-extern char *depressed_titles[];
-extern char *nightcoreTitles[];
-extern char *nwobhmTitles[];
-extern char *WhiteGirlPopTitles[];
-
-
-char **TitleDispatch[] = {
-    NULL,
-    depressed_titles,
-    nightcoreTitles,
-    nwobhmTitles,
-    WhiteGirlPopTitles
-};
-
-
-extern double myTherapySessionLengths[];
-extern double ADHDSongsLengths[];
-extern double NWOBHSongsLengths[];
-extern double WhiteGirlPopLengths[];
-
-
-double *DurationDispatch[] = {
-    NULL,
-    myTherapySessionLengths,
-    ADHDSongsLengths,
-    NWOBHSongsLengths,
-    WhiteGirlPopLengths
-};
 
 char *Colors[] = {
             NULL,
@@ -145,6 +89,8 @@ char *Colors[] = {
 typedef void (*WriterFunction)(const char *lyrics,double duration);
 
 typedef songMetaData (*MenuFunction)();
+
+//Poor Man's OOP in C 
 
 WriterFunction writerType[] = {
     typewriter,
@@ -169,6 +115,11 @@ char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold X (pick your
 int main(void)
 {
 
+    genreMetaData song = genreSelection();
+    printf("%s\n",song.genre);
+    printf("%zu\n",GENRE_SIZE); //Yeah I am such a people(compiler) pleaser with that unsigned long 
+
+    /*
     if (!FLAG) {
         printf("Getting the cutting edge version of lyrics and shit don't worry bruh\n\n\n");
         pid_t pid = fork();
@@ -198,9 +149,6 @@ int main(void)
     sa.sa_handler = &sigintHandler;
     sigaction(SIGINT,&sa,NULL);
 
-    struct sigaction sa2 = { 0 };
-    sa2.sa_handler = &sigWINCHHandler;
-    sigaction(SIGWINCH,&sa2,NULL);
 
     int pid = 0;
     //Yeah I do fucking need IPC FOR SOME REASON 
@@ -208,58 +156,10 @@ int main(void)
 
     while (1) //Yeah I ain't giving up my infinite loop unless you use Ctrl+C to roll rickroll dice
     {
-        int genreChoice = genreMenu();
-        if (genreChoice) 
-        {
-            char **selectedLyricsArray = LyricsDispatch[genreChoice]; //ADHD
-            char **selectedAudioArray = AudioDispatch[genreChoice];
-            char **selectedTitleArray = TitleDispatch[genreChoice];
-            double *selectedDurationArray = DurationDispatch[genreChoice];
-            
-            songMetaData selectedSong = genreInput(genreChoice); 
-
-            
-            if (selectedSong.songIndex == -1)
-            {
-                return(2);
-            } //As I said that's gonna help me
-            
-            
-            else 
-            {
-                //I'll optimize this shit too
-                WriterFunction writer = writerType[selectedSong.writerType]; //Writer : Assigned 
-                selectedSong.songIndex -= SONG_OFFSET; //OFF-Set set here so no off by one from now on in arrays
-                selectedSong.lyrics = selectedLyricsArray[selectedSong.songIndex]; //Lyrics gotten
-                selectedSong.url = selectedAudioArray[selectedSong.songIndex]; // Audio checked too
-                selectedSong.title = selectedTitleArray[selectedSong.songIndex]; //Title drop
-                selectedSong.duration = selectedDurationArray[selectedSong.songIndex]; //Duration handled
-
-
-                pid = fork();
-                if (pid == -1) { return(-13); } //Errno of Love    
-                
-                if (pid == 0)
-                {
-                    playShit(selectedSong.url);
-                }
-                else
-                {
-                    printf(WIPE_TERMINAL "Current Song: %s\n",selectedSong.title);
-                    usleep(SECOND * 2.5);
-                    writer(selectedSong.lyrics,selectedSong.duration);
-                    wait(NULL);
-                }
-            }
-            printf(WIPE_TOP GO_HOME); //Clear the top and go (1,1)
-        }
-        else {return(1);} //Menu Error Code (from that point I'll act like every error starting from 1-n to determine shit easier)
-        BoldWriterColor = -1;
-        printf(WIPE_TERMINAL);
-        
+       
     }
     
-
+*/
     return(0);
 }
 
@@ -293,154 +193,6 @@ void sigintHandler(int sig) //Ctrl+C magic
     exit(0);
 }
 
-
-songMetaData genreInput(int getGenre)
-{
-    songMetaData songPrefs = {0};
-
-    songPrefs.songIndex = -1;
-    songPrefs.writerType = 0;
-    int iter = 0; //I know I fucking used 'i' in somewhere in globabl scope so I don't wanna overwrite it (or I am just trippin')
-
-    char **titleArray = TitleDispatch[getGenre];
-    
-    printf(WIPE_TERMINAL BOLD_PURPLE);
-    while ( titleArray[iter] != NULL) {
-        
-        printf("%d)%s\n",iter+SONG_OFFSET,titleArray[iter]);
-        usleep(50000);
-        iter++;  
-    }
-    int songCount = iter;
-    
-    const char *intro = "Pick your poison(1-%d) or Ctrl+C to exit:";
-
-    printf(intro,iter);   // +1 comes from the NULL                                                    
-    //Still...program doesn't know how to handle just entering please don't.     > /// < 
-    if(scanf("%d", &songPrefs.songIndex) != 1 || songPrefs.songIndex < 1 || songPrefs.songIndex > songCount)  
-    {
-        if (songPrefs.songIndex == 1368953) {
-            int pid = fork();
-            if (pid == -1) { exit(-1);}
-            if (pid == 0)
-            {playShit(MeaLux);}
-            else {
-                printf("This one is personal\n");
-                usleep(SECOND*1.5);
-                printf(WIPE_TERMINAL BOLD_PURPLE);
-                printf("Current Track: Mea Lux - Ad Lucem Meum");
-                wait(NULL);
-                
-            } 
-        }
-        // New shiny fucntion to clear buffer OwO
-        else {
-            clearIBuffer();
-
-            printf("Bro...either try not to be a idiot or Delta the fuck out\n"); 
-            return(songPrefs);
-    
-        }
-        } 
-    else
-    {
-        switch (getGenre) {
-            case 1:
-                char rgbSelection = ' ';
-                printf("Wanna RGB? (y/n): ");
-                if (scanf(" %c",&rgbSelection) != 1) {
-                    clearIBuffer();
-                    printf("Just y or n...I mean C'mon that wasn't this hard...");
-                    songPrefs.songIndex = -1;
-                    break;
-                }            
-                else {
-                    rgbSelection = tolower(rgbSelection);
-                    if (rgbSelection == 'y') {
-                        songPrefs.writerType = 1;
-                    }
-                    else if (rgbSelection == 'n') {
-                        songPrefs.writerType = 0;
-                    }
-
-                    else 
-                    {
-                        printf("Bro... just Y OR N duh...");
-                        clearIBuffer();
-                    }
-                    break;
-                }
-            
-                break;
-
-            case 4:
-                int writerArraySize = sizeof(writerTypes) / sizeof(writerTypes[0]);
-                printf(WIPE_TERMINAL BOLD_RED);
-                for (short i = 0;i < writerArraySize; i++) {
-                    printf("%d)%s\n",i+1,writerTypes[i]);
-                }
-                printf(FIX_FONT);
-                printf("Select a writer bruh: ");
-                if (scanf(" %d",&songPrefs.writerType) != 1 || songPrefs.writerType < 1 || songPrefs.writerType > writerArraySize ) {
-                    printf("Bro just learn to count up to %d or delta the fuck out\n",writerArraySize);
-                    songPrefs.writerType = 0;
-                    clearIBuffer();
-                }
-                songPrefs.writerType-=SONG_OFFSET;
-                if (songPrefs.writerType == 2) {
-                    colorPicker();
-                }
-                break;
-
-            default:
-                songPrefs.writerType = getGenre-SONG_OFFSET;
-                break;
-        }
-    }
-    printf(FIX_FONT);
-    return(songPrefs);
-}
-
-
-
-int genreMenu(void)
-{
-    int lengthOfCatalouge = (sizeof(genres)/sizeof(genres[0]))- SONG_OFFSET;
-    int genrePick = -1;
-    printf(WIPE_TERMINAL);
-    printf(BOLD_RED "\t\t\t_-JUST A SHITTY JUKEBOX-_\n" FIX_FONT);
-    asciiPrinter();
-    printf(BOLD_RED "Genres\n" FIX_FONT);
-    for (int i = 0; genres[i] != NULL; i++)
-    {
-        printf("%d)%s\n",i+SONG_OFFSET,genres[i]);
-    }
-    
-    printf("Select one genre to see its special menu(1-%d):",lengthOfCatalouge);
-    int pidGenre = fork();
-    if (pidGenre == -1) { printf("Fork just exploded :/ \n");return (genrePick); }
-    if (pidGenre == 0) 
-    {
-        usleep(SECOND*60);
-        kill(getppid(),SIGTERM);
-        printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD FIX_FONT WIPE_TERMINAL);
-        playShit(roast);
-    }
-    else {        
-        if (scanf("%d",&genrePick) != 1 || genrePick < 1 || genrePick > lengthOfCatalouge)
-        {   
-            clearIBuffer();
-            printf("Bro how hard can it be to pick 1 or 2? Delta...\n");
-            kill(pidGenre, SIGTERM);
-            return(0); 
-        }
-        else
-        {
-            kill(pidGenre, SIGTERM);
-            return(genrePick);
-        }
-    }
-}
 
 
 void epilepsy_typewriter(const char* song,double duration) {
@@ -617,7 +369,12 @@ void asciiPrinter()
 void clearIBuffer(void)
 {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF) { } 
+    while ((c = getchar()) != '\n' && c != EOF) {/*Nothing to see here just clearing some leftovers*/}
+        
+    if (c == EOF) {
+        clearerr(stdin);   // Yeah that's like wearing two condoms but better be safe than sorry
+    }
+    
 }
 
 
@@ -650,10 +407,27 @@ LyricsParser countPrintables(const char *lyrics)
     return(parsedLyrics);
 }
 
-void sigWINCHHandler(int sig)
+genreMetaData genreSelection(void)
 {
-    ioctl(STDOUT_FILENO,TIOCGWINSZ,&window);
+    
+	printf(WIPE_TERMINAL BOLD_RED);
+      	
+	for(int i = 0;i < GENRE_SIZE;i++)
+	{
+	    printf("%2d)%s\n",i+1,allGenres[i].genre);
+        usleep(SECOND*0.2);
+	}
+    printf(FIX_FONT "\nPick your poison bruh: ");
+
+    int genreChoice = safe_scanf(1,GENRE_SIZE);
+    if (genreChoice == -1) {
+        genreMetaData chosenGenre = {.genre=NULL,.songs=NULL,.songCount=-1};
+        printf("Either pick a genre or Delta the fuck out bro\n");
+        return(chosenGenre);
+    }
+    return(allGenres[genreChoice-OFFSET]);
 }
+
 
 
 void errandBoy(void)
@@ -713,13 +487,26 @@ void colorPicker(void)
         }
         printf(FIX_FONT);
         printf("Pick your color: ");
-        if(scanf("%d",&BoldWriterColor) != 1 || BoldWriterColor < 1 || BoldWriterColor > (sizeof(Colors)/sizeof(Colors[1])-SONG_OFFSET))
+        if(scanf("%d",&BoldWriterColor) != 1 || BoldWriterColor < 1 || BoldWriterColor > (sizeof(Colors)/sizeof(Colors[1])-OFFSET))
         {
             printf("You'll get red bitch");
             BoldWriterColor = 1;
         }
     }
     
+}
+
+int safe_scanf(int min,int max)
+{
+    int choice = 0;
+    if(scanf(" %d",&choice) != 1 || choice < min || choice > max)
+    {
+        clearIBuffer();
+        return(-1);
+    }
+
+    return(choice);
+   
 }
 
 
