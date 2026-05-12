@@ -58,10 +58,10 @@ void errandBoy(void);
 void SkyNet(void);
 
 genreMetaData genreSelection(void);//I named those more obvious since I fucking deleted the wrong fucking function for fuck sake and I gotta rebuild 2 fucking different fucntions again
-songMetaData songSelection(int selectedGenre); //AAAAAAAAAAAA I am at the edge of fucking either committing arson or suidice AAAAH OwO
+songMetaData songSelection(genreMetaData selectedGenre); //AAAAAAAAAAAA I am at the edge of fucking either committing arson or suidice AAAAH OwO
 
 
-int playShit(char *url);
+int playShit(const char *url);
 int safe_scanf(int min,int max);
 
 LyricsParser countPrintables(const char *lyrics);
@@ -115,11 +115,7 @@ char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold X (pick your
 int main(void)
 {
 
-    genreMetaData song = genreSelection();
-    printf("%s\n",song.genre);
-    printf("%zu\n",GENRE_SIZE); //Yeah I am such a people(compiler) pleaser with that unsigned long 
-
-    /*
+    
     if (!FLAG) {
         printf("Getting the cutting edge version of lyrics and shit don't worry bruh\n\n\n");
         pid_t pid = fork();
@@ -137,9 +133,6 @@ int main(void)
     usleep(SECOND*0.25);
 
 
-
-    printf("%d\n",FLAG);
-    
     srand(time(NULL));
     setvbuf(stdout,NULL,_IONBF,0);
 
@@ -149,18 +142,34 @@ int main(void)
     sa.sa_handler = &sigintHandler;
     sigaction(SIGINT,&sa,NULL);
 
-
     int pid = 0;
     //Yeah I do fucking need IPC FOR SOME REASON 
     //Note for future-self 0->Read      1->Write
 
     while (1) //Yeah I ain't giving up my infinite loop unless you use Ctrl+C to roll rickroll dice
     {
-       
+        printf(WIPE_TERMINAL);
+
+        genreMetaData genre = genreSelection();
+        songMetaData song = songSelection(genre);
+        pid = fork();
+
+        
+        if(pid == -1){return(-1);}
+        if (pid == 0) {
+            playShit(song.url);
+        }
+        
+        usleep(SECOND*3);
+        writerType[song.writerType](song.lyrics,song.duration);
+        wait(NULL);
+        usleep(SECOND*3);
+
+        printf(WIPE_TERMINAL FIX_FONT);
     }
     
-*/
-    return(0);
+
+    return(0); //Yeah you can see but can't touch...deal with it
 }
 
 
@@ -378,7 +387,7 @@ void clearIBuffer(void)
 }
 
 
-int playShit(char *url)
+int playShit(const char *url)
 {
     int errno = execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-fflags", "nobuffer", "-flags", "low_delay", "-probesize", "32", "-analyzeduration", "0", "-strict", "experimental", url, "-loglevel", "8", NULL);
     if (errno == -1) { return(-7); }
@@ -415,9 +424,9 @@ genreMetaData genreSelection(void)
 	for(int i = 0;i < GENRE_SIZE;i++)
 	{
 	    printf("%2d)%s\n",i+1,allGenres[i].genre);
-        usleep(SECOND*0.2);
+        usleep(SECOND*0.1);
 	}
-    printf(FIX_FONT "\nPick your poison bruh: ");
+    printf(FIX_FONT "\nPick your poison bruh (1-%d): ",GENRE_SIZE);
 
     int genreChoice = safe_scanf(1,GENRE_SIZE);
     if (genreChoice == -1) {
@@ -428,7 +437,20 @@ genreMetaData genreSelection(void)
     return(allGenres[genreChoice-OFFSET]);
 }
 
+songMetaData songSelection(genreMetaData genre)
+{
 
+    printf(WIPE_TERMINAL BOLD_PURPLE);
+    for (int i = 0;i < genre.songCount;i++) {
+        printf("%2d)%s\n",i+1,genre.songs[i].title);
+        usleep(SECOND*0.13);
+    }
+    printf(FIX_FONT "What you wanna listen bruh (1-%d):",genre.songCount);
+    int songPick = safe_scanf(1,genre.songCount);
+    if (songPick == -1) {printf("How hard can it be to pick a fucking number on screen...Just...Delta\n");return(genre.songs[genre.songCount]);}
+    
+    return(genre.songs[songPick-OFFSET]);
+}
 
 void errandBoy(void)
 {
