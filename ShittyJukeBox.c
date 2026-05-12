@@ -437,6 +437,7 @@ genreMetaData genreSelection(void)
         printf("Either pick a genre or Delta the fuck out bro\n");
         return(chosenGenre);
     }
+
     return(allGenres[genreChoice-OFFSET]);
 }
 
@@ -449,9 +450,27 @@ songMetaData songSelection(genreMetaData genre)
         usleep(SECOND*0.13);
     }
     printf(FIX_FONT "What you wanna listen bruh (1-%d):",genre.songCount);
-    int songPick = safe_scanf(1,genre.songCount);
-    if (songPick == -1) {printf("How hard can it be to pick a fucking number on screen...Just...Delta\n");return(genre.songs[genre.songCount]);}
     
+    
+    int songPick = safe_scanf(1,genre.songCount);
+    if (songPick == -1) {printf("How hard can it be to pick a fucking number on a screen...Just...Delta\n");return(genre.songs[genre.songCount]);}
+
+    int writerArraySize = sizeof(writerTypes) / sizeof(writerTypes[0]);
+    printf(WIPE_TERMINAL BOLD_RED);
+    for (short i = 0;i < writerArraySize; i++) {
+        printf("%d)%s\n",i+1,writerTypes[i]);
+    }
+    printf(FIX_FONT);
+    printf("Select a writer bruh: ");
+    if (scanf(" %d",&genre.songs[songPick-OFFSET].writerType) != 1 || genre.songs[songPick-OFFSET].writerType < 1 || genre.songs[songPick-OFFSET].writerType > writerArraySize ) {
+        printf("Bro just learn to count up to %d...Punishment:RGB Seziures!!!!\n",writerArraySize);
+        genre.songs[songPick-OFFSET].writerType = 2;
+        }
+    genre.songs[songPick-OFFSET].writerType-=OFFSET;
+    if (genre.songs[songPick-OFFSET].writerType == 2) {
+        colorPicker();
+    }
+
     return(genre.songs[songPick-OFFSET]);
 }
 

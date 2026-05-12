@@ -22,11 +22,11 @@ typedef struct {
 
 
 
-/* ==================== THERAPY SONGS (Emo) ==================== */
+/* ==================== MY THERAPY SONGS  ==================== */
 songMetaData myTherapySession[] = {0};
 
 
-/* ==================== ADHD / NIGHTCORE SONGS ==================== */
+/* ==================== ADHD EXPLOSUION  SONGS ==================== */
 songMetaData adhdSongs[] = {0};
 
 /* ==================== NWOBHM SONGS ==================== */
@@ -45,7 +45,7 @@ songMetaData *genreSongArrays[] = {
     whiteGirlPopSongs
 };
 
-/* ==================== SPECIAL SONGS (rickroll, roast, MeaLux) ==================== */
+/* ==================== SPECIAL ONES (Yup me...no I didn't meanit...FUCK)  ==================== */
 const char *rickroll = "";
 char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2XruCaFROIum9nGkQGUzth";
 char *roast = "https://drive.google.com/uc?export=open&id=1LXCZzIJ_LR9Thw8-M2oVnKfYCHUn5obY";
