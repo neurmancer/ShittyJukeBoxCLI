@@ -1,9 +1,6 @@
 #ifndef SONGDATA_H         
 #define SONGDATA_H
 
-
-#define FLAG 1
-
 typedef struct {
     const char *title;
     const char *lyrics;
