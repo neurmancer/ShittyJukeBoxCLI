@@ -16,10 +16,12 @@
 //She Loves Purple,So Do I
 //define NORMAL_EMO_OFFSET   13  IT was a pleasure to work with you guys...but I learned structs :/
 //define SEIZURE_EMO_OFFSET  53  Goodbye infinite mode ideas via using infinite primes 1000000000000066600000000000001 you'll always live in my heart
+//Another victim of my learning process...Dispatch tables and Vtable wannabes paralel arrays...but I reunited the USSR (United Song Structure Russiandoll) 
 #define SECOND 1000000 //Microseconds
 #define BOLD_RED "\e[1;91m"
 #define BOLD_BLACK "\e[1;90m"	//and I won't even fucking use this  
 #define BOLD_PURPLE "\e[1;95m"
+#define PAIN const true; 
 
 #ifndef FLAG 
 #define FLAG 0
@@ -46,7 +48,7 @@ typedef struct {
 /*  What we do when C starts bitching? WE ADD MORE GLOBAL VARS !!!!LESSS GO!...or refactor almost every logic shit...yeah that's a pain in the ass - me from 13 hours in the future*/
 int BoldWriterColor = -1;
 
-
+//Here lies more functions than my entire highschool calculus lectures
 void colorPicker(void);
 void clearIBuffer(void);
 void bold_typewriter(const char* song,double duration);
@@ -71,10 +73,7 @@ extern genreMetaData allGenres[];
 extern char *roast;
 
 
-
-
-
-
+//I'll also get rid of this
 char *Colors[] = {
             NULL,
             "Red",
@@ -151,13 +150,17 @@ int main(void)
         printf(WIPE_TERMINAL);
 
         genreMetaData genre = genreSelection();
+        if (genre.songCount == -1 ){return(-13);} //Still...Errno of love
         songMetaData song = songSelection(genre);
+        if (song.writerType == genre.songCount) {return(-53);}
         pid = fork();
 
-        
+
         if(pid == -1){return(-1);}
         if (pid == 0) {
             playShit(song.url);
+            perror("If you see this you couldn't play shit...apparently duh\n");
+            exit(1);
         }
         
         usleep(SECOND*3);
@@ -475,7 +478,7 @@ void SkyNet(void)
     pid_t pid = fork();
     if (pid == -1)
     {
-        printf("Something fucked hard\n");
+        printf("Damn...not today sentient AIs\n");
         exit(1);
     }
     if (pid == 0)
@@ -530,7 +533,6 @@ int safe_scanf(int min,int max)
     return(choice);
    
 }
-
 
 /*
 

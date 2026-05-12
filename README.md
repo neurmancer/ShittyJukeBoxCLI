@@ -4,6 +4,15 @@
 
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
 
+## TO-DO list for me (if you're not me go on)
+- [] First, organize this fucking readme
+
+- [] Change a shit as you inspect the code once again since I've changed a lot...I mean a lot a lot (can you believe it it's quieter now...)
+
+- [] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
+
+- [] ADD THE THINGS
+
 
 ## Table of Content (I start liking this shit.)
 
@@ -48,7 +57,7 @@
 
 - New features will be added 'cuz why not?
 
-- **3 Types of lyrics printing option**
+- **3 Types of lyrics printing option** *Under Construction There is No free will for a while*
 - - RGB/Pale white choice for emo songs (and for you nerds check the periodic sin fade...It'll make you mathgasm for sure.)
 - - Forced RGB for Nightcore for obvious reasons
 - - Forced Bold red for NWOBHM songs  
@@ -58,16 +67,16 @@
 
 #### In Development Features
 
-- My Sanity
-- *Everything... I am trying to change the Genre Input menus and honestly it started to change me instead...* *Done* I united them in one genre menu
+- My Sanity ***__GOT WORSE__***
+- *Everything... I am trying to change the Genre Input menus and honestly it started to change me instead...* **Done** I united them in one genre menu
 -  Well...firstly, Hi again (After 3 Months)...let's start
-- Pause&Resume feature
-- More songs... (Whitegirl pop...probably Britney Spears will overtake it) *DONE AND OVERTAKEN*
+- Pause&Resume feature(No shit you won't get this for like in 2 months or so(or in 2 days IDK))
+- More songs... (Whitegirl pop...probably Britney Spears will overtake it) **DONE AND OVERTAKEN**
 - > Well added a few more(At 2.30AM...12.05.2026 and lol 5 and 12...if those were the adjacent and opposite of a triangle hypotenuse would be 13 ***wink wink***) those being:
 - - Don't Fear the Reaper (HIM cover not the OG...it's emo duh),I don't love you, I never told you what I do for a living both by MCR(if you are here you now the band don't make me spell it aloud)
 - I'll add more songs till every genre gets their 20 songs  - *In Progress* -
-- Song Queuing (I hate this word) if I learn linked lists or shit
-> Probably I'll use curl to do some weird shit *Cancelled(Due to me being afraid of reviving SkyNet instead)* *PSYCH I JUST DID IT NOW IT CAN RECOMPILE IT FUCKING SELF MID RUN AND songdata.h is just to gaslight the compiler*  
+- Song Queuing (I hate this word) if I learn linked lists or shit *Not in progress but started learning DSA*
+> Probably I'll use curl to do some weird shit *Cancelled(Due to me being afraid of reviving SkyNet instead)* **PSYCH I JUST DID IT NOW IT CAN RECOMPILE IT FUCKING SELF MID RUN AND songdata.h is just to gaslight the compiler**
 
 
 ### TWEAKS (Where I brag about shit for the Nerds)
