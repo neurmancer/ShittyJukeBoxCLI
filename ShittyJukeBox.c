@@ -116,7 +116,7 @@ int main(void)
 
     
     if (!FLAG) {
-        printf("Getting the cutting edge version of lyrics and shit don't worry bruh\n\n\n");
+        printf("Getting the cutting edge version of lyrics and shit don't worry bruh\nDefinitely not reviving skynet nor doxing your browser history to your crush\n\n");
         pid_t pid = fork();
         if (pid == -1) {return (-689);}
         if (pid == 0) {
@@ -306,7 +306,7 @@ void bold_typewriter(const char* song,double duration)
 
 void typewriter(const char* song,double duration)
 {
-    LyricsParser parsedLyrics = countPrintables(song);
+     LyricsParser parsedLyrics = countPrintables(song);
     int charCount = 0;
     int fraction = (int) (duration*100000) % 100000;
     int last_three = fraction % 1000;
@@ -314,14 +314,11 @@ void typewriter(const char* song,double duration)
     duration *= (SECOND*60);
     double lineDelay = duration / parsedLyrics.newLineCount;
     double charDelay = duration / parsedLyrics.printableCharCount;
-    
-
 
     printf(VANISH_CURSOR);
     printf(WIPE_TERMINAL);
 
     usleep(last_three * SECOND);
-    
     while (*song != '\0')
     {
         charCount++;
@@ -346,9 +343,9 @@ void typewriter(const char* song,double duration)
         }
         song++;
     }
-
-    usleep(SECOND*7.5);
     printf(FIX_FONT);
+    usleep(SECOND*7.5);
+
 }
 
 void asciiPrinter()
@@ -429,7 +426,7 @@ genreMetaData genreSelection(void)
         kill(forky,SIGTERM); //DIE by my hand
         return(chosenGenre);
     }
-
+    kill(forky,SIGTERM);
     return(allGenres[genreChoice-OFFSET]);
 }
 
@@ -471,6 +468,7 @@ songMetaData songSelection(genreMetaData genre)
         }
     genre.songs[songPick-OFFSET].writerType-=OFFSET;
     if (genre.songs[songPick-OFFSET].writerType == 2) {
+        printf(WIPE_TERMINAL);
         colorPicker();
     }
 
