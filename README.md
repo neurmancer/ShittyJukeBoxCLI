@@ -5,7 +5,7 @@
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
 
 ## TO-DO list for me (if you're not me go on)
-- [] First, organize this fucking readme...(hi me from morning 'bet.')
+- [x] First, organize this fucking readme...(hi me from morning 'bet.')
 
 - [] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
 
@@ -37,6 +37,22 @@
 
 
 ### My Therapy Songs
+
+- Bring Me To Life - Evanescence
+- Lithium - Evanescence
+- My Immortal - Evanescence
+- I Hate Everything About You - Three Days Grace
+- Pain - Three Days Grace
+- Boulevard of Broken Dreams - Green Day
+- Unforgiven - Metallica
+- Fade To Black - Metallica
+- How You Remind Me - Nickelback
+- Lithium - Nirvana
+- Still Loving You - Scorpions
+- Don't Fear The Reaper - HIM (Blue Öyster Cult cov- 
+- I Don't Love You - My Chemical Romance
+- I Never Told You What I Do For A Living - My Chemical Romance
+
 
 ### ADHD Songs
 

@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
-#include <ctype.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include "src/songdata.h"
