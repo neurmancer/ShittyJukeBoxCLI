@@ -7,7 +7,7 @@
 ## TO-DO list for me (if you're not me go on)
 - [x] First, organize this fucking readme...(hi me from morning 'bet.')
 
-- [] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
+- [x] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
 
 - [x] ADD THE THINGS (Added)
 
