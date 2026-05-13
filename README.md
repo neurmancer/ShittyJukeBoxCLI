@@ -56,11 +56,43 @@
 
 ### ADHD Songs
 
+- Angel With A Shotgun
+- Rockefeller Street
+- Teeth
+- Thunder
+- Take a Hint
+- How to Be a Heartbreaker
+- Light it Up
+- Pretty Rave Girl
+- All I Ever Wanted
+- Angel of Darkness
+- Pretty Little Psycho
+
+
 ### New Wave Of British Heavy Metal Songs
+- Ace of Spades - Motörhead
+- Overkill - Motörhead
+- Too Late Too Late - Motörhead
+- Am I Evil? - Diamond Head
+- In the Heat of The Night - Diamond Head
+- Denim & Leather - Saxon
+- Crusader - Saxon
+- Fire in The Sky - Saxon
+- The Trooper - Iron Maiden
+- Prisoner of Your (Hazel) Eyes - Judas Priest
 
 ### White Girl Pop Songs
 
-
+- Toxic - Britney Spears
+- Gimme More - Britney Spears
+- Oops!...I Did It Again - Britney Spears
+- S&M - Rihanna
+- Call Me Maybe - Carly Rae Jepsen
+- Bad Romance - Lady Gaga
+- Judas - Lady Gaga
+- If U Seek Amy - Britney Spears
+- I Kissed a Girl - Katy Perry
+- ...Baby One More Time - Britney Spears
 
 ## FEATURES
  
@@ -91,9 +123,9 @@
 
 #### In Development Features
 
-- My Sanity ***__GOT WORSE__***
-
 -  Well...firstly, Hi again (After 3 Months)...let's start
+
+- My Sanity ***__GOT WORSE__***
 
 - Pause&Resume feature(No shit you won't get this for like in 2 months or so(or in 2 days IDK))
 
