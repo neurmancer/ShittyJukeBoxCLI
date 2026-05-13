@@ -5,9 +5,9 @@
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
 
 ## TO-DO list for me (if you're not me go on)
-- [] First, organize this fucking readme
+- [] First, organize this fucking readme...(hi me from morning 'bet.')
 
-- [] Change a shit as you inspect the code once again since I've changed a lot...I mean a lot a lot (can you believe it it's quieter now...)
+- [] Change shits as you inspect the code once again since I've changed a lot...I mean a lot a lot (can you believe it it's quieter now...hi fututre me what have you done to my precious jukebox...you lobotomized it bro...)
 
 - [] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
 
@@ -53,15 +53,16 @@
 
 - Roughly synced lyrics with audio(again, I am not fucking spotify)
 
-- I personally roast you with my broken grammer if you take too long to pick a genre lol
+**UNDER CONSTRUCTION AGAIN**
+- ~~I personally roast you with my broken grammer if you take too long to pick a genre lol~~
 
 - New features will be added 'cuz why not?
 
-- **3 Types of lyrics printing option** *Under Construction There is No free will for a while*
-- - RGB/Pale white choice for emo songs (and for you nerds check the periodic sin fade...It'll make you mathgasm for sure.)
-- - Forced RGB for Nightcore for obvious reasons
-- - Forced Bold red for NWOBHM songs  
-- - Free Will for the White Girl Pop enjoyers...pick your writer and pick your color!  
+- **3 Types of lyrics printing option** ~~*Under Construction There is No free will for a while*~~ **CONSTRUCTION DONE**
+- - RGB(and for you nerds check the periodic sin fade...It'll make you mathgasm for sure.)
+- - Pale White
+- - ~~Forced Bold red for NWOBHM songs~~   
+- - Free Will for the ~~White Girl Pop enjoyers...~~ ALL GENRES pick your writer and pick your color!  
 - - Slightly better dynamic lyrics timing (but still in dev)
 
 
