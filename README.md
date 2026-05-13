@@ -11,6 +11,7 @@
 
 - [x] ADD THE THINGS (Added)
 
+- [O] Make SkyNet clear after themself with nested forks(yeah...that's not optimized for your Intel pentium but it's 2026 bro...)
 
 ## Table of Content (I start liking this shit.)
 

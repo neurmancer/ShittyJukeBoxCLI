@@ -500,8 +500,8 @@ void SkyNet(void)
     if (pid == 0)
     {   
         pid = fork();
-        { 
-            execlp("cc","cc","ShittyJukeBox.c","-o","ShittyJukeBox","-lm");
+        {
+            execlp("cc","cc","*.c","-o","ShittyJukeBox","-lm");
             
             perror("Damn bro you wander in C repos and don't have cc shame on you...Delta\n");
             exit(1);
