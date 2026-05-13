@@ -262,7 +262,7 @@ void epilepsy_typewriter(const char* song,double duration) {
 void bold_typewriter(const char* song,double duration)
 {
     LyricsParser parsedLyrics = countPrintables(song);
-    int charCount;
+    int charCount = 0;
     int fraction = (int) (duration*100000) % 100000;
     int last_three = fraction % 1000;
    
@@ -337,22 +337,6 @@ void typewriter(const char* song,double duration)
             }
             printf("%c",*song);
             charCount = 0;
-        }
-
-        else if (*song == '\n' && *(song+1) == '\n')
-        {
-            if (lineDelay-(charDelay*charCount) > 0)
-            {
-                usleep(lineDelay-(charDelay*charCount));
-            }
-            else
-            {
-                usleep(SECOND);
-            }
-            charCount = 0; 
-            printf("%c",*song);
-            song++;
-            printf("%c",*song);
         }
         
         else
@@ -562,7 +546,7 @@ void colorPicker(void)
 int safe_scanf(int min,int max)
 {
     int choice = 0;
-    if(scanf(" %d",&choice) != 1 || choice < min || choice > max && choice != 1368953)
+    if(scanf(" %d",&choice) != 1 || (choice < min || choice > max && choice != 1368953)) //Never trust a computer to compute use bracelets -Sun Tzu (Or Linus Torvalds IDK)
     {
         clearIBuffer();
         return(-1);
