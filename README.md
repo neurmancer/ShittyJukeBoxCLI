@@ -7,8 +7,6 @@
 ## TO-DO list for me (if you're not me go on)
 - [] First, organize this fucking readme...(hi me from morning 'bet.')
 
-- [] Change shits as you inspect the code once again since I've changed a lot...I mean a lot a lot (can you believe it it's quieter now...hi fututre me what have you done to my precious jukebox...you lobotomized it bro...)
-
 - [] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
 
 - [x] ADD THE THINGS (Added)
@@ -16,6 +14,7 @@
 
 ## Table of Content (I start liking this shit.)
 
+* [Songs](#genres-and-songs)
 * [Features](#features)
 * [In Development Features](#in-development-features)
 * [Tweaks](#tweaks-where-i-brag-about-shit-for-the-nerds)
@@ -25,15 +24,32 @@
 * [OUTDATED Windows port](#winportsux-for-v2-outdated-af)
 * [Third-party requirements and legal shit(paperwork)](#third-party-app-needs-and-licenses-will-be-here-and-yeah-this-title-is-still-too-fucking-long-but-i-refuse-to-shorten-it-and-its-self-aware-of-the-situation)
 
+## GENRES AND SONGS
+
+* [Early 00s](#my-therapy-songs)
+
+* [Nightcore](#adhd-songs)
+
+* [New Wave Of British Heavy Metal](#new-wave-of-british-heavy-metal-songs)
+
+* [Pop](#white-girl-pop-songs)
+
+
+
+### My Therapy Songs
+
+### ADHD Songs
+
+### New Wave Of British Heavy Metal Songs
+
+### White Girl Pop Songs
+
+
+
 ## FEATURES
  
 
-- 14emo/rock songs (with 2 included metallica songs)
-- 11 Nightcore songs from early 2000s or smthg(I've been born in 2006 don't judge I wasn't even alive) 
-
-- 10 NWOBHM songs for you to feel the speed metal/golden era in your bones
-
-- 10 freshly added  white girl pop bangers to vibe at night after crying into emo songs and gave you the free will of writer choice all the writer options are available for pop enjoyers (9+1...I just added Baby one more time 2 mins ago)
+- Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
 
 - A jukebox ASCII Art at the bottom of code for the vibes and lyrics on the top of the code (now in an array for the nerds)
 
@@ -45,39 +61,37 @@
 
 - Now apperantly it got it's own windows branch which I'll provide with .exe file too since Win users don't know what a compiler is. but it is in another repo and outdated for now (link will be at the end for the old win repo)
 
-- WindowsPORT has it's own branch called winPORTsux which I won't merge
-
-- Now with a ASCII JUKEBOX in Genre Menu (fullscreen advised by the developer, me, yk. I'd do as I say if I were you)
-
-- Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
-
 - Roughly synced lyrics with audio(again, I am not fucking spotify)
 
-**UNDER CONSTRUCTION AGAIN**
-- ~~I personally roast you with my broken grammer if you take too long to pick a genre lol~~
+- I personally roast you with my broken grammer if you take too long to pick a genre lol
 
 - New features will be added 'cuz why not?
 
-- **3 Types of lyrics printing option** ~~*Under Construction There is No free will for a while*~~ **CONSTRUCTION DONE**
-- - RGB(and for you nerds check the periodic sin fade...It'll make you mathgasm for sure.)
-- - Pale White
-- - ~~Forced Bold red for NWOBHM songs~~   
-- - Free Will for the ~~White Girl Pop enjoyers...~~ ALL GENRES pick your writer and pick your color!  
-- - Slightly better dynamic lyrics timing (but still in dev)
 
+- **3 Types of lyrics printing option**
+> - RGB(and for you nerds check the periodic sin fade...It'll make you mathgasm for sure.)
+> - Pale White
+> - Bold text with prefered color totally up to your decision   
 
 #### In Development Features
 
 - My Sanity ***__GOT WORSE__***
-- *Everything... I am trying to change the Genre Input menus and honestly it started to change me instead...* **Done** I united them in one genre menu
+
 -  Well...firstly, Hi again (After 3 Months)...let's start
+
 - Pause&Resume feature(No shit you won't get this for like in 2 months or so(or in 2 days IDK))
+
 - More songs... (Whitegirl pop...probably Britney Spears will overtake it) **DONE AND OVERTAKEN**
+
 - > Well added a few more(At 2.30AM...12.05.2026 and lol 5 and 12...if those were the adjacent and opposite of a triangle hypotenuse would be 13 ***wink wink***) those being:
-- - Don't Fear the Reaper (HIM cover not the OG...it's emo duh),I don't love you, I never told you what I do for a living both by MCR(if you are here you now the band don't make me spell it aloud)
+
+- - Don't Fear the Reaper (HIM cover not the OG...it's emo duh),I don't love you, I never told you what I do for a living both by MCR(if you 
+
+are here you now the band don't make me spell it aloud)
 - I'll add more songs till every genre gets their 20 songs  - *In Progress* -
+
 - Song Queuing (I hate this word) if I learn linked lists or shit *Not in progress but started learning DSA*
-> Probably I'll use curl to do some weird shit *Cancelled(Due to me being afraid of reviving SkyNet instead)* **PSYCH I JUST DID IT NOW IT CAN RECOMPILE IT FUCKING SELF MID RUN AND songdata.h is just to gaslight the compiler**
+
 
 
 ### TWEAKS (Where I brag about shit for the Nerds)
@@ -87,13 +101,18 @@
 - Better exit state handling and more optimized loop
 - 1 second between end of the song and genre menu to optimize reaction time on old PCs
 - Reduced reaction time 
+- Got all the songs hard-coded since I don't trust .so and ESPECIALLY .dlls (fuk u windows)
 - Better verse seperation (only for NWOBHM for now) (and yeah I can misspell shit since it's 3.15AM)
-- I made it literally plug and play if you know how dispatch tables are working you can plug your own urls,titles,lyrics and it will run just fine. I single handedly achieved object omnipotence(I'LL BRAG OFC THIS IS MY 13TH DAY OF PROGRAMMING. I FEEL LIKE A CYBER-GOD RN(and after 2 months of burn-out I forgot and relearned it lol old me was hyping way more than I do rn))
+- I made it literally plug and play if you know how dispatch tables are working you can plug your own urls,titles,lyrics and it will run just fine. I single handedly achieved object omnipotence(I'LL BRAG OFC THIS IS MY 13TH DAY OF PROGRAMMING. I FEEL LIKE A CYBER-GOD RN(and 
+after 2 months of burn-out I forgot and relearned it lol old me was hyping way more than I do rn) (and yeah I discarded the 5 parallel arrays and united them under one genreMetaData struct now...so that's old too))
+> Probably I'll use curl to do some weird shit *Cancelled(Due to me being afraid of reviving SkyNet instead)* **PSYCH I JUST DID IT NOW IT CAN RECOMPILE IT FUCKING SELF MID RUN AND songdata.h is just to gaslight the compiler**
+
 
 ## QA
 
 - Q: When will that be done?
 - A: Never...when I add shit other ideas are coming to my mind and I grind to add them too and THAT'S JUST WHAT'S HAPPENING NOW HI! FROM 3 MONTHS LATER
+
 - Q:Is this a malware
 - A:Depends...malware for your brain but no not as a malware for computers since I don't know how to script them yet.
 
@@ -168,7 +187,7 @@ sudo dnf install curl
   If I ever add real audio libs or some cursed ncurses dependency, I'll update this wall of text. Until then: pure C + vibes + war crimes against buffering.
 
 **Legal disclaimer for the nerds who actually read this:**  
-This project uses ffplay in the most cursed way possible. If FFmpeg foundation comes knocking, tell 'em Arda said "thanks for the -loglevel 8 flag, it saved my ass" as well as curl..for making -o exists I also owe them my second born.  
+This project uses ffplay and curl in the most cursed way possible. If FFmpeg foundation comes knocking, tell 'em Arda said "thanks for the -loglevel 8 flag, it saved my ass" as well as curl..for making -o exists I also owe them my second born.  
 
 If **Rick Astley** finds out about the rickroll brick, tell him I love him platonically and still have a cassette of 'Whenever You Need Somebody' album.
 
