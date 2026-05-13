@@ -184,19 +184,16 @@ void sigintHandler(int sig) //Ctrl+C magic
 
         printf(WIPE_TERMINAL); //Rickroll 3.32
         usleep(5000);
-        int pid = fork();
-        if (pid == -1) { printf("Rickroll child fucked up and I can't return value in a void func\n");exit(-1987);} //yeah album date of Whenever you need somebody
-        if (pid == 0)
+        int xID = fork();
+        if (xID == -1) { printf("Rickroll child fucked up and I can't return value in a void func\n");exit(-1987);} //yeah album date of Whenever you need somebody
+        if (xID == 0)
         {
 
             playShit(rickrollAudio);
         }
-
-        else
-        {
-            epilepsy_typewriter(rickroll,3.32019);
-            wait(NULL);
-        } //If you get this ctrl+c ain't saving you. 
+        epilepsy_typewriter(rickroll,3.32019);
+        wait(NULL);
+         //If you get this ctrl+c ain't saving you. 
     }
     printf(FIX_FONT WIPE_TERMINAL);
     printf(WIPE_TOP GO_HOME);
