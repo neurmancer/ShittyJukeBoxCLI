@@ -430,11 +430,19 @@ genreMetaData genreSelection(void)
         usleep(SECOND*0.1);
 	}
     printf(FIX_FONT "\nPick your poison bruh (1-%d): ",GENRE_SIZE);
-
+    int forky = fork();
+    if (forky == -1) {genreMetaData chosenGenre = {.genre=NULL,.songs=NULL,.songCount=-1};return(chosenGenre);}
+    if (forky == 0) {
+        usleep(SECOND*60);
+        kill(getppid(),SIGTERM); //PATRICIDE GO BRRRRRRRRR
+        playShit(roast);
+    }
+    
     int genreChoice = safe_scanf(1,GENRE_SIZE);
-    if (genreChoice == -1) {
+    if (genreChoice == -1  || genreChoice == 1368953) {
         genreMetaData chosenGenre = {.genre=NULL,.songs=NULL,.songCount=-1};
         printf("Either pick a genre or Delta the fuck out bro\n");
+        kill(forky,SIGTERM); //DIE by my hand
         return(chosenGenre);
     }
 
@@ -454,6 +462,17 @@ songMetaData songSelection(genreMetaData genre)
     
     int songPick = safe_scanf(1,genre.songCount);
     if (songPick == -1) {printf("How hard can it be to pick a fucking number on a screen...Just...Delta\n");return(genre.songs[genre.songCount]);}
+
+    if (songPick == 1368953) {
+        int processID = fork();
+        if (processID == -1) {perror("Fork got spooned");exit(1);}
+        printf(WIPE_TERMINAL BOLD_PURPLE);
+        printf("This one's personal...");
+        usleep(SECOND*1.5);
+        printf(WIPE_TERMINAL);
+        printf("Playing: Mea Lux - Ad Lucem Meum\n"FIX_FONT);
+        playShit(meaLuxAudio);
+    }
 
     int writerArraySize = sizeof(writerTypes) / sizeof(writerTypes[0]);
     printf(WIPE_TERMINAL BOLD_RED);
@@ -543,7 +562,7 @@ void colorPicker(void)
 int safe_scanf(int min,int max)
 {
     int choice = 0;
-    if(scanf(" %d",&choice) != 1 || choice < min || choice > max)
+    if(scanf(" %d",&choice) != 1 || choice < min || choice > max && choice != 1368953)
     {
         clearIBuffer();
         return(-1);

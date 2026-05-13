@@ -11,7 +11,7 @@
 
 - [] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
 
-- [] ADD THE THINGS
+- [x] ADD THE THINGS (Added)
 
 
 ## Table of Content (I start liking this shit.)
