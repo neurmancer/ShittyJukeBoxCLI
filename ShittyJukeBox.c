@@ -86,7 +86,7 @@ char *Colors[] = {
 
 typedef void (*WriterFunction)(const char *lyrics,double duration);
 
-typedef songMetaData (*MenuFunction)();
+
 
 //Poor Man's OOP in C 
 
@@ -112,26 +112,33 @@ char *writerTypes[] = {"Pale White","RGB (seziure guranteed)","Bold X (pick your
 
 int main(void)
 {
+    printf(VANISH_CURSOR);
 
-    
     if (!FLAG) {
-        printf("Getting the cutting edge version of lyrics and shit don't worry bruh\nDefinitely not reviving skynet nor doxing your browser history to your crush\n\n");
+        const char *bar = "|/-\\";
+        
+        time_t start = time(NULL);
         pid_t pid = fork();
         if (pid == -1) {return (-689);}
         if (pid == 0) {
             errandBoy();
         }
+        int spinner = 0;
+        while (difftime(time(NULL),start) < 2.5) {
+            printf("\r Definitely not doxing your browser history to your crush or reviving SkyNet\t%c",bar[spinner%4]);
+            spinner++;
+            usleep(SECOND*0.01);
+        }
         wait(NULL);
-        usleep(SECOND*0.75);
         
         SkyNet();
     }
 
     printf(WIPE_TERMINAL);
-    usleep(SECOND*0.25);
+    usleep(SECOND*0.20);
 
 
-    srand(time(NULL));
+    srand(time(NULL) ^ getpid()); //Yeah fucking overkill for a rickroll cbait but... better than 'Guess how much seconds have passed since 1970?' it needed chaos so I gave...
     setvbuf(stdout,NULL,_IONBF,0);
 
  
@@ -149,24 +156,36 @@ int main(void)
         printf(WIPE_TERMINAL);
 
         genreMetaData genre = genreSelection();
-        if (genre.songCount == -1 ){return(-13);} //Still...Errno of love
+        if (genre.songCount == -1 )
+        {
+            printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
+            return(-13);
+        } //Still...Errno of love
         songMetaData song = songSelection(genre);
-        if (song.writerType == genre.songCount) {return(-53);}
+        if (song.writerType == genre.songCount) 
+        {
+            printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
+            return(-53);
+        }
         pid = fork();
 
 
-        if(pid == -1){return(-1);}
-        if (pid == 0) {
-            playShit(song.url);
-            perror("If you see this you couldn't play shit...apparently duh\n");
-            exit(1);
+        if(pid == -1){
+            printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
+            return(-1);
         }
-        
+        if (pid == 0) {
+            
+            if (playShit(song.url) == -7){
+                printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
+                perror("If you see this you couldn't play shit...apparently duh\n");
+                exit(1);
+            }
+        }
         usleep(SECOND*3);
         writerType[song.writerType](song.lyrics,song.duration);
         wait(NULL);
         usleep(SECOND*3);
-
         printf(WIPE_TERMINAL FIX_FONT);
     }
     
@@ -438,7 +457,9 @@ songMetaData songSelection(genreMetaData genre)
     
     
     int songPick = safe_scanf(1,genre.songCount);
-    if (songPick == -1) {printf("How hard can it be to pick a fucking number on a screen...Just...Delta\n");return(genre.songs[genre.songCount]);}
+    if (songPick == -1) {printf("How hard can it be to pick a fucking number on a screen...Just...Delta\n" BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
+        exit(1);
+    }
 
     if (songPick == 1368953) {
         int processID = fork();
@@ -474,10 +495,11 @@ songMetaData songSelection(genreMetaData genre)
 void errandBoy(void)
 {
     const char *LyricsFromOverSeas = "./src/songdata.h";
-    const char *url    = "https://drive.google.com/uc?export=download&id=1rrCXmmoeMtXCK-0lUjjKZTSBRmMuTuOM";
+    const char *url    = "https://drive.google.com/uc?export=download&id=1_FpwVs9gioRle36fVZnrDJKJo-L20e60";
 
-execlp("curl", "curl",
-               "-L", "-J", "-S",
+
+    execlp("curl", "curl",
+               "-L", "-J", "-sS",
                "-o", LyricsFromOverSeas,      // ← THIS IS THE FUCKING IMPORTANT PART
                url,
                NULL);
@@ -499,20 +521,18 @@ void SkyNet(void)
     }
     if (pid == 0)
     {   
-        pid = fork();
-        {
-            execlp("cc","cc","ShittyJukeBox.c","-o","ShittyJukeBox","-lm");
-            
-            perror("Damn bro you wander in C repos and don't have cc shame on you...Delta\n");
-            exit(1);
-        }
         
+        execlp("cc","cc","ShittyJukeBox.c","-o","ShittyJukeBox","-lm",NULL);
+            
+        perror("Damn bro you wander in C repos and don't have cc shame on you...Delta\n");
+        exit(1);
+  
     } 
-    else {
-        wait(NULL);
-        usleep(SECOND*1.5);
-        execl("./ShittyJukeBox", "ShittyJukeBox", NULL);
-    }
+
+    wait(NULL);
+    usleep(SECOND*1.5);
+    execl("./ShittyJukeBox", "ShittyJukeBox", NULL);
+
 }
 
 

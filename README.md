@@ -13,6 +13,8 @@
 
 - [O] Make SkyNet clear after themself with nested forks(yeah...that's not optimized for your Intel pentium but it's 2026 bro...)
 
+- [O] Error handling...
+
 ## Table of Content (I start liking this shit.)
 
 * [Songs](#genres-and-songs)
