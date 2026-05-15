@@ -5,15 +5,17 @@
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
 
 ## TO-DO list for me (if you're not me go on)
-- [x] First, organize this fucking readme...(hi me from morning 'bet.')
+- [x] First, organize this fucking readme...(hi me from morning 'bet.') **DONE**
+
+- [O] Random music selection from any genre
 
 - [x] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
 
 - [x] ADD THE THINGS (Added)
 
-- [O] Make SkyNet clear after themself with nested forks(yeah...that's not optimized for your Intel pentium but it's 2026 bro...)
+- [O] Make SkyNet clear after themself with nested forks(yeah...that's not optimized for your Intel pentium but it's 2026 bro...) *Still thinking about if I should*
 
-- [O] Error handling...
+- [O] Error handling... **DONE**
 
 ## Table of Content (I start liking this shit.)
 
@@ -106,7 +108,7 @@
 
 - Interactive loop (unless you fuck up pressing digits then it roasts you)
 
-- %25 chance of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done(Hostage negotiations for your terminal with Rick Astley is open to discuss)
+- %25 chance (yeah enhanced PRNG not the number guesser from 'How many seconds have passed since 1970? type shit) of getting rickrolled as you try to exit and bricks Ctrl+C 'till it is done(Hostage negotiations for your terminal with Rick Astley is open to discuss)
 
 - Unfortunetly not uses prime numbers to determine if you want RGB or not anymore since I've learned structs
 
