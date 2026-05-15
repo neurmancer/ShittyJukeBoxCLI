@@ -15,7 +15,8 @@
 
 - [O] Make SkyNet clear after themself with nested forks(yeah...that's not optimized for your Intel pentium but it's 2026 bro...) *Still thinking about if I should*
 
-- [O] Error handling... **DONE**
+- [X] Error handling... **DONE**(kinda)
+
 
 ## Table of Content (I start liking this shit.)
 
