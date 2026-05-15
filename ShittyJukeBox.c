@@ -187,6 +187,8 @@ int main(void)
         wait(NULL);
         usleep(SECOND*3);
         printf(WIPE_TERMINAL FIX_FONT);
+        
+        BoldWriterColor = -1;
     }
     
 

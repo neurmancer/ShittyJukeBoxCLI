@@ -58,7 +58,7 @@
 - Don't Fear The Reaper - HIM (Blue Öyster Cult cov- 
 - I Don't Love You - My Chemical Romance
 - I Never Told You What I Do For A Living - My Chemical Romance
-
+- Misery Business - Paramore
 
 ### ADHD Songs
 
@@ -146,6 +146,7 @@ are here you now the band don't make me spell it aloud)
 
 - Song Queuing (I hate this word) if I learn linked lists or shit *Not in progress but started learning DSA*
 
+- Maybe a 'type r to play something random (even rickroll itself *wink wink*) **Not sure**
 
 
 ### TWEAKS (Where I brag about shit for the Nerds)
@@ -159,6 +160,8 @@ are here you now the band don't make me spell it aloud)
 - Better verse seperation (only for NWOBHM for now) (and yeah I can misspell shit since it's 3.15AM)
 - I made it literally plug and play if you know how dispatch tables are working you can plug your own urls,titles,lyrics and it will run just fine. I single handedly achieved object omnipotence(I'LL BRAG OFC THIS IS MY 13TH DAY OF PROGRAMMING. I FEEL LIKE A CYBER-GOD RN(and 
 after 2 months of burn-out I forgot and relearned it lol old me was hyping way more than I do rn) (and yeah I discarded the 5 parallel arrays and united them under one genreMetaData struct now...so that's old too))
+- hand-rolled a shitty(c'mon it's the brand at this point) database JOIN purely through array-of-pointers-to-arrays and sheer fucking willpower. 
+
 > Probably I'll use curl to do some weird shit *Cancelled(Due to me being afraid of reviving SkyNet instead)* **PSYCH I JUST DID IT NOW IT CAN RECOMPILE IT FUCKING SELF MID RUN AND songdata.h is just to gaslight the compiler**
 
 
