@@ -1,17 +1,10 @@
 # SHITTY JUKEBOX IS NOW IN ITS OWN REPO  
 - ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY (And since I update readmes without an editor and at fucking 3AMish don't expect shakespeareian english or not even proper englsih)
-- Current Version **V5.λ** (get it? as in 5.13 since it's 'L' besides in literally took half of my will to live to develop..Half-Life?...c'mon you guys supposed to be the nerds...anyways here is radioactive decay constant (or wavelength if you are a wave kind of nerd)) 
+- Current Version **V5.Ω** (get it? Omega as in resistance...my resistance against DMCA and microstate variable in Boltzmann interpration of entropy...and as in last letter in alphabet like 'bro I swear that's the last version' C'mon you guys supposed the be the nerds)
 
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
 
-## TO-DO list for me (if you're not me go on)
-- [x] First, organize this fucking readme...(hi me from morning 'bet.') **DONE**
-
-- [O] Random music selection from any genre
-
-- [x] Rearrange the songdata.h for better readability (OCD...will keep me awake tonight)
-
-- [x] ADD THE THINGS (Added)
+## TO-DO List (if you are not me you shall pass)
 
 - [O] Make SkyNet clear after themself with nested forks(yeah...that's not optimized for your Intel pentium but it's 2026 bro...) *Still thinking about if I should*
 

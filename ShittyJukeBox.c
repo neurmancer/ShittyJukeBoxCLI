@@ -36,7 +36,7 @@
 #define OFFSET 1
 #define GENRE_SIZE sizeof(allGenres)/sizeof(allGenres[0])
 
-
+//Should I curb the personality of the code? or I let it be me totally?
 
 typedef struct {
 
@@ -135,7 +135,7 @@ int main(void)
     }
 
     printf(WIPE_TERMINAL);
-    usleep(SECOND*0.20);
+    usleep(SECOND*0.05);
 
 
     srand(time(NULL) ^ getpid()); //Yeah fucking overkill for a rickroll cbait but... better than 'Guess how much seconds have passed since 1970?' it needed chaos so I gave...
@@ -209,7 +209,6 @@ void sigintHandler(int sig) //Ctrl+C magic
         if (xID == -1) { printf("Rickroll child fucked up and I can't return value in a void func\n");exit(-1987);} //yeah album date of Whenever you need somebody
         if (xID == 0)
         {
-
             playShit(rickrollAudio);
         }
         epilepsy_typewriter(rickroll,3.32019);
