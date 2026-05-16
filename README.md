@@ -139,8 +139,7 @@ are here you now the band don't make me spell it aloud)
 
 - Song Queuing (I hate this word) if I learn linked lists or shit *Not in progress but started learning DSA*
 
-- Maybe a 'type r to play something random (even rickroll itself *wink wink*) **Not sure**
-
+- Maybe a 'type r to play something random (even rickroll itself *wink wink*) **Not sure** (failed attempt at 1.43AM)
 
 ### TWEAKS (Where I brag about shit for the Nerds)
 
