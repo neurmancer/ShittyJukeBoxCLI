@@ -1,14 +1,11 @@
-# SHITTY JUKEBOX IS NOW IN ITS OWN REPO  
+# SHITTY JUKEBOX  
 - ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY (And since I update readmes without an editor and at fucking 3AMish don't expect shakespeareian english or not even proper englsih)
-- Current Version **V5.Ω** (get it? Omega as in resistance...my resistance against DMCA and microstate variable in Boltzmann interpration of entropy...and as in last letter in alphabet like 'bro I swear that's the last version' C'mon you guys supposed the be the nerds)
+- Current Version **Ω** (get it? Omega as in resistance...my resistance against DMCA and microstate variable in Boltzmann interpration of entropy...and as in last letter in alphabet like 'bro I swear that's the last version' C'mon you guys supposed the be the nerds)
+
+> This project is finalized (well...not kinda but I'll take a long break since yk...it's somehow working) I gotta prepare for university exam
+See you in 2027
 
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
-
-## TO-DO List (if you are not me you shall pass)
-
-- [O] Make SkyNet clear after themself with nested forks(yeah...that's not optimized for your Intel pentium but it's 2026 bro...) *Still thinking about if I should*
-
-- [X] Error handling... **DONE**(kinda)
 
 
 ## Table of Content (I start liking this shit.)
