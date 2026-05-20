@@ -50,7 +50,7 @@ See you in 2027
 - I Never Told You What I Do For A Living - My Chemical Romance
 - Misery Business - Paramore
 
-### ADHD Songs
+### ADHD Core
 
 - Angel With A Shotgun
 - Rockefeller Street
