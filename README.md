@@ -2,8 +2,6 @@
 - ShittyJUKEBOX REPO NOW OFFICIAL BABYYYY (And since I update readmes without an editor and at fucking 3AMish don't expect shakespeareian english or not even proper englsih)
 - Current Version **Ω** (get it? Omega as in resistance...my resistance against DMCA and microstate variable in Boltzmann interpration of entropy...and as in last letter in alphabet like 'bro I swear that's the last version' C'mon you guys supposed the be the nerds)
 
-> This project is finalized (well...not kinda but I'll take a long break since yk...it's somehow working) I gotta prepare for university exam
-See you in 2027
 
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
 
