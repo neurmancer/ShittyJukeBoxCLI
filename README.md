@@ -6,6 +6,9 @@
 > - Licensed under GNU GPL-3.0 – fork, modify, rickroll your friends, but keep it open source bitch
 
 
+> I thought I was doen with this project but...after a while I think I'll refactor almost everything in this project...
+> Same Idea just more maintainable (and I lowkey gotta enhance error handling, signal-safe communication...1600LoC header file and shit yk...)
+
 ## Table of Content (I start liking this shit.)
 
 * [Songs](#genres-and-songs)
