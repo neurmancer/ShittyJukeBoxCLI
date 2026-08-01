@@ -15,3 +15,4 @@
 > Loop feature 
 > More songs 
 > and more shit as ideas drop 
+> Lame ass elevator music as a joke for genre menu selection time
