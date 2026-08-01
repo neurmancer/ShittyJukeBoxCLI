@@ -12,7 +12,7 @@
 
 //She Loves Purple, So Do I.
 
-#define SECOND 1000000
+#define SECOND 1000000000
 #define FREQ 0.5f
 
 //ANSI DEFINES 
@@ -27,6 +27,10 @@
 #define BOLD_PURPLE "\e[1;95m"
 
 
+//My shitty defines
+
+#define PAGE 4096
+
 //Fine let me handle termios today at least...
 
 
@@ -36,8 +40,15 @@ void typewriter(char *lyrics);
 void epilepsyTypewriter(char *lyrics);
 void boldTypewriter(char *lyrics);
 
-void confTermios(void);
 
+void confTermios(void);
+void fixTerm(void);
+
+/* I/O thingies */
+
+int readInput(void);
+int readKey(char *buf, int k);
+void testCase(int key);
 
 typedef void (*WriterFunction)(char *lyrics);
 
@@ -46,15 +57,22 @@ typedef void (*WriterFunction)(char *lyrics);
 
 static struct termios ogTerm,newTerm;
 
+/*
+    Now the shit I gotta do... 
+
+    1- Get a buffer reading func to yk...reading buffer
+    2- Handle keystrokes (arrow keys to be specific for or you know what?we're going vim mod j and k for up and down )
+    3- Do the thing xD
+*/
 
 
-
-
+//Yup handled the up down...NICE!
 
 int main(void)
 {
     srand(time(NULL));
     setvbuf(stdout, NULL, _IONBF, 0);
+    confTermios();
     printf(VANISH_CURSOR);
     
     
@@ -65,11 +83,26 @@ int main(void)
     };    
 
 
+    struct timespec req = { 0 };    //RTFM I won't explain shit this is not the basic repo 
+    struct timespec rem = { 0 };    //This is where my toxic emo persona shines
+
+    int key = 0;
+    size_t iter = 0;
+    while (key != -1) {
+        key = readInput();
+        printf("%d\t%zu\n",key,iter);
+        testCase(key);
+        req.tv_nsec = 0.1*SECOND;
+        nanosleep(&req, &rem);
+        iter++;
+    }
+    
+    printf("Thingy ended\n");
     char *test = "This is the test\n";
     
     writerTypes[rand() % 3](test);
 
-
+    fixTerm();
     printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
     return(0);
 }
@@ -131,10 +164,10 @@ void boldTypewriter(char* song)
 
 void confTermios(void)
 {
-    tcgetattr(STDOUT_FILENO,  &ogTerm);
+    tcgetattr(STDIN_FILENO,  &ogTerm);
 
     newTerm = ogTerm;
-    newTerm.c_lflag &= (ICANON | ECHO);
+    newTerm.c_lflag &= ~(ICANON | ECHO);    //Ops forgot to switch the bits 
     newTerm.c_cc[VMIN] = 0;
     newTerm.c_cc[VTIME] = 0;
     
@@ -147,4 +180,57 @@ void fixTerm(void)
     printf(FIX_FONT BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
 
     tcsetattr(STDIN_FILENO, TCSANOW, &ogTerm);
+}
+
+
+/*          **I/O THINGIES**    */
+
+int readInput(void)
+{
+
+    char buf[PAGE] = { 0 };
+    int reader = read(STDIN_FILENO, buf, sizeof(buf));
+    int lastPressedKey = 0;
+
+    for (int k = 0;k <= reader; k++) {
+        int key = readKey(buf, k);
+        if (!key) { continue; }
+        lastPressedKey = key;   //That was the bug
+    }
+    //Feels like that's gonna have fuck tone of edge cases but here we are 
+    
+    return(lastPressedKey);
+}
+
+int readKey(char *buf, int k)
+{
+    if (buf[k] == 'q') { return(-1);}
+
+    switch (buf[k]) {
+        case 'j':
+            return(1);  //I mean...I could've made them 1 and -1 want to make the navigation more natural with %d;%dH...but we'll see
+        case 'k':
+            return(2);
+    }
+
+    return(0);
+}
+
+void testCase(int key)
+{
+    switch (key) {
+        case -1:
+            printf("Quit\n");
+            break;
+        case 0:
+            printf("Nothing\n");
+            break;
+        case 1:
+            printf("Up\n");
+            break;
+
+        case 2:
+            printf("Down\n");
+            break;
+    }
 }
