@@ -31,12 +31,24 @@
 
 
 /* =============== FUNCTION PROTOTPES =============== */
-//Yeah the guy with exubrance and shitty jokes have been partially grown-up...No more in code stand-ups unf...
+//Yeah the guy with exuberance and shitty jokes have been partially grown-up...No more in code stand-ups unf...
 void typewriter(char *lyrics);
 void epilepsyTypewriter(char *lyrics);
 void boldTypewriter(char *lyrics);
 
+void confTermios(void);
+
+
 typedef void (*WriterFunction)(char *lyrics);
+
+
+/* ================= GLOBAL VARS ==================== (yeah I'll have globals...After all I am still me lol)*/
+
+static struct termios ogTerm,newTerm;
+
+
+
+
 
 
 int main(void)
@@ -50,7 +62,8 @@ int main(void)
         typewriter,
         epilepsyTypewriter,
         boldTypewriter
-    };
+    };    
+
 
     char *test = "This is the test\n";
     
@@ -113,4 +126,25 @@ void boldTypewriter(char* song)
     }
     printf(FIX_FONT);
 
+}
+
+
+void confTermios(void)
+{
+    tcgetattr(STDOUT_FILENO,  &ogTerm);
+
+    newTerm = ogTerm;
+    newTerm.c_lflag &= (ICANON | ECHO);
+    newTerm.c_cc[VMIN] = 0;
+    newTerm.c_cc[VTIME] = 0;
+    
+    tcsetattr(STDIN_FILENO, TCSANOW, &newTerm);
+}
+
+
+void fixTerm(void)
+{
+    printf(FIX_FONT BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &ogTerm);
 }
