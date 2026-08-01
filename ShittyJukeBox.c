@@ -41,6 +41,15 @@
 //Fine let me handle termios today at least...
 
 
+
+/* ================= OBJECTS =======================*/
+
+typedef struct{
+    int x, y;        //Note to self: terminal uses y,x format not x,y and starts at (1,1) not (0, 0) mwah OwO    -Past Me.
+    int lastX, lastY;
+}Cursor;
+
+
 /* =============== FUNCTION PROTOTPES =============== */
 //Yeah the guy with exuberance and shitty jokes have been partially grown-up...No more in code stand-ups unf...
 void typewriter(char *lyrics);
@@ -55,7 +64,7 @@ void fixTerm(void);
 
 int readInput(void);
 int readKey(char *buf, int k);
-void testCase(int key);
+void testCase(int key, Cursor *cursor);
 
 typedef void (*WriterFunction)(char *lyrics);
 
@@ -72,13 +81,6 @@ static struct termios ogTerm,newTerm;
     3- Do the thing xD
 */
 
-/* ================= OBJECTS =======================*/
-
-typedef struct{
-    int x,y;        //Note to self: terminal uses y,x format not x,y and starts at (1,1) not (0, 0) mwah OwO    -Past Me.
-}cursor;
-
-
 
 //Yup handled the up down...NICE!
 
@@ -88,7 +90,7 @@ int main(void)
     setvbuf(stdout, NULL, _IONBF, 0);
     confTermios();
     printf(VANISH_CURSOR);
-    
+    printf(WIPE_TERMINAL);
     
     WriterFunction writerTypes[] = {
         typewriter,
@@ -99,13 +101,19 @@ int main(void)
 
     struct timespec req = { 0 };    //RTFM I won't explain shit this is not the basic repo 
     struct timespec rem = { 0 };    //This is where my toxic emo persona shines
+    Cursor cursor = {1, 1, 1, 1 }; 
+
 
     int key = 0;
     size_t iter = 0;
+    for (int i = 0;i < 5;i++) {
+        printf(RED_BG"Test?          \n");
+    }
+    
+
     while (key != -1) {
         key = readInput();
-        printf("%d\t%zu\n",key,iter);
-        testCase(key);
+        testCase(key, &cursor);
         req.tv_nsec = 0.1*SECOND;
         nanosleep(&req, &rem);
         iter++;
@@ -115,6 +123,8 @@ int main(void)
     char *test = "This is the test\n";
     
     writerTypes[rand() % 3](test);
+
+debug:  //Poor man's gdb
 
     fixTerm();
     printf(BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
@@ -230,21 +240,28 @@ int readKey(char *buf, int k)
     return(0);
 }
 
-void testCase(int key)
+void testCase(int key, Cursor *cursor)
 {
     switch (key) {
         case -1:
             printf("Quit\n");
             break;
-        case 0:
-            printf("Nothing\n");
-            break;
+
         case 1:
-            printf("Up\n");
+            cursor->lastX = cursor->x;
+            cursor->lastY = cursor->y;
+            cursor->y -= 1;
+            printf(SUMMON_CURSOR RED_AF_BG "            " RESET_FONT,cursor->lastY, cursor->lastX);
+            printf(SHE_LOVES SUMMON_CURSOR "Test        " RESET_FONT,cursor->y,cursor->x); 
+            
             break;
 
         case 2:
-            printf("Down\n");
+            cursor->lastX = cursor->x;
+            cursor->lastY = cursor->y;
+            cursor->y += 1;
+            printf(SUMMON_CURSOR RED_AF_BG "                " RESET_FONT ,cursor->lastY,cursor->lastX);
+            printf(SHE_LOVES SUMMON_CURSOR "Test        " RESET_FONT,cursor->y,cursor->x);    
             break;
     }
 }
