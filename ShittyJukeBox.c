@@ -17,14 +17,21 @@
 
 //ANSI DEFINES 
 
-#define FIX_FONT "\e[0m"
+#define RESET_FONT "\e[0m"
 #define WIPE_TERMINAL "\033[H\033[J"
 #define YET_ANOTHER_WIPE_TERMINAL "\033[3J"
-#define WIPE_TOP "\033[2J"
+#define WIPE_TOP "\033[3J"
 #define GO_HOME "\033[H"
 #define VANISH_CURSOR "\033[?25l"
 #define BRING_BACK_THE_CURSOR_FROM_THE_DEAD "\033[?25h"
 #define BOLD_PURPLE "\e[1;95m"
+#define SUMMON_CURSOR "\033[%d;%dH"
+
+//Coloring shit
+#define RED_BG "\e[41m"
+#define RED_AF_BG "\e[0;101m"
+#define SHE_LOVES "\e[45m"  //So Do I...
+
 
 
 //My shitty defines
@@ -64,6 +71,13 @@ static struct termios ogTerm,newTerm;
     2- Handle keystrokes (arrow keys to be specific for or you know what?we're going vim mod j and k for up and down )
     3- Do the thing xD
 */
+
+/* ================= OBJECTS =======================*/
+
+typedef struct{
+    int x,y;        //Note to self: terminal uses y,x format not x,y and starts at (1,1) not (0, 0) mwah OwO    -Past Me.
+}cursor;
+
 
 
 //Yup handled the up down...NICE!
@@ -135,7 +149,7 @@ void epilepsyTypewriter(char *lyrics)
         c++;
         usleep(50000);
     }
-    printf(FIX_FONT);
+    printf(RESET_FONT);
 }
 
 
@@ -157,7 +171,7 @@ void boldTypewriter(char* song)
         }
         song++;
     }
-    printf(FIX_FONT);
+    printf(RESET_FONT);
 
 }
 
@@ -177,7 +191,7 @@ void confTermios(void)
 
 void fixTerm(void)
 {
-    printf(FIX_FONT BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
+    printf(RESET_FONT BRING_BACK_THE_CURSOR_FROM_THE_DEAD);
 
     tcsetattr(STDIN_FILENO, TCSANOW, &ogTerm);
 }
