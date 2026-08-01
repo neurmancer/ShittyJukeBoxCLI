@@ -103,20 +103,22 @@ int main(void)
     struct timespec rem = { 0 };    //This is where my toxic emo persona shines
     Cursor cursor = {1, 1, 1, 1 }; 
 
-
     int key = 0;
-    size_t iter = 0;
-    for (int i = 0;i < 5;i++) {
-        printf(RED_BG"Test?          \n");
-    }
     
 
+
+
+/*======== EXPERIMENTAL ZONE ================ */
+    size_t iter = 0;
+
+
+goto debug;
+
+/*======== EXPERIMENTAL ZONE ================ */
+
+
     while (key != -1) {
-        key = readInput();
-        testCase(key, &cursor);
-        req.tv_nsec = 0.1*SECOND;
-        nanosleep(&req, &rem);
-        iter++;
+
     }
     
     printf("Thingy ended\n");
@@ -238,30 +240,4 @@ int readKey(char *buf, int k)
     }
 
     return(0);
-}
-
-void testCase(int key, Cursor *cursor)
-{
-    switch (key) {
-        case -1:
-            printf("Quit\n");
-            break;
-
-        case 1:
-            cursor->lastX = cursor->x;
-            cursor->lastY = cursor->y;
-            cursor->y -= 1;
-            printf(SUMMON_CURSOR RED_AF_BG "            " RESET_FONT,cursor->lastY, cursor->lastX);
-            printf(SHE_LOVES SUMMON_CURSOR "Test        " RESET_FONT,cursor->y,cursor->x); 
-            
-            break;
-
-        case 2:
-            cursor->lastX = cursor->x;
-            cursor->lastY = cursor->y;
-            cursor->y += 1;
-            printf(SUMMON_CURSOR RED_AF_BG "                " RESET_FONT ,cursor->lastY,cursor->lastX);
-            printf(SHE_LOVES SUMMON_CURSOR "Test        " RESET_FONT,cursor->y,cursor->x);    
-            break;
-    }
 }
