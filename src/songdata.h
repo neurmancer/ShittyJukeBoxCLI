@@ -9,6 +9,10 @@ typedef struct {
     float duration; //4*4 = 16 + 24 = 48 I guess optimzed the padding or shit dunno
     float lyricsStartAt; 
     float lyricsEndAt;  
+    
+    int hasSolo;
+    int soloStartAt;
+    int soloEndAt;
     int writerType;
 
 } songMetaData;
@@ -19,7 +23,6 @@ typedef struct {
     const char *genre;
     songMetaData *songs;
     int songCount;
-
 
 }genreMetaData;
 
@@ -42,7 +45,7 @@ songMetaData whiteGirlPopSongs[] = {0};
 /* ==================== DISPATCH TABLE ==================== */
 
 songMetaData *genreSongArrays[] = {
-    (songMetaData *)0,  //Yeah I ain't typing NULL or nullptr lols
+    (songMetaData *)0,  //Yeah I ain't typing NULL nor nullptr lols
     myTherapySession,
     adhdSongs,
     nwobhmSongs,
@@ -55,7 +58,7 @@ char *rickrollAudio = "https://drive.google.com/uc?export=open&id=10aiePDkX2t2Xr
 char *roast = "https://drive.google.com/uc?export=open&id=1LXCZzIJ_LR9Thw8-M2oVnKfYCHUn5obY";
 char *meaLuxAudio = "https://drive.google.com/uc?export=open&id=1oG209grBSgu_q6MxCbw-L9wMNBw5HKOe";
 
-/* Genres list (keep for menu) */
+/* Genres list */
 genreMetaData allGenres[] = {0};
 #endif // SONGDATA_H
 
