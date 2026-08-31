@@ -31,4 +31,12 @@
 > A modular design with lots of files instead of just 'main.c'
 > A makefile to make user experience easier 
 > A GUI version using raylib(I probably won't do it this started as a CLI passion and will end like that)
+> This is a stretch I am aware but customization and ricing with Lua support
+> > This requries it's own terminal emulator and Imma also build it don't worry bruh
+> Spoiler: IoT shit support will eventually end up being here
 
+#### REASON OF 'SCOPE CREEP' SECTION'S EXISTENCE
+
+> I'm currently ricing a DWM setup under another repo which gonna power my CyberDeck and ShittyJukebox
+is part of the Legacy and there will be shit that added for feral CyberGremlins like me 
+(For example: CLI flags that allows physical media such as cassette tapes)
