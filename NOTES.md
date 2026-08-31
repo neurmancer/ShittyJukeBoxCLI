@@ -16,3 +16,19 @@
 > More songs 
 > and more shit as ideas drop 
 > Lame ass elevator music as a joke for genre menu selection time
+> My own audio encoder so if ffplay fucke me up I can still work gracefully 
+(and I want playerctl to see my program as it is not as 'ffplay')(but still...I am not fucking spotify)
+
+
+
+### Scope Creep 
+
+> This part is where I go feral and say 'No promises' the 'Planned Updates' section is my vision for next
+'stable' version before leaving project for a long time (like current Legacy version) 
+
+> These are the possible future paths 
+> Audio Visualizer using fourier transforms ('cuz yk...me)
+> A modular design with lots of files instead of just 'main.c'
+> A makefile to make user experience easier 
+> A GUI version using raylib(I probably won't do it this started as a CLI passion and will end like that)
+
