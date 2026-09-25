@@ -159,9 +159,10 @@ void tui_menu_draw(TuiMenu *menu, const char *status)
     for (size_t i = menu->top; i < menu->count && i - menu->top < visible; ++i) {
         TuiItem *item = &menu->items[i];
         char label[512];
-        snprintf(label, sizeof label, "%s %s%s%s", i == menu->selected ? ">" : " ",
+        snprintf(label, sizeof label, "%s %s%s%s%s", i == menu->selected ? ">" : " ",
                  item->kind == TUI_TOGGLE ? (item->value ? "[on]  " : "[off] ") : "",
-                 item->label, item->enabled ? "" : " (unavailable)");
+                 item->label, menu->has_active && menu->active == i ? " [current]" : "",
+                 item->enabled ? "" : " (unavailable)");
         line(3 + i - menu->top, width,
              !item->enabled ? DIM : i == menu->selected ? BOLDY INVERSE : RESET, label);
     }
@@ -202,7 +203,10 @@ TuiResult tui_player_handle(TuiPlayer *player, TerminalAction action)
         switch (player->selected) {
             case PLAYER_SHUFFLE: player->shuffle = !player->shuffle; break;
             case PLAYER_REPEAT: player->repeat = !player->repeat; break;
-            case PLAYER_PLAY: player->paused = !player->paused; break;
+            case PLAYER_PLAY:
+                if (player->song_id) { return(TUI_SELECTED); }
+                player->paused = !player->paused;
+                break;
             default: return(TUI_SELECTED);
         }
     
@@ -251,7 +255,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
     size_t x = 3;
 
-    if (columns >= 78 && rows >= 18) {
+    if (player->show_cover && columns >= 78 && rows >= 18) {
         size_t cover_width = columns / 3;
 
         if (cover_width > 34) { cover_width = 34; }
@@ -278,7 +282,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
     unsigned long long elapsed = player->elapsed;
 
-    if (elapsed > player->duration) { elapsed = player->duration; }
+    if (player->duration_known && elapsed > player->duration) { elapsed = player->duration; }
 
     char stamp[32];
 
@@ -305,7 +309,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
     fputs("]" RESET, stdout);
 
-    const char *icons[] = {"⇄", "◀◀", player->paused ? "▶" : "Ⅱ", "▶▶", "↻"};
+    const char *icons[] = {"⇄", "◀◀", player->loading ? "…" : player->paused ? "▶" : "Ⅱ", "▶▶", "↻"};
 
     size_t button_x = x + (width - 35) / 2;
 
@@ -326,9 +330,12 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
     size_t selected = player->selected < PLAYER_CONTROL_COUNT ? player->selected : PLAYER_PLAY;
 
     text_at(12, x, width, DIM, names[selected]);
+    char modes[96];
+    snprintf(modes, sizeof modes, "Shuffle: %s   Repeat: %s", player->shuffle ? "on" : "off", player->repeat ? "on" : "off");
+    if (rows >= 17) { text_at(13, x, width, GREEN, modes); }
 
     line(rows - 2, columns - 1, FANCY, status ? status : "");
-    line(rows - 1, columns - 1, DIM, player->song_id ? "Track selected - audio is not connected" : "UI preview - audio is not connected");
+    line(rows - 1, columns - 1, DIM, player->playback_status ? player->playback_status : "UI preview - audio is not connected");
     line(rows, columns - 1, DIM, "1:player 2:lyrics 3:visualizer Q:queue Tab:next Esc:back q:quit");
 
     fflush(stdout);
@@ -531,9 +538,12 @@ static void queue_overlay(TuiState *state)
         }
         if (queue->top >= queue->count) { queue->top = 0; }
         for (size_t i = queue->top; i < queue->count && i - queue->top < visible; ++i) {
+            char label[512];
+            snprintf(label, sizeof label, "%s%s", queue->items[i].label,
+                     queue->has_active && queue->active == i ? " [current]" : "");
             text_at(4 + i - queue->top, x + 2, width - 3,
                     !queue->items[i].enabled ? DIM : i == queue->selected ? INVERSE PURPLE : RESET,
-                    queue->items[i].label);
+                    label);
         }
     }
     text_at(rows - 2, x + 2, width - 3, DIM, "Q / Esc: close queue");
@@ -547,6 +557,17 @@ void tui_state_draw(TuiState *state)
 
     else if (state->menus[state->screen]) {
         tui_menu_draw(state->menus[state->screen], state->status);
+        if (state->player && state->player->song_id && (!state->status || !*state->status)) {
+            size_t rows, columns;
+            terminal_size(&rows, &columns);
+            if (rows >= 7 && columns >= 24) {
+                char now[768];
+                snprintf(now, sizeof now, "%s: %s | %llu:%02llu | 1: player",
+                         state->player->playback_status ? state->player->playback_status : "Selected",
+                         state->player->title, state->player->elapsed / 60, state->player->elapsed % 60);
+                line(rows - 2, columns - 1, GREEN, now);
+            }
+        }
     }
 
     else { pending_screen(state); }

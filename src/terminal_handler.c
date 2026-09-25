@@ -156,6 +156,7 @@ TerminalAction terminal_read(int timeout_ms)
     }
     
     if (escape_state == 1) {
+        if (byte == 27) { return(TERM_BACK); }
         
         if (byte == '[' || byte == 'O') { escape_state = 2; parameter = 0; }
 

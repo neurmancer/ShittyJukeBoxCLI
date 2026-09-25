@@ -13,10 +13,14 @@ typedef struct {
     char error[256];
 } Database;
 
-typedef enum { DB_DURATION_UNKNOWN, DB_DURATION_MANUAL, DB_DURATION_FFPROBE } DbDurationSource;
+typedef enum {
+    DB_DURATION_UNKNOWN, DB_DURATION_MANUAL, DB_DURATION_FFPROBE,
+    DB_DURATION_FFMPEG = DB_DURATION_FFPROBE
+} DbDurationSource;
 
 typedef struct {
     int64_t id;
+    
     char *title;
     char *artist;
     char *album;
@@ -24,15 +28,16 @@ typedef struct {
     char *cover_uri;
     char *lyrics;
     char *lyrics_format; /* plain or lrc */
-    char *legacy_title;
+    char *lyrics_uri; /* Source page; empty for manually supplied lyrics. */
+    
     int64_t duration_ms;
+    
     DbDurationSource duration_source;
+    
     int64_t lyrics_start_ms;
     int64_t lyrics_end_ms;
     int64_t solo_start_ms;
     int64_t solo_end_ms;
-    int writer_type;
-    double legacy_duration; //My old fucking sorcery
 } DbSong;
 
 
@@ -60,7 +65,9 @@ const char *database_error(const Database *db);
  */
 
 DbSong database_song_init(void);
+
 int database_song_save(Database *db, const DbSong *song, int64_t *id);
+int database_lyrics_set(Database *db, int64_t id, const char *lyrics, const char *source_uri);
 int database_song_get(Database *db, int64_t id, DbSong *song);
 
 /* find returns 0 when found, 1 when absent, -1 on error. */
@@ -74,6 +81,7 @@ int database_genre_save(Database *db, const char *name, int64_t *id);
 int database_genres(Database *db, DbGenre **genres, size_t *count);
 void database_genres_free(DbGenre *genres, size_t count);
 int database_song_genre(Database *db, int64_t song_id, int64_t genre_id, int position);
+int database_song_genre_append(Database *db, int64_t song_id, int64_t genre_id);
 int database_special_set(Database *db, const char *role, int64_t song_id);
 int database_special_get(Database *db, const char *role, int64_t *song_id);
 

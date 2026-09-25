@@ -7,3 +7,7 @@ songdata.h
 /jukebox.db-journal
 /jukebox.db-wal
 /jukebox.db-shm
+
+/jukebox-add
+/legacy-backup/
+tools/

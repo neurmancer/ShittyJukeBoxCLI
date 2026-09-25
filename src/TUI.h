@@ -22,6 +22,8 @@ typedef struct {
     size_t selected; /* SIZE_MAX when no enabled item exists or shit */
     size_t top;
     bool wrap;
+    bool has_active;
+    size_t active;
 } TuiMenu;
 
 typedef enum { TUI_UNCHANGED, TUI_CHANGED, TUI_SELECTED, TUI_BACK, TUI_QUIT } TuiResult;
@@ -47,12 +49,15 @@ typedef struct {
     const char *album;
     const char *cover_status;
     const char *lyrics;
+    const char *playback_status;
     
     int64_t song_id;
     unsigned long long elapsed;
     unsigned long long duration;
     
     bool duration_known;
+    bool show_cover;
+    bool loading;
     bool lyrics_visible;
     
     size_t selected;
