@@ -1,3 +1,41 @@
+# ShittyJukeBox Version: Ω²
+
+## ToC
+
+- [I ran out mythical creature names for recursion](#toc)
+- [File System Plan](#fsp)
+- [Original dev notes](#notes)
+
+
+### FSP 
+
+- This is where I'll put the filetree draft on my real notebook so I can continue to plan accordinghly
+
+```text
+    ShittyJukeBox/
+        ShittyJukeBox.c
+        Makefile
+        build.sh
+        src/
+            audio_handler.c
+            audio_handler.h
+            lyircs_handler.c
+            lyrics_handler.h
+            terminal_handler.c
+            terminal_handler.h
+            TUI.c
+            TUI.h
+            database.c
+            database.h
+        config/
+            config.lua    #Possible but no promises
+     
+```
+
+### Notes
+
+> the original notes on the dev branch of shitty jukebox
+
 ## Future of The ShittyJukebox
 
 
@@ -39,4 +77,6 @@
 
 > I'm currently ricing a DWM setup under another repo which gonna power my CyberDeck and ShittyJukebox
 is part of the Legacy and there will be shit that added for feral CyberGremlins like me 
-(For example: CLI flags that allows physical media such as cassette tapes)
+(For example: CLI flags that allows physical media such as cassette tapes) 
+
+
