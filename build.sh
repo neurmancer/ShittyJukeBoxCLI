@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-cc ShittyJukeBox.c -lm -o ShittyJukeBox 
-clear
+set -eu
 
-./ShittyJukeBox
+cd -- "$(dirname -- "$0")"
+make run
