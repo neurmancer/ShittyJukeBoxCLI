@@ -161,14 +161,14 @@ void tui_menu_draw(TuiMenu *menu, const char *status)
         char label[512];
         snprintf(label, sizeof label, "%s %s%s%s%s", i == menu->selected ? ">" : " ",
                  item->kind == TUI_TOGGLE ? (item->value ? "[on]  " : "[off] ") : "",
-                 item->label, menu->has_active && menu->active == i ? " [current]" : "",
-                 item->enabled ? "" : " (unavailable)");
+                 item->label, menu->has_active && menu->active == i ? " [playing]" : "",
+                 item->enabled ? "" : " (wtf?)");
         line(3 + i - menu->top, width,
              !item->enabled ? DIM : i == menu->selected ? BOLDY INVERSE : RESET, label);
     }
-    if (!menu->count) { line(3, width, DIM, "No items yet."); }
+    if (!menu->count) { line(3, width, DIM, "Just static..."); }
     char position[80];
-    if (menu->selected == SIZE_MAX) { snprintf(position, sizeof position, "No selectable items"); }
+    if (menu->selected == SIZE_MAX) { snprintf(position, sizeof position, "Nothing to fuck with"); }
 
     else { snprintf(position, sizeof position, "%zu / %zu", menu->selected + 1, menu->count); }
     line(rows - 3, width, DIM, position);
