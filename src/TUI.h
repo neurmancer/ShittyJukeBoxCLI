@@ -86,7 +86,8 @@ typedef enum {
     SCREEN_PLAYER, SCREEN_LYRICS, SCREEN_VISUALIZER, SCREEN_SONGS, SCREEN_COUNT
 } TuiScreen;
 
-typedef enum { OVERLAY_NONE, OVERLAY_QUEUE } TuiOverlay;
+typedef enum { OVERLAY_NONE, OVERLAY_QUEUE, OVERLAY_TYPEWRITER } TuiOverlay;
+typedef enum { TYPEWRITER_NORMAL, TYPEWRITER_RGB, TYPEWRITER_BOLD, TYPEWRITER_MODE_COUNT } TypewriterMode;
 
 typedef struct {
     TuiScreen screen;
@@ -98,6 +99,9 @@ typedef struct {
     TuiMenu *queue;
     TuiPlayer *player;
     size_t lyrics_top;
+    TypewriterMode typewriter_mode;
+    size_t typewriter_color;
+    size_t typewriter_selected;
     const char *status;
 } TuiState;
 

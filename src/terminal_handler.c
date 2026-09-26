@@ -14,7 +14,7 @@ static struct termios original;
 static const int signals[] = {SIGINT, SIGTERM, SIGHUP, SIGQUIT, SIGWINCH};
 static struct sigaction previous[sizeof signals / sizeof signals[0]];
 static size_t installed;
-static int active, registered, escape_state;
+static int active, registered, escape_state, frame_open;
 static char key_sequence[64];
 static size_t key_length;
 static int key_overflow;
@@ -41,6 +41,7 @@ static void on_signal(int number)
 void terminal_restore(void)
 {
     if (active) {
+        terminal_frame_end();
         terminal_cover_free();
         
         while (tcsetattr(STDIN_FILENO, TCSANOW, &original) < 0 && errno == EINTR) {}
@@ -159,6 +160,7 @@ static TerminalAction plain_key(unsigned byte)
         case '2': return(TERM_LYRICS);
         case '3': return(TERM_VISUALIZER);
         case 'Q': return(TERM_QUEUE);
+        case 't': return(TERM_TYPEWRITER);
         case 's': return(TERM_SETTINGS);
         case '\t': return(TERM_NEXT_VIEW);
         case 4: return(TERM_END);
@@ -319,6 +321,23 @@ void terminal_size(size_t *rows, size_t *columns)
     }
 }
 
+void terminal_frame_begin(void)
+{
+    /* DEC mode 2026: supporting terminals retain the previous complete frame
+     * while we clear, redraw lyrics, apply highlights, and paint overlays. */
+    if (frame_open) { return; }
+    frame_open = 1;
+    fputs("\033[?2026h", stdout);
+}
+
+void terminal_frame_end(void)
+{
+    if (!frame_open) { return; }
+    frame_open = 0;
+    fputs("\033[?2026l", stdout);
+    fflush(stdout);
+}
+
 void terminal_clear(void)
 {
     terminal_cover_hide();
@@ -350,16 +369,59 @@ int terminal_cover_draw(size_t row, size_t column, size_t width, size_t height)
     return(1);
 }
 
+int terminal_cover_supported(void)
+{
+    const char *term = getenv("TERM");
+    return(active && term && !strcmp(term, "xterm-kitty") && !getenv("TMUX") && !getenv("STY"));
+}
+
+static int cover_upload(const unsigned char *data, size_t count, const char *format)
+{
+    terminal_cover_free();
+    cover_error[0] = '\0';
+    const char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    for (size_t offset = 0; offset < count;) {
+        size_t chunk = count - offset;
+        if (chunk > 3072) { chunk = 3072; }
+        char encoded[4097];
+        size_t output = 0;
+        for (size_t i = 0; i < chunk; i += 3) {
+            unsigned value = (unsigned)data[offset + i] << 16;
+            if (i + 1 < chunk) { value |= (unsigned)data[offset + i + 1] << 8; }
+            if (i + 2 < chunk) { value |= data[offset + i + 2]; }
+            encoded[output++] = alphabet[(value >> 18) & 63];
+            encoded[output++] = alphabet[(value >> 12) & 63];
+            encoded[output++] = i + 1 < chunk ? alphabet[(value >> 6) & 63] : '=';
+            encoded[output++] = i + 2 < chunk ? alphabet[value & 63] : '=';
+        }
+        encoded[output] = '\0';
+        printf("\033_G%sm=%d;%s\033\\", offset == 0 ? format : "", offset + chunk < count, encoded);
+        offset += chunk;
+    }
+    cover_loaded = 1;
+    if (fflush(stdout) == EOF) { terminal_cover_free(); errno = EIO; return(-1); }
+    return(0);
+}
+
+int terminal_cover_rgba(const unsigned char *pixels, size_t width, size_t height)
+{
+    if (!terminal_cover_supported()) { errno = ENOTSUP; return(-1); }
+    if (!pixels || !width || !height || width > 512 || height > 512) { errno = EINVAL; return(-1); }
+    char format[128];
+    snprintf(format, sizeof format, "a=t,f=32,s=%zu,v=%zu,t=d,i=" COVER_NUMBER ",q=1,", width, height);
+    return(cover_upload(pixels, width * height * 4, format));
+}
+
 int terminal_cover_load(const char *path)
 {
+    terminal_cover_free();
     cover_error[0] = '\0';
-    const char *term = getenv("TERM");
     if (!active) { errno = EINVAL; return(-1); }
     /* Multiplexer passthrough is a separate backend
      don't emit the fucking raw APC there  
     */
 
-    if (!term || strcmp(term, "xterm-kitty") || getenv("TMUX") || getenv("STY")) {
+    if (!terminal_cover_supported()) {
         errno = ENOTSUP;
         return(-1);
     }
@@ -399,44 +461,7 @@ int terminal_cover_load(const char *path)
         return(-1);
     }
     
-    terminal_cover_free();
-    
-    const char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; //Lowkey I gotta add a few more chars but nah
-    
-    for (size_t offset = 0; offset < count;) {
-        
-        size_t chunk = count - offset;
-        
-        if (chunk > 3072) { chunk = 3072; }
-        
-        char encoded[4097];
-        size_t output = 0;
-        
-        for (size_t i = 0; i < chunk; i += 3) {
-            unsigned value = (unsigned)data[offset + i] << 16;
-            if (i + 1 < chunk) { value |= (unsigned)data[offset + i + 1] << 8; }
-            if (i + 2 < chunk) { value |= data[offset + i + 2]; }
-        
-            encoded[output++] = alphabet[(value >> 18) & 63];
-            encoded[output++] = alphabet[(value >> 12) & 63];
-            encoded[output++] = i + 1 < chunk ? alphabet[(value >> 6) & 63] : '=';
-            encoded[output++] = i + 2 < chunk ? alphabet[value & 63] : '=';
-        }
-        
-        encoded[output] = '\0';
-        
-        printf("\033_G%sm=%d;%s\033\\", offset == 0 ?
-               "a=t,f=100,t=d,i=" COVER_NUMBER ",q=1," : "",
-               offset + chunk < count, encoded);
-        offset += chunk;
-    }
-    
+    int result = cover_upload(data, count, "a=t,f=100,t=d,i=" COVER_NUMBER ",q=1,");
     free(data);
-    data = NULL;
-    
-    cover_loaded = 1;
-    
-    if (fflush(stdout) == EOF) { errno = EIO; return(-1); }
-    
-    return(0);
+    return(result);
 }

@@ -38,7 +38,7 @@ typedef enum {
     TERM_FIRST, TERM_LAST, TERM_ACTIVATE, TERM_BACK, TERM_QUIT,
     TERM_RESIZE, TERM_END, TERM_ERROR,
     TERM_ARROW_UP, TERM_ARROW_DOWN, TERM_VOLUME_UP, TERM_VOLUME_DOWN,
-    TERM_PLAYER, TERM_LYRICS, TERM_VISUALIZER, TERM_QUEUE, TERM_NEXT_VIEW, TERM_SETTINGS
+    TERM_PLAYER, TERM_LYRICS, TERM_VISUALIZER, TERM_QUEUE, TERM_NEXT_VIEW, TERM_SETTINGS, TERM_TYPEWRITER
 } TerminalAction;
 
 int terminal_init(void);
@@ -50,11 +50,16 @@ int terminal_signal(void);
 
 void terminal_size(size_t *rows, size_t *columns);
 void terminal_clear(void);
+/* Present a complete redraw together on terminals supporting synchronized output. */
+void terminal_frame_begin(void);
+void terminal_frame_end(void);
 
 /* Kitty PNG transport(stole the idea from fastfetch ngl). Upload once, then draw again and again
  * Returns -1 with errno for unavailable graphics or unreadable/invalid PNG.
  */
 int terminal_cover_load(const char *path);
+int terminal_cover_supported(void);
+int terminal_cover_rgba(const unsigned char *pixels, size_t width, size_t height);
 /* Asynchronous errors returned by the terminal; empty when none reported. */
 const char *terminal_cover_error(void);
 int terminal_cover_draw(size_t row, size_t column, size_t width, size_t height);

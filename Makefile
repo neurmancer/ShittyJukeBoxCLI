@@ -3,14 +3,14 @@ CPPFLAGS ?=
 CFLAGS ?= -Wall -Wextra -std=c11
 LDFLAGS ?=
 LDLIBS = -lm -lsqlite3
-AUDIO_PACKAGES = libavformat libavcodec libavutil libswresample sdl2
+AUDIO_PACKAGES = libavformat libavcodec libavutil libswresample libswscale sdl2
 AUDIO_CFLAGS = $(shell pkg-config --cflags $(AUDIO_PACKAGES))
 AUDIO_LIBS = $(shell pkg-config --libs $(AUDIO_PACKAGES))
 
 TARGET = ShittyJukeBox
 DB ?= jukebox.db
 SOURCES = ShittyJukeBox.c src/audio_handler.c src/lyrics_handler.c \
-          src/terminal_handler.c src/TUI.c src/database.c
+          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c
 HEADERS = $(wildcard src/*.h)
 
 .PHONY: all run clean test test-audio add-song add-songs

@@ -1,6 +1,7 @@
 #include "src/TUI.h"
 #include "src/database.h"
 #include "src/audio_handler.h"
+#include "src/cover_handler.h"
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -101,6 +102,8 @@ typedef struct {
     size_t genre;
     size_t index;
     uint64_t generation;
+    CoverLoader *covers;
+    const char *cover_override;
 } PlaybackSelection;
 
 static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
@@ -112,8 +115,12 @@ static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
         ui->status = "Cannot allocate playback request.";
         return(-1);
     }
-    *selection = (PlaybackSelection){song, genre, index, audio_status(audio).generation};
+    selection->song = song;
+    selection->genre = genre;
+    selection->index = index;
+    selection->generation = audio_status(audio).generation;
     select_song(ui, song);
+    cover_request(selection->covers, selection->cover_override ? selection->cover_override : song->cover_uri);
     ui->player->paused = false;
     ui->status = "";
     for (size_t i = 0; i < library->count; ++i) { library->sections[i].menu.has_active = false; }
@@ -195,7 +202,6 @@ int main(int argc, char **argv)
 
         else if (!strcmp(argv[i], "--cover") && i + 1 < argc) {
             cover_path = argv[++i];
-            preview = true;
         }
 
         else if (!strcmp(argv[i], "--db") && i + 1 < argc) { database_path = argv[++i]; }
@@ -266,7 +272,7 @@ int main(int argc, char **argv)
     }
 
     char cover_status[160] = "No album cover";
-    if (cover_path && terminal_cover_load(cover_path) < 0) {
+    if (preview && cover_path && terminal_cover_load(cover_path) < 0) {
         snprintf(cover_status, sizeof cover_status, "Cover: %s", strerror(errno));
     }
     Lyrics timed_lyrics = {0};
@@ -290,7 +296,9 @@ int main(int argc, char **argv)
     tui_state_init(&ui, preview ? SCREEN_PLAYER : SCREEN_HOME);
     int error = 0;
     size_t selected_genre = 0;
-    PlaybackSelection selection = {0};
+    PlaybackSelection selection = {
+        .covers = terminal_cover_supported() ? cover_create() : NULL, .cover_override = cover_path
+    };
     char volume_status[96] = "";
     char playback_status[256] = "Choose a song to start playback";
     AudioStatus last_audio = {.state = AUDIO_IDLE};
@@ -300,8 +308,9 @@ int main(int argc, char **argv)
     tui_state_draw(&ui);
 
     while (running) {
-        int refresh_ms = ui.screen == SCREEN_LYRICS && timed_lyrics.count &&
-                         player.lyrics_visible && !player.paused ? 30 : 100;
+        bool timed_view = ui.screen == SCREEN_LYRICS && timed_lyrics.count && player.lyrics_visible && !player.paused;
+        bool word_timing = player.lyric_active < timed_lyrics.count && timed_lyrics.cues[player.lyric_active].word_count;
+        int refresh_ms = timed_view ? (word_timing ? 10 : 30) : 100;
         TerminalAction action = terminal_read(refresh_ms);
         if (action == TERM_ERROR) { error = errno; break; }
         if (action == TERM_ARROW_UP || action == TERM_ARROW_DOWN) {
@@ -431,11 +440,20 @@ int main(int argc, char **argv)
         }
         last_audio = status;
 
+        size_t cover_width, cover_height;
+        unsigned char *pixels = cover_take(selection.covers, &cover_width, &cover_height);
+        if (pixels) {
+            player.show_cover = terminal_cover_rgba(pixels, cover_width, cover_height) == 0;
+            free(pixels);
+            result = TUI_CHANGED;
+        }
+
         if (running && result != TUI_UNCHANGED) { tui_state_draw(&ui); }
     }
 
     int signal_number = terminal_signal();
     
+    cover_destroy(selection.covers);
     terminal_restore();
     lyrics_free(&timed_lyrics);
     audio_destroy(audio);

@@ -42,9 +42,9 @@ static int valid_utf8(const unsigned char *p)
 
 static int digit(char c) { return(c >= '0' && c <= '9'); }
 
-static const char *timestamp(const char *p, const char *end, int64_t *time)
+static const char *timestamp(const char *p, const char *end, int64_t *time, char opening, char closing)
 {
-    if (p == end || *p++ != '[') { return(NULL); }
+    if (p == end || *p++ != opening) { return(NULL); }
 
     const char *start = p;
     int64_t minutes = 0;
@@ -71,7 +71,7 @@ static const char *timestamp(const char *p, const char *end, int64_t *time)
 
     while (places++ < 3) { fraction *= 10; }
 
-    if (p == end || *p++ != ']') { return(NULL); }
+    if (p == end || *p++ != closing) { return(NULL); }
 
     *time = minutes * 60000 + seconds * 1000 + fraction;
 
@@ -80,7 +80,10 @@ static const char *timestamp(const char *p, const char *end, int64_t *time)
 
 void lyrics_free(Lyrics *lyrics)
 {
-    for (size_t i = 0; i < lyrics->count; ++i) { free(lyrics->cues[i].text); }
+    for (size_t i = 0; i < lyrics->count; ++i) {
+        free(lyrics->cues[i].text);
+        free(lyrics->cues[i].words);
+    }
     free(lyrics->cues);
     *lyrics = (Lyrics){0};
 }
@@ -90,6 +93,63 @@ static int compare_cues(const void *left, const void *right)
     const LyricsCue *a = left, *b = right;
     if (a->time_ms != b->time_ms) { return(a->time_ms < b->time_ms ? -1 : 1); }
     return((a->order > b->order) - (a->order < b->order));
+}
+
+static int cue_text(LyricsCue *cue, const char *text, const char *end, int64_t base,
+                    size_t *allocated, char *error, size_t size)
+{
+    size_t markers = 0;
+    int64_t previous = base;
+    for (const char *p = text; p < end; ++p) {
+        if (*p != '<') { continue; }
+        int64_t time;
+        const char *after = timestamp(p, end, &time, '<', '>');
+        if (!after) {
+            const char *candidate = p + 1;
+            while (candidate < end && digit(*candidate)) { ++candidate; }
+            if (candidate > p + 1 && candidate < end && *candidate == ':') {
+                return(failure(error, size, "Invalid inline LRC timestamp"));
+            }
+            continue;
+        }
+        if (time < previous) { return(failure(error, size, "Inline LRC timestamps must not go backwards or precede the line")); }
+        previous = time;
+        ++markers;
+        p = after - 1;
+    }
+    size_t length = (size_t)(end - text);
+    size_t required = length + 1 + (markers ? (markers + 1) * sizeof *cue->words : 0);
+    if (required > 8 * LRC_MAX_BYTES - *allocated) {
+        return(failure(error, size, "Expanded LRC text and word timing exceed 8 MiB"));
+    }
+    *allocated += required;
+    cue->text = malloc(length + 1);
+    if (!cue->text) { return(failure(error, size, "Cannot allocate lyrics")); }
+    if (!markers) {
+        memcpy(cue->text, text, length);
+        cue->text[length] = '\0';
+        return(0);
+    }
+    cue->words = malloc((markers + 1) * sizeof *cue->words);
+    if (!cue->words) { return(failure(error, size, "Cannot allocate word timestamps")); }
+    cue->words[cue->word_count++] = (LyricsWord){cue->time_ms, 0};
+    size_t bytes = 0;
+    for (const char *p = text; p < end;) {
+        int64_t time;
+        const char *after = timestamp(p, end, &time, '<', '>');
+        if (after) {
+            cue->words[cue->word_count++] = (LyricsWord){cue->time_ms + (time - base), bytes};
+            p = after;
+            /* Avoid doubling separators in "word <timestamp> next". */
+            if (bytes && (cue->text[bytes - 1] == ' ' || cue->text[bytes - 1] == '\t')) {
+                while (p < end && (*p == ' ' || *p == '\t')) { ++p; }
+            }
+        }
+
+        else { cue->text[bytes++] = *p++; }
+    }
+    cue->text[bytes] = '\0';
+    return(0);
 }
 
 int lyrics_parse(const char *source, Lyrics *lyrics, char *error, size_t size)
@@ -132,7 +192,7 @@ int lyrics_parse(const char *source, Lyrics *lyrics, char *error, size_t size)
             int64_t time;
             size_t first = parsed.count;
     
-            while ((after = timestamp(text, end, &time))) {
+            while ((after = timestamp(text, end, &time, '[', ']'))) {
     
                 if (parsed.count == LRC_MAX_CUES) {
     
@@ -160,23 +220,11 @@ int lyrics_parse(const char *source, Lyrics *lyrics, char *error, size_t size)
     
             for (size_t i = first; i < parsed.count; ++i) {
     
-                size_t length = (size_t)(end - text);
-    
-                if (length + 1 > 8 * LRC_MAX_BYTES - text_bytes) {
+                if (cue_text(&parsed.cues[i], text, end, parsed.cues[first].time_ms,
+                             &text_bytes, error, size) < 0) {
                     lyrics_free(&parsed);
-    
-                    return(failure(error, size, "Expanded LRC text exceeds 8 MiB"));
+                    return(-1);
                 }
-    
-                text_bytes += length + 1;
-    
-                parsed.cues[i].text = malloc(length + 1);
-    
-                if (!parsed.cues[i].text) { goto memory; }
-    
-                memcpy(parsed.cues[i].text, text, length);
-    
-                parsed.cues[i].text[length] = '\0';
             }
             if (first == parsed.count && end != p) { ++parsed.skipped_lines; }
         }
@@ -189,7 +237,12 @@ int lyrics_parse(const char *source, Lyrics *lyrics, char *error, size_t size)
         return(failure(error, size, "No valid LRC timestamps"));
     }
     
-    for (size_t i = 0; i < parsed.count; ++i) { parsed.cues[i].time_ms -= offset; }
+    for (size_t i = 0; i < parsed.count; ++i) {
+        parsed.cues[i].time_ms -= offset;
+        for (size_t j = 0; j < parsed.cues[i].word_count; ++j) {
+            parsed.cues[i].words[j].time_ms -= offset;
+        }
+    }
     
     qsort(parsed.cues, parsed.count, sizeof *parsed.cues, compare_cues);
     
@@ -259,10 +312,55 @@ size_t lyrics_active(const Lyrics *lyrics, int64_t position_ms)
     return(low);
 }
 
+static size_t stamped_visible_bytes(const Lyrics *lyrics, size_t index, int64_t position_ms, int64_t duration_ms)
+{
+    const LyricsCue *cue = &lyrics->cues[index];
+    size_t low = 0, high = cue->word_count;
+    while (low < high) {
+        size_t mid = low + (high - low) / 2;
+        if (cue->words[mid].time_ms <= position_ms) { low = mid + 1; }
+
+        else { high = mid; }
+    }
+    if (!low) { return(0); }
+    size_t current = low - 1;
+    size_t first = cue->words[current].byte_offset;
+    size_t end_byte = low < cue->word_count ? cue->words[low].byte_offset : strlen(cue->text);
+    int64_t start = cue->words[current].time_ms;
+    int64_t end = duration_ms;
+    int known = duration_ms >= 0;
+    if (low < cue->word_count) { end = cue->words[low].time_ms; known = 1; }
+
+    else {
+        size_t next = index + 1;
+        while (next < lyrics->count && lyrics->cues[next].time_ms == cue->time_ms) { ++next; }
+        if (next < lyrics->count) { end = lyrics->cues[next].time_ms; known = 1; }
+    }
+    while (first < end_byte && (cue->text[first] == ' ' || cue->text[first] == '\t')) { ++first; }
+    size_t letters_end = end_byte;
+    while (letters_end > first && (cue->text[letters_end - 1] == ' ' || cue->text[letters_end - 1] == '\t')) { --letters_end; }
+    size_t characters = 0;
+    for (size_t i = first; i < letters_end; ++i) {
+        if (((unsigned char)cue->text[i] & 0xc0) != 0x80) { ++characters; }
+    }
+    if (!characters) { return(end_byte); }
+    uint64_t window = known && end > start ? (uint64_t)end - (uint64_t)start : (uint64_t)characters * 100;
+    uint64_t elapsed = (uint64_t)position_ms - (uint64_t)start;
+    if (window <= 1 || elapsed >= window - 1) { return(end_byte); }
+    size_t visible = 1 + (size_t)((long double)elapsed * (characters - 1) / (window - 1));
+    size_t bytes = first;
+    while (bytes < letters_end && visible--) {
+        ++bytes;
+        while (bytes < letters_end && ((unsigned char)cue->text[bytes] & 0xc0) == 0x80) { ++bytes; }
+    }
+    return(bytes == letters_end ? end_byte : bytes);
+}
+
 size_t lyrics_visible_bytes(const Lyrics *lyrics, size_t cue, int64_t position_ms, int64_t duration_ms)
 {
     if (cue >= lyrics->count || position_ms < lyrics->cues[cue].time_ms) { return(0); }
-    
+    if (lyrics->cues[cue].word_count) { return(stamped_visible_bytes(lyrics, cue, position_ms, duration_ms)); }
+
     const char *text = lyrics->cues[cue].text;
     
     size_t length = strlen(text), characters = 0;
@@ -274,25 +372,48 @@ size_t lyrics_visible_bytes(const Lyrics *lyrics, size_t cue, int64_t position_m
     
     if (!characters) { return(0); }
     
-    int64_t window = (int64_t)characters * 40;
+    uint64_t window = (uint64_t)characters * 100;
     int64_t start = lyrics->cues[cue].time_ms;
     size_t next = cue + 1;
     
     while (next < lyrics->count && lyrics->cues[next].time_ms == start) { ++next; }
     
     int64_t end = next < lyrics->count ? lyrics->cues[next].time_ms : duration_ms;
-    if (end > start && end < start + window) { window = end - start; }
-    
-    if (position_ms >= start + window) { return(length); }
-    
-    size_t visible = 1 + (size_t)((position_ms - start) * (int64_t)characters / window);
-    size_t bytes = 0;
-    
-    while (bytes < length && visible--) {
-        ++bytes;
-    
-        while (bytes < length && ((unsigned char)text[bytes] & 0xc0) == 0x80) { ++bytes; }
+    /* LRC gives line starts, so use the whole interval instead of racing through
+     * the line at a fixed typing speed. Unsigned subtraction also handles offsets. */
+    if ((next < lyrics->count || duration_ms >= 0) && end > start) {
+        window = (uint64_t)end - (uint64_t)start;
+        /* Leave a redraw or two for the completed line before the next cue. */
+        if (window > 100) { window -= 50; }
     }
-    
-    return(bytes);
+    uint64_t elapsed = (uint64_t)position_ms - (uint64_t)start;
+    if (window <= 1 || elapsed >= window - 1) { return(length); }
+
+    /* Rush inside each word, then wait at its following space. Reset the lead
+     * for every word so it cannot accumulate across the line. */
+    long double progress = (long double)elapsed * (characters - 1) / (window - 1);
+    size_t bytes = 0, index = 0;
+    while (bytes < length) {
+        while (bytes < length && (text[bytes] == ' ' || text[bytes] == '\t')) { ++bytes; ++index; }
+        size_t word_byte = bytes, word_start = index;
+        while (bytes < length && text[bytes] != ' ' && text[bytes] != '\t') {
+            ++bytes;
+            while (bytes < length && ((unsigned char)text[bytes] & 0xc0) == 0x80) { ++bytes; }
+            ++index;
+        }
+        size_t word_end = bytes, word_characters = index - word_start;
+        while (bytes < length && (text[bytes] == ' ' || text[bytes] == '\t')) { ++bytes; ++index; }
+        if (progress >= (long double)index && bytes < length) { continue; }
+        if (!word_characters || progress < (long double)word_start) { return(word_byte); }
+
+        size_t visible = 1 + (size_t)((progress - word_start) * 1.2L);
+        if (visible >= word_characters) { return(bytes); }
+        bytes = word_byte;
+        while (bytes < word_end && visible--) {
+            ++bytes;
+            while (bytes < word_end && ((unsigned char)text[bytes] & 0xc0) == 0x80) { ++bytes; }
+        }
+        return(bytes);
+    }
+    return(length);
 }
