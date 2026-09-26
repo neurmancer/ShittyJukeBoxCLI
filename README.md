@@ -30,9 +30,17 @@
 
 - there is a hotkey menu down below on terminal so you never have to guess which key does what(spoiler alert scroll works too) 
 
+- THE FUCKING ASCII JUKEBOX HAVE RETURNED 
+
+- Well...we don't have SkyNet anymore...
+
+- Mr. Rick Astley kindly evacuated to the ring 0 and does not rickroll the user on exit (He did, in fact, give up)
+
 - I mean...**YOU FUCKING GOTTA TRY IT TO UNDERSTAND MY HYPE BRO** go fucking [compile](#how-to-run)
 
 ## In Dev
+
+- [ ] Song database recreation
 
 - [ ] Lyrics sync (AND TRUST ME THIS TIME IT'LL BE FUCKING PERFECT) (Still...tho...I am not fucking spotify, just a teenager with a dream)
 
@@ -46,6 +54,8 @@
 
 
 ## How to run
+
+> _Before running_ I advise using the kitty terminal emulator for the cover art feature support but other terminals are working just well for the rest
 
 ```sh
 
