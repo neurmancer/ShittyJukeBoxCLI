@@ -178,6 +178,153 @@ void tui_menu_draw(TuiMenu *menu, const char *status)
     fflush(stdout);
 }
 
+/* Cell widths keep the cabinet centered with accented and wide genre names.(Fuck me...where are the old jokes?) */
+
+static size_t text_cells(const char *text)
+{
+    mbstate_t state = {0};
+    size_t width = 0, left = strlen(text);
+    while (left) {
+        wchar_t character;
+        size_t bytes = mbrtowc(&character, text, left, &state);
+        int cells;
+        if (bytes == (size_t)-1 || bytes == (size_t)-2) {
+            state = (mbstate_t){0};
+            bytes = 1;
+            cells = 1;
+        }
+
+        else { cells = wcwidth(character); }
+        width += cells < 0 ? 1 : (size_t)cells;
+        text += bytes;
+        left -= bytes;
+    }
+    return(width);
+}
+
+static void cabinet_center(size_t row, size_t x, size_t width, const char *style, const char *text)
+{
+    size_t cells = text_cells(text);
+    if (cells > width) { cells = width; }
+    text_at(row, x + (width - cells) / 2, cells, style, text);
+}
+
+static void cabinet_bar(size_t row, size_t x, size_t width, char left, char fill, char right)
+{
+    char bar[65];
+    memset(bar, fill, width);
+    bar[0] = left;
+    bar[width - 1] = right;
+    bar[width] = '\0';
+    text_at(row, x, width, PURPLE, bar);
+}
+
+static void jukebox_menu_draw(TuiMenu *menu, TuiScreen screen, const char *status)
+{
+    size_t rows, columns;
+
+    terminal_size(&rows, &columns);
+    if (rows < 18 || columns < 44) {
+
+        tui_menu_draw(menu, status);
+
+        if (rows >= 7 && columns >= 24) {
+            line(rows, columns - 1, DIM, screen == SCREEN_SETTINGS ?
+                 "s: genres  Esc: back  q: quit" : "s: settings  Esc: back  q: quit");
+            fflush(stdout);
+        }
+
+        return;
+    }
+
+    normalize(menu);
+
+    size_t width = columns - 4;
+
+    if (width > 64) { width = 64; }
+
+    size_t visible = rows - 16;
+
+    if (visible > 8) { visible = 8; }
+    if (visible > menu->count) { visible = menu->count ? menu->count : 1; }
+
+    size_t height = visible + 13;
+    size_t x = (columns - width) / 2 + 1;
+    size_t y = (rows - 3 - height) / 2 + 1;
+
+    terminal_clear();
+    cabinet_bar(y, x + 6, width - 12, '.', '-', '.');
+    text_at(y + 1, x + 3, 3, PURPLE, ".-'");
+    text_at(y + 1, x + width - 6, 3, PURPLE, "'-.");
+    text_at(y + 2, x + 1, 1, PURPLE, "/");
+    text_at(y + 2, x + width - 2, 1, PURPLE, "\\");
+
+    for (size_t row = y + 3; row < y + height - 2; ++row) {
+        text_at(row, x, 3, PURPLE, "| |");
+        text_at(row, x + width - 3, 3, PURPLE, "| |");
+    }
+
+    cabinet_center(y + 2, x + 4, width - 8, GREEN BOLDY, "S H I T T Y   J U K E B O X");
+    cabinet_bar(y + 4, x + 4, width - 8, '+', '-', '+');
+    cabinet_center(y + 5, x + 4, width - 8, PURPLE BOLDY,
+                   screen == SCREEN_GENRES ? "Genres     [s: Settings]" :
+                   screen == SCREEN_SETTINGS ? "Settings     [s: Genres]" : "Choose your next track");
+    if (menu->selected != SIZE_MAX) {
+        if (menu->top > menu->selected) { menu->top = menu->selected; }
+        if (menu->selected - menu->top >= visible) { menu->top = menu->selected - visible + 1; }
+    }
+
+    if (menu->top >= menu->count) { menu->top = 0; }
+
+    size_t label_width = 0;
+
+    for (size_t i = 0; i < menu->count; ++i) {
+        size_t cells = 2 + text_cells(menu->items[i].label) +
+                       (menu->items[i].kind == TUI_TOGGLE ? 6 : 0) +
+                       (menu->has_active && menu->active == i ? 10 : 0) +
+                       (menu->items[i].enabled ? 0 : 7);
+        if (cells > label_width) { label_width = cells; }
+    }
+
+    if (label_width > width - 12) { label_width = width - 12; }
+
+    for (size_t i = menu->top; i < menu->count && i - menu->top < visible; ++i) {
+
+        TuiItem *item = &menu->items[i];
+        char label[512];
+
+        snprintf(label, sizeof label, "%s %s%s%s%s", i == menu->selected ? ">" : " ",
+                 item->kind == TUI_TOGGLE ? (item->value ? "[on]  " : "[off] ") : "",
+                 item->label, menu->has_active && menu->active == i ? " [playing]" : "",
+                 item->enabled ? "" : " (wtf?)");
+
+                 text_at(y + 7 + i - menu->top, x + (width - label_width) / 2, label_width,
+                !item->enabled ? DIM : i == menu->selected ? PURPLE BOLDY INVERSE : RESET, label);
+    }
+
+    if (!menu->count) { cabinet_center(y + 7, x + 4, width - 8, DIM, "Just static..."); }
+
+    char position[96];
+
+    if (menu->selected == SIZE_MAX) { snprintf(position, sizeof position, "No selections yet"); }
+
+    else { snprintf(position, sizeof position, "%zu / %zu%s%s", menu->selected + 1, menu->count,
+                    menu->top ? "   ^ more" : "", menu->top + visible < menu->count ? "   v more" : ""); }
+    cabinet_center(y + 7 + visible, x + 4, width - 8, DIM, position);
+    cabinet_bar(y + 8 + visible, x + 4, width - 8, '+', '-', '+');
+    cabinet_center(y + 9 + visible, x + 4, width - 8, GREEN, "(((OwO)))     [ 13 / 53 ]     (((UwU)))");
+    cabinet_center(y + 10 + visible, x + 4, width - 8, DIM, ":::::::::    INSERT COIN    :::::::::");
+    cabinet_bar(y + 11 + visible, x, width, '\'', '=', '\'');
+
+    text_at(y + 12 + visible, x + 4, 5, PURPLE, "[___]");
+    text_at(y + 12 + visible, x + width - 9, 5, PURPLE, "[___]");
+
+    line(rows - 2, columns - 1, FANCY, status ? status : "");
+    cabinet_center(rows - 1, 1, columns - 1, DIM, "Arrows/hjkl: move/set  Enter/Space: select");
+    cabinet_center(rows, 1, columns - 1, DIM, "s: genres/settings  Esc: back  q: quit  Home/End: jump");
+    fflush(stdout);
+}
+
 TuiResult tui_player_handle(TuiPlayer *player, TerminalAction action)
 {
     if (player->selected >= PLAYER_CONTROL_COUNT) { player->selected = PLAYER_PLAY; }
@@ -235,7 +382,7 @@ static void cover_frame(size_t width, size_t height, const char *status)
     fputs("╯" RESET, stdout);
     
     if (!terminal_cover_draw(4, 4, width - 2, height - 2)) {
-        text_at(4 + height / 2, 5, width - 4, DIM, status);
+        text_at(4 + height / 2, 5, width - 4, DIM, *terminal_cover_error() ? terminal_cover_error() : status);
     }
 }
 
@@ -331,12 +478,20 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
     text_at(12, x, width, DIM, names[selected]);
     char modes[96];
-    snprintf(modes, sizeof modes, "Shuffle: %s   Repeat: %s", player->shuffle ? "on" : "off", player->repeat ? "on" : "off");
+    snprintf(modes, sizeof modes, "Volume: %d%%   Shuffle: %s   Repeat: %s", player->volume_percent, player->shuffle ? "on" : "off", player->repeat ? "on" : "off");
     if (rows >= 17) { text_at(13, x, width, GREEN, modes); }
 
-    line(rows - 2, columns - 1, FANCY, status ? status : "");
+    const char *message = status ? status : "";
+    if (player->show_cover) {
+        if (*terminal_cover_error()) { message = terminal_cover_error(); }
+
+        else if (player->cover_status && !strncmp(player->cover_status, "Cover:", 6)) { message = player->cover_status; }
+
+        else if (columns < 78 || rows < 18) { message = "Cover hidden: enlarge terminal to at least 78 columns / 18 rows."; }
+    }
+    line(rows - 2, columns - 1, FANCY, message);
     line(rows - 1, columns - 1, DIM, player->playback_status ? player->playback_status : "UI preview - audio is not connected");
-    line(rows, columns - 1, DIM, "1:player 2:lyrics 3:visualizer Q:queue Tab:next Esc:back q:quit");
+    line(rows, columns - 1, DIM, "Up/Down:vol Ctrl/Shift:vol  1:player 2:lyrics 3:FFT Q:queue Esc:back q:quit");
 
     fflush(stdout);
 }
@@ -381,7 +536,9 @@ static TuiResult state_back(TuiState *state)
 
 static size_t lyrics_count(const TuiPlayer *player)
 {
-    if (!player || !player->lyrics || !*player->lyrics || !player->lyrics_visible) { return(0); }
+    if (!player || !player->lyrics_visible) { return(0); }
+    if (player->timed_lyrics && player->timed_lyrics->count) { return(player->timed_lyrics->count); }
+    if (!player->lyrics || !*player->lyrics) { return(0); }
 
     size_t count = 1;
 
@@ -406,6 +563,13 @@ TuiResult tui_state_handle(TuiState *state, TerminalAction action)
         TuiResult result = tui_menu_handle(state->queue, action);
         if (result == TUI_BACK) { state->overlay = OVERLAY_NONE; return(TUI_CHANGED); }
         return(result);
+    }
+
+    if (action == TERM_SETTINGS && (state->screen == SCREEN_HOME || state->screen == SCREEN_GENRES || state->screen == SCREEN_SETTINGS)) {
+        if (state->screen == SCREEN_SETTINGS && state->history_count &&
+            state->history[state->history_count - 1] == SCREEN_GENRES) { return(state_back(state)); }
+        tui_state_switch(state, state->screen == SCREEN_SETTINGS ? SCREEN_GENRES : SCREEN_SETTINGS);
+        return(TUI_CHANGED);
     }
 
     if (action == TERM_PLAYER || action == TERM_LYRICS || action == TERM_VISUALIZER) {
@@ -476,7 +640,20 @@ static void pending_screen(const TuiState *state)
     }
     
     
-    if (state->screen == SCREEN_LYRICS && lyrics_count(state->player)) {
+    if (state->screen == SCREEN_LYRICS && state->player && state->player->lyrics_visible &&
+        state->player->timed_lyrics && state->player->timed_lyrics->count) {
+        const TuiPlayer *player = state->player;
+        const Lyrics *lyrics = player->timed_lyrics;
+        for (size_t row = 6, i = state->lyrics_top; i < lyrics->count && row < rows - 1; ++row, ++i) {
+            const LyricsCue *cue = &lyrics->cues[i];
+            bool active = player->lyric_active != SIZE_MAX &&
+                          cue->time_ms == lyrics->cues[player->lyric_active].time_ms;
+            size_t length = active ? lyrics_visible_bytes(lyrics, i, player->position_ms, player->duration_ms) : strlen(cue->text);
+            text_span(row, 1, width, active ? PURPLE BOLDY : DIM, cue->text, length);
+        }
+    }
+
+    else if (state->screen == SCREEN_LYRICS && lyrics_count(state->player)) {
     
         const char *cursor = state->player->lyrics;
         size_t index = 0;
@@ -556,7 +733,11 @@ void tui_state_draw(TuiState *state)
     }
 
     else if (state->menus[state->screen]) {
-        tui_menu_draw(state->menus[state->screen], state->status);
+        if (state->screen == SCREEN_HOME || state->screen == SCREEN_GENRES || state->screen == SCREEN_SETTINGS) {
+            jukebox_menu_draw(state->menus[state->screen], state->screen, state->status);
+        }
+
+        else { tui_menu_draw(state->menus[state->screen], state->status); }
         if (state->player && state->player->song_id && (!state->status || !*state->status)) {
             size_t rows, columns;
             terminal_size(&rows, &columns);

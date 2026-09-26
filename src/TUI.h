@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "terminal_handler.h"
+#include "lyrics_handler.h"
 
 typedef enum { TUI_BUTTON, TUI_TOGGLE } TuiItemKind;
 
@@ -51,6 +52,11 @@ typedef struct {
     const char *lyrics;
     const char *playback_status;
     
+    Lyrics *timed_lyrics;
+    size_t lyric_active;
+    int64_t position_ms;
+    int64_t duration_ms;
+    int volume_percent;
     int64_t song_id;
     unsigned long long elapsed;
     unsigned long long duration;

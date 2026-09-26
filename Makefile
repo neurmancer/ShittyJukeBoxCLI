@@ -28,14 +28,15 @@ clean:
 
 test:
 	python3 tests/check.py
+	python3 tests/import_check.py
 
 test-audio:
 	python3 tests/audio_check.py
 
 IMPORT_PACKAGES = libcurl libxml-2.0
 
-jukebox-add: tools/add_song.c tools/genius.c tools/genius.h src/database.c src/database.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(shell pkg-config --cflags $(IMPORT_PACKAGES)) tools/add_song.c tools/genius.c src/database.c $(LDFLAGS) $(LDLIBS) $(shell pkg-config --libs $(IMPORT_PACKAGES)) -o $@
+jukebox-add: tools/add_song.c tools/genius.c tools/genius.h src/database.c src/database.h src/lyrics_handler.c src/lyrics_handler.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(shell pkg-config --cflags $(IMPORT_PACKAGES)) tools/add_song.c tools/genius.c src/database.c src/lyrics_handler.c $(LDFLAGS) $(LDLIBS) $(shell pkg-config --libs $(IMPORT_PACKAGES)) -o $@
 
 add-song add-songs: jukebox-add
 	./jukebox-add --db "$(DB)"

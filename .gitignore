@@ -10,4 +10,7 @@ songdata.h
 
 /jukebox-add
 /legacy-backup/
-tools/
+tools/*
+!tools/add_song.c
+!tools/genius.c
+!tools/genius.h

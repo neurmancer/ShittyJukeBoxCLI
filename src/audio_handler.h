@@ -16,6 +16,7 @@ typedef struct {
     int64_t duration_ms; /* -1 if the stream does not advertise a duration. */
     AudioState state;
     bool pause_requested;
+    int volume_percent;
     char error[256];
 } AudioStatus;
 
@@ -32,6 +33,8 @@ int audio_play(AudioPlayer *player, int64_t song_id, const char *uri);
 
 void audio_pause(AudioPlayer *player, bool paused);
 void audio_stop(AudioPlayer *player);
+/* Session volume, clamped to 0..100; retained across track changes. */
+void audio_set_volume(AudioPlayer *player, int percent);
 
 AudioStatus audio_status(AudioPlayer *player);
 

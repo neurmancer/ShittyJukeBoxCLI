@@ -1,6 +1,6 @@
+#define _POSIX_C_SOURCE 200809L
 #include <sched.h>
 #include <time.h>
-#define _POSIX_C_SOURCE 200809L
 #include "audio_handler.h"
 #include <SDL.h>
 #include <libavcodec/avcodec.h>
@@ -27,6 +27,7 @@ struct AudioPlayer {
     char *pending_uri;
     
     AudioStatus status;
+    int volume_percent;
     SDL_AudioDeviceID device; /* Protected by mutex for immediate pause/stop. */
 };
 
@@ -91,6 +92,12 @@ static int wait_output(Playback *play, bool drain)
     return(AVERROR_EXIT);
 }
 
+static void scale_volume(int16_t *pcm, size_t samples, int percent)
+{
+    if (percent == 100) { return; }
+    for (size_t i = 0; i < samples; ++i) { pcm[i] = (int16_t)((int32_t)pcm[i] * percent / 100); }
+}
+
 static int output_frame(Playback *play, SwrContext *resampler, AVFrame *frame)
 {
     if (wait_output(play, false) < 0) { return(AVERROR_EXIT); }
@@ -111,6 +118,7 @@ static int output_frame(Playback *play, SwrContext *resampler, AVFrame *frame)
     if (samples > 0) {
         pthread_mutex_lock(&play->player->mutex);
 
+        scale_volume((int16_t *)pcm, (size_t)samples * 2, play->player->volume_percent);
         int queued = cancelled(play) ? -2 : SDL_QueueAudio(play->device, pcm, (Uint32)samples * FRAME_BYTES);
 
         pthread_mutex_unlock(&play->player->mutex); //Better than fork bombs eh?
@@ -396,6 +404,7 @@ AudioPlayer *audio_create(char *error, size_t size)
     atomic_init(&player->generation, 0);
     
     player->status.duration_ms = -1;
+    player->volume_percent = 100;
     
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
         snprintf(error, size, "%s", SDL_GetError());
@@ -484,12 +493,22 @@ void audio_stop(AudioPlayer *player)
     pthread_mutex_unlock(&player->mutex);
 }
 
+void audio_set_volume(AudioPlayer *player, int percent)
+{
+    if (percent < 0) { percent = 0; }
+    if (percent > 100) { percent = 100; }
+    pthread_mutex_lock(&player->mutex);
+    player->volume_percent = percent;
+    pthread_mutex_unlock(&player->mutex);
+}
+
 AudioStatus audio_status(AudioPlayer *player)
 {
     pthread_mutex_lock(&player->mutex);
     
     AudioStatus status = player->status;
     
+    status.volume_percent = player->volume_percent;
     status.pause_requested = atomic_load(&player->paused);
     
     pthread_mutex_unlock(&player->mutex);

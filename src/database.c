@@ -230,12 +230,19 @@ int database_song_save(Database *db, const DbSong *song, int64_t *id)
 
 int database_lyrics_set(Database *db, int64_t id, const char *lyrics, const char *source_uri)
 {
+    return(database_lyrics_replace(db, id, lyrics, "plain", source_uri));
+}
+
+int database_lyrics_replace(Database *db, int64_t id, const char *lyrics, const char *format, const char *source_uri)
+{
+    if (!format || (strcmp(format, "plain") && strcmp(format, "lrc"))) { return(fail(db, "Invalid lyrics format")); }
     sqlite3_stmt *statement = NULL;
-    if (prepare(db, &statement, "UPDATE songs SET lyrics=?1,lyrics_uri=?2,lyrics_format='plain',"
+    if (prepare(db, &statement, "UPDATE songs SET lyrics=?1,lyrics_uri=?2,lyrics_format=?4,"
         "lyrics_start_ms=NULL,lyrics_end_ms=NULL WHERE id=?3") < 0) { return(-1); }
     int result = bind_text(statement, 1, lyrics);
     if (result == SQLITE_OK) { result = bind_text(statement, 2, source_uri); }
     if (result == SQLITE_OK) { result = sqlite3_bind_int64(statement, 3, id); }
+    if (result == SQLITE_OK) { result = bind_text(statement, 4, format); }
     if (result == SQLITE_OK) { result = sqlite3_step(statement); }
     if (finish(db, statement, result) < 0) { return(-1); }
     if (!sqlite3_changes(db->handle)) { return(fail(db, "Song does not exist")); }

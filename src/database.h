@@ -28,7 +28,7 @@ typedef struct {
     char *cover_uri;
     char *lyrics;
     char *lyrics_format; /* plain or lrc */
-    char *lyrics_uri; /* Source page; empty for manually supplied lyrics. */
+    char *lyrics_uri; /* Source page or imported file path; empty when absent. */
     
     int64_t duration_ms;
     
@@ -59,14 +59,17 @@ int database_open(Database *db, const char *path);
 void database_close(Database *db);
 const char *database_error(const Database *db);
 
-/* Start input records here to get unknown timestamps, not accidental zeroes.
-  Save borrows strings. Get/list allocate strings: release with the free APIs.
-  id=0 inserts; id>0 updates that record. media_uri is unique; IDs remain stable.
+/* 
+    // I'll add offline support someday tho..
+    Maybe a file for playlist presence on local rig etc...
+    Fuck...scope creep
+
  */
 
 DbSong database_song_init(void);
 
 int database_song_save(Database *db, const DbSong *song, int64_t *id);
+int database_lyrics_replace(Database *db, int64_t id, const char *lyrics, const char *format, const char *source_uri);
 int database_lyrics_set(Database *db, int64_t id, const char *lyrics, const char *source_uri);
 int database_song_get(Database *db, int64_t id, DbSong *song);
 
@@ -90,8 +93,9 @@ int database_commit(Database *db);
 void database_rollback(Database *db);
 
 /* Parses ffprobe's format=duration numeric output (seconds), or rejects N/A.
- * Probing belongs outside the UI thread. Store successful results explicitly.
+ * Probing belongs outside the UI thread. Store successful results explicitly. (nvim please stop fucking putting * each comment LINE)
  */
+ 
 int database_duration_parse(const char *seconds, int64_t *milliseconds);
 int database_duration_set(Database *db, int64_t song_id, int64_t milliseconds, DbDurationSource source);
 

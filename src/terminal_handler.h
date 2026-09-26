@@ -37,7 +37,8 @@ typedef enum {
     TERM_NONE, TERM_UP, TERM_DOWN, TERM_LEFT, TERM_RIGHT,
     TERM_FIRST, TERM_LAST, TERM_ACTIVATE, TERM_BACK, TERM_QUIT,
     TERM_RESIZE, TERM_END, TERM_ERROR,
-    TERM_PLAYER, TERM_LYRICS, TERM_VISUALIZER, TERM_QUEUE, TERM_NEXT_VIEW
+    TERM_ARROW_UP, TERM_ARROW_DOWN, TERM_VOLUME_UP, TERM_VOLUME_DOWN,
+    TERM_PLAYER, TERM_LYRICS, TERM_VISUALIZER, TERM_QUEUE, TERM_NEXT_VIEW, TERM_SETTINGS
 } TerminalAction;
 
 int terminal_init(void);
@@ -54,6 +55,8 @@ void terminal_clear(void);
  * Returns -1 with errno for unavailable graphics or unreadable/invalid PNG.
  */
 int terminal_cover_load(const char *path);
+/* Asynchronous errors returned by the terminal; empty when none reported. */
+const char *terminal_cover_error(void);
 int terminal_cover_draw(size_t row, size_t column, size_t width, size_t height);
 void terminal_cover_hide(void);
 void terminal_cover_free(void);
