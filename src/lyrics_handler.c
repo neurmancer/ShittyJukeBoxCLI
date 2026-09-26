@@ -379,18 +379,19 @@ size_t lyrics_visible_bytes(const Lyrics *lyrics, size_t cue, int64_t position_m
     while (next < lyrics->count && lyrics->cues[next].time_ms == start) { ++next; }
     
     int64_t end = next < lyrics->count ? lyrics->cues[next].time_ms : duration_ms;
-    /* LRC gives line starts, so use the whole interval instead of racing through
-     * the line at a fixed typing speed. Unsigned subtraction also handles offsets. */
+
+
     if ((next < lyrics->count || duration_ms >= 0) && end > start) {
         window = (uint64_t)end - (uint64_t)start;
-        /* Leave a redraw or two for the completed line before the next cue. */
+    
         if (window > 100) { window -= 50; }
     }
     uint64_t elapsed = (uint64_t)position_ms - (uint64_t)start;
+    
     if (window <= 1 || elapsed >= window - 1) { return(length); }
 
     /* Rush inside each word, then wait at its following space. Reset the lead
-     * for every word so it cannot accumulate across the line. */
+     * for every word so it cannot accumulate across the line. change the rush pattern I undertook the sync labor */
     long double progress = (long double)elapsed * (characters - 1) / (window - 1);
     size_t bytes = 0, index = 0;
     while (bytes < length) {

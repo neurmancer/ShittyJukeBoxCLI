@@ -3,7 +3,6 @@ RULES.md
 tests/
 /ShittyJukeBox
 songdata.h
-/jukebox.db
 /jukebox.db-journal
 /jukebox.db-wal
 /jukebox.db-shm

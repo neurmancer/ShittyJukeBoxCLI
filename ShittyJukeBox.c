@@ -14,6 +14,8 @@
 //Here we go...once again...
 
 
+//Man once I was using function prototypes before now I am just trying to make this shit work first...
+
 typedef struct {
     DbSong *songs;
     size_t count;
@@ -26,76 +28,13 @@ typedef struct {
     TuiItem *items;
     SongMenu *sections;
 } Library;
+static void library_free(Library *library);
 
-static void library_free(Library *library)
-{
-    if (library->sections) {
-        for (size_t i = 0; i < library->count; ++i) {
-            database_songs_free(library->sections[i].songs, library->sections[i].count);
-            free(library->sections[i].menu.items);
-        }
-    }
-    free(library->sections);
-    free(library->items);
-    database_genres_free(library->genres, library->count);
-    *library = (Library){0};
-}
 
-static int library_load(Database *db, Library *library)
-{
-    if (database_genres(db, &library->genres, &library->count) < 0) { return(-1); }
-    if (!library->count) { return(0); }
-    library->items = calloc(library->count, sizeof *library->items);
-    library->sections = calloc(library->count, sizeof *library->sections);
-    if (!library->items || !library->sections) { goto no_memory; }
-    for (size_t i = 0; i < library->count; ++i) {
-        library->items[i] = (TuiItem){library->genres[i].name, TUI_BUTTON, true, false};
-        SongMenu *section = &library->sections[i];
-        if (database_songs(db, library->genres[i].id, &section->songs, &section->count) < 0) { return(-1); }
-        section->menu = (TuiMenu){.title = library->genres[i].name, .count = section->count, .wrap = true};
-        if (section->count) {
-            section->menu.items = calloc(section->count, sizeof *section->menu.items);
-            if (!section->menu.items) { goto no_memory; }
-        }
-        for (size_t j = 0; j < section->count; ++j) {
-            section->menu.items[j] = (TuiItem){section->songs[j].title, TUI_BUTTON, true, false};
-        }
-        tui_menu_init(&section->menu);
-    }
-    return(0);
-no_memory:
-    snprintf(db->error, sizeof db->error, "Cannot allocate library menus");
-    return(-1);
-}
+static int library_load(Database *db, Library *library);
 
-static void select_song(TuiState *ui, const DbSong *song)
-{
-    TuiPlayer *player = ui->player;
-    player->song_id = song->id;
-    player->title = song->title;
-    player->artist = song->artist;
-    player->album = *song->album ? song->album : "Album unknown";
-    player->lyrics = song->lyrics;
-    lyrics_free(player->timed_lyrics);
-    player->lyric_active = SIZE_MAX;
-    player->position_ms = 0;
-    player->duration_ms = song->duration_ms;
-    if (!strcmp(song->lyrics_format, "lrc")) {
-        char error[160];
-        if (lyrics_parse(song->lyrics, player->timed_lyrics, error, sizeof error) < 0) {
-            player->lyrics = "Cannot parse timed lyrics; re-import a valid LRC file.";
-        }
-    }
-    player->duration_known = song->duration_ms != DB_TIME_UNKNOWN;
-    player->duration = player->duration_known ? (unsigned long long)(song->duration_ms / 1000) : 0;
-    player->elapsed = 0;
-    player->paused = true;
-    ui->lyrics_top = 0;
-    player->show_cover = false;
-    player->loading = true;
-    player->playback_status = "Loading stream...";
-    terminal_cover_free();
-}
+
+static void select_song(TuiState *ui, const DbSong *song);
 
 typedef struct {
     DbSong *song;
@@ -106,88 +45,11 @@ typedef struct {
     const char *cover_override;
 } PlaybackSelection;
 
-static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
-                      PlaybackSelection *selection, size_t genre, size_t index)
-{
-    SongMenu *section = &library->sections[genre];
-    DbSong *song = &section->songs[index];
-    if (audio_play(audio, song->id, song->media_uri) < 0) {
-        ui->status = "Cannot allocate playback request.";
-        return(-1);
-    }
-    selection->song = song;
-    selection->genre = genre;
-    selection->index = index;
-    selection->generation = audio_status(audio).generation;
-    select_song(ui, song);
-    cover_request(selection->covers, selection->cover_override ? selection->cover_override : song->cover_uri);
-    ui->player->paused = false;
-    ui->status = "";
-    for (size_t i = 0; i < library->count; ++i) { library->sections[i].menu.has_active = false; }
-    section->menu.has_active = true;
-    section->menu.active = index;
-    ui->menus[SCREEN_GENRES]->has_active = true;
-    ui->menus[SCREEN_GENRES]->active = genre;
-    if (ui->queue->items != section->menu.items) {
-        *ui->queue = (TuiMenu){.title = "Queue", .items = section->menu.items, .count = section->count};
-        tui_menu_init(ui->queue);
-        ui->queue->selected = index;
-    }
-    ui->queue->has_active = true;
-    ui->queue->active = index;
-    return(0);
-}
+static int start_song(AudioPlayer *audio, TuiState *ui, Library *library, PlaybackSelection *selection, size_t genre, size_t index);
+static size_t next_song(const SongMenu *section, size_t index, bool shuffle, bool previous);
+static int import_lrc(Database *db, int64_t id, const char *path);
 
-static size_t next_song(const SongMenu *section, size_t index, bool shuffle, bool previous)
-{
-    if (shuffle && section->count > 1) {
-        return((index + 1 + (size_t)rand() % (section->count - 1)) % section->count);
-    }
-    return((index + (previous ? section->count - 1 : 1)) % section->count);
-}
 
-static int import_lrc(Database *db, int64_t id, const char *path)
-{
-    Lyrics timeline = {0};
-    char *source = NULL, error[256];
-    DbSong song = database_song_init();
-    int result = 1;
-    if (lyrics_read(path, &source, &timeline, error, sizeof error) < 0) {
-        fprintf(stderr, "LRC: %s\n", error);
-        goto done;
-    }
-    if (database_begin(db) < 0) { goto database_error; }
-    if (database_song_get(db, id, &song) < 0) { goto rollback; }
-    free(song.lyrics);
-    song.lyrics = source;
-    source = NULL;
-    free(song.lyrics_format);
-    free(song.lyrics_uri);
-    song.lyrics_format = malloc(4);
-    song.lyrics_uri = malloc(strlen(path) + 1);
-    if (!song.lyrics_format || !song.lyrics_uri) {
-        snprintf(db->error, sizeof db->error, "Cannot allocate LRC metadata");
-        goto rollback;
-    }
-    strcpy(song.lyrics_format, "lrc");
-    strcpy(song.lyrics_uri, path);
-    song.lyrics_start_ms = song.lyrics_end_ms = DB_TIME_UNKNOWN;
-    if (database_song_save(db, &song, &id) < 0 || database_commit(db) < 0) { goto rollback; }
-    printf("Imported %zu timed lines (%zu untimed/invalid lines ignored for playback).\n"
-           "Original LRC bytes retained in the database; source file unchanged.\n",
-           timeline.count, timeline.skipped_lines);
-    result = 0;
-    goto done;
-rollback:
-    database_rollback(db);
-database_error:
-    fprintf(stderr, "Library: %s\n", database_error(db));
-done:
-    free(source);
-    lyrics_free(&timeline);
-    database_song_free(&song);
-    return(result);
-}
 
 int main(int argc, char **argv)
 {
@@ -463,4 +325,157 @@ int main(int argc, char **argv)
     if (error) { fprintf(stderr, "Terminal input: %s\n", strerror(error)); return(1); }
     
     return(signal_number ? 128 + signal_number : 0);
+}
+
+static int import_lrc(Database *db, int64_t id, const char *path)
+{
+    Lyrics timeline = {0};
+    char *source = NULL, error[256];
+    DbSong song = database_song_init();
+    int result = 1;
+    if (lyrics_read(path, &source, &timeline, error, sizeof error) < 0) {
+        fprintf(stderr, "LRC: %s\n", error);
+        goto done;
+    }
+    if (database_begin(db) < 0) { goto database_error; }
+    if (database_song_get(db, id, &song) < 0) { goto rollback; }
+    free(song.lyrics);
+    song.lyrics = source;
+    source = NULL;
+    free(song.lyrics_format);
+    free(song.lyrics_uri);
+    song.lyrics_format = malloc(4);
+    song.lyrics_uri = malloc(strlen(path) + 1);
+    if (!song.lyrics_format || !song.lyrics_uri) {
+        snprintf(db->error, sizeof db->error, "Cannot allocate LRC metadata");
+        goto rollback;
+    }
+    strcpy(song.lyrics_format, "lrc");
+    strcpy(song.lyrics_uri, path);
+    song.lyrics_start_ms = song.lyrics_end_ms = DB_TIME_UNKNOWN;
+    if (database_song_save(db, &song, &id) < 0 || database_commit(db) < 0) { goto rollback; }
+    printf("Imported %zu timed lines (%zu untimed/invalid lines ignored for playback).\n"
+           "Original LRC bytes retained in the database; source file unchanged.\n",
+           timeline.count, timeline.skipped_lines);
+    result = 0;
+    goto done;
+rollback:
+    database_rollback(db);
+database_error:
+    fprintf(stderr, "Library: %s\n", database_error(db));
+done:
+    free(source);
+    lyrics_free(&timeline);
+    database_song_free(&song);
+    return(result);
+}
+
+static size_t next_song(const SongMenu *section, size_t index, bool shuffle, bool previous)
+{
+    if (shuffle && section->count > 1) {
+        return((index + 1 + (size_t)rand() % (section->count - 1)) % section->count);
+    }
+    return((index + (previous ? section->count - 1 : 1)) % section->count);
+}
+
+static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
+                      PlaybackSelection *selection, size_t genre, size_t index)
+{
+    SongMenu *section = &library->sections[genre];
+    DbSong *song = &section->songs[index];
+    if (audio_play(audio, song->id, song->media_uri) < 0) {
+        ui->status = "Cannot allocate playback request.";
+        return(-1);
+    }
+    selection->song = song;
+    selection->genre = genre;
+    selection->index = index;
+    selection->generation = audio_status(audio).generation;
+    select_song(ui, song);
+    cover_request(selection->covers, selection->cover_override ? selection->cover_override : song->cover_uri);
+    ui->player->paused = false;
+    ui->status = "";
+    for (size_t i = 0; i < library->count; ++i) { library->sections[i].menu.has_active = false; }
+    section->menu.has_active = true;
+    section->menu.active = index;
+    ui->menus[SCREEN_GENRES]->has_active = true;
+    ui->menus[SCREEN_GENRES]->active = genre;
+    if (ui->queue->items != section->menu.items) {
+        *ui->queue = (TuiMenu){.title = "Queue", .items = section->menu.items, .count = section->count};
+        tui_menu_init(ui->queue);
+        ui->queue->selected = index;
+    }
+    ui->queue->has_active = true;
+    ui->queue->active = index;
+    return(0);
+}
+
+static void select_song(TuiState *ui, const DbSong *song)
+{
+    TuiPlayer *player = ui->player;
+    player->song_id = song->id;
+    player->title = song->title;
+    player->artist = song->artist;
+    player->album = *song->album ? song->album : "Album unknown";
+    player->lyrics = song->lyrics;
+    lyrics_free(player->timed_lyrics);
+    player->lyric_active = SIZE_MAX;
+    player->position_ms = 0;
+    player->duration_ms = song->duration_ms;
+    if (!strcmp(song->lyrics_format, "lrc")) {
+        char error[160];
+        if (lyrics_parse(song->lyrics, player->timed_lyrics, error, sizeof error) < 0) {
+            player->lyrics = "Cannot parse timed lyrics; re-import a valid LRC file.";
+        }
+    }
+    player->duration_known = song->duration_ms != DB_TIME_UNKNOWN;
+    player->duration = player->duration_known ? (unsigned long long)(song->duration_ms / 1000) : 0;
+    player->elapsed = 0;
+    player->paused = true;
+    ui->lyrics_top = 0;
+    player->show_cover = false;
+    player->loading = true;
+    player->playback_status = "Loading stream...";
+    terminal_cover_free();
+}
+
+static int library_load(Database *db, Library *library)
+{
+    if (database_genres(db, &library->genres, &library->count) < 0) { return(-1); }
+    if (!library->count) { return(0); }
+    library->items = calloc(library->count, sizeof *library->items);
+    library->sections = calloc(library->count, sizeof *library->sections);
+    if (!library->items || !library->sections) { goto no_memory; }
+    for (size_t i = 0; i < library->count; ++i) {
+        library->items[i] = (TuiItem){library->genres[i].name, TUI_BUTTON, true, false};
+        SongMenu *section = &library->sections[i];
+        if (database_songs(db, library->genres[i].id, &section->songs, &section->count) < 0) { return(-1); }
+        section->menu = (TuiMenu){.title = library->genres[i].name, .count = section->count, .wrap = true};
+        if (section->count) {
+            section->menu.items = calloc(section->count, sizeof *section->menu.items);
+            if (!section->menu.items) { goto no_memory; }
+        }
+        for (size_t j = 0; j < section->count; ++j) {
+            section->menu.items[j] = (TuiItem){section->songs[j].title, TUI_BUTTON, true, false};
+        }
+        tui_menu_init(&section->menu);
+    }
+    return(0);
+no_memory:
+    snprintf(db->error, sizeof db->error, "Cannot allocate library menus");
+    return(-1);
+}
+
+static void library_free(Library *library)
+{
+    if (library->sections) {
+        for (size_t i = 0; i < library->count; ++i) {
+            database_songs_free(library->sections[i].songs, library->sections[i].count);
+            free(library->sections[i].menu.items);
+        }
+    }
+    free(library->sections);
+    free(library->items);
+    database_genres_free(library->genres, library->count);
+    *library = (Library){0};
 }
