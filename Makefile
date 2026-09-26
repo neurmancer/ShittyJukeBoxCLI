@@ -26,6 +26,8 @@ run: $(TARGET)
 clean:
 	$(RM) $(TARGET) jukebox-add
 
+# Well...I can't test the shit I built with the shit I built so .gitignored tests uses python (not user sided event)
+
 test:
 	python3 tests/check.py
 	python3 tests/import_check.py

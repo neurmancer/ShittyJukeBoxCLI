@@ -1,7 +1,7 @@
 #ifndef SHITTYJUKEBOX_TERMINAL_HANDLER_H
 #define SHITTYJUKEBOX_TERMINAL_HANDLER_H
 #define RESET         "\033[0m"
-#define PURPLE        "\033[38;2;193;112;255m"
+#define SHE_LOVES_PURPLE        "\033[38;2;193;112;255m"
 #define GREEN         "\033[38;2;0;235;116m"
 
 #define BOLDY          "\033[1m"

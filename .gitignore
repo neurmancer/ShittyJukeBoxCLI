@@ -14,3 +14,4 @@ tools/*
 !tools/add_song.c
 !tools/genius.c
 !tools/genius.h
+template.txt

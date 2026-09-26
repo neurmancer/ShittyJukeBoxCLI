@@ -1,3 +1,4 @@
+#include "terminal_handler.h"
 #define _XOPEN_SOURCE 700
 #include "TUI.h"
 #include <stdint.h>
@@ -216,7 +217,7 @@ static void cabinet_bar(size_t row, size_t x, size_t width, char left, char fill
     bar[0] = left;
     bar[width - 1] = right;
     bar[width] = '\0';
-    text_at(row, x, width, PURPLE, bar);
+    text_at(row, x, width, SHE_LOVES_PURPLE, bar);
 }
 
 static void jukebox_menu_draw(TuiMenu *menu, TuiScreen screen, const char *status)
@@ -254,19 +255,19 @@ static void jukebox_menu_draw(TuiMenu *menu, TuiScreen screen, const char *statu
 
     terminal_clear();
     cabinet_bar(y, x + 6, width - 12, '.', '-', '.');
-    text_at(y + 1, x + 3, 3, PURPLE, ".-'");
-    text_at(y + 1, x + width - 6, 3, PURPLE, "'-.");
-    text_at(y + 2, x + 1, 1, PURPLE, "/");
-    text_at(y + 2, x + width - 2, 1, PURPLE, "\\");
+    text_at(y + 1, x + 3, 3, SHE_LOVES_PURPLE, ".-'");
+    text_at(y + 1, x + width - 6, 3, SHE_LOVES_PURPLE, "'-.");
+    text_at(y + 2, x + 1, 1, SHE_LOVES_PURPLE, "/");
+    text_at(y + 2, x + width - 2, 1, SHE_LOVES_PURPLE, "\\");
 
     for (size_t row = y + 3; row < y + height - 2; ++row) {
-        text_at(row, x, 3, PURPLE, "| |");
-        text_at(row, x + width - 3, 3, PURPLE, "| |");
+        text_at(row, x, 3, SHE_LOVES_PURPLE, "| |");
+        text_at(row, x + width - 3, 3, SHE_LOVES_PURPLE, "| |");
     }
 
     cabinet_center(y + 2, x + 4, width - 8, GREEN BOLDY, "S H I T T Y   J U K E B O X");
     cabinet_bar(y + 4, x + 4, width - 8, '+', '-', '+');
-    cabinet_center(y + 5, x + 4, width - 8, PURPLE BOLDY,
+    cabinet_center(y + 5, x + 4, width - 8, SHE_LOVES_PURPLE BOLDY,
                    screen == SCREEN_GENRES ? "Genres     [s: Settings]" :
                    screen == SCREEN_SETTINGS ? "Settings     [s: Genres]" : "Choose your next track");
     if (menu->selected != SIZE_MAX) {
@@ -299,7 +300,7 @@ static void jukebox_menu_draw(TuiMenu *menu, TuiScreen screen, const char *statu
                  item->enabled ? "" : " (wtf?)");
 
                  text_at(y + 7 + i - menu->top, x + (width - label_width) / 2, label_width,
-                !item->enabled ? DIM : i == menu->selected ? PURPLE BOLDY INVERSE : RESET, label);
+                !item->enabled ? DIM : i == menu->selected ? SHE_LOVES_PURPLE BOLDY INVERSE : RESET, label);
     }
 
     if (!menu->count) { cabinet_center(y + 7, x + 4, width - 8, DIM, "Just static..."); }
@@ -316,8 +317,8 @@ static void jukebox_menu_draw(TuiMenu *menu, TuiScreen screen, const char *statu
     cabinet_center(y + 10 + visible, x + 4, width - 8, DIM, ":::::::::    INSERT COIN    :::::::::");
     cabinet_bar(y + 11 + visible, x, width, '\'', '=', '\'');
 
-    text_at(y + 12 + visible, x + 4, 5, PURPLE, "[___]");
-    text_at(y + 12 + visible, x + width - 9, 5, PURPLE, "[___]");
+    text_at(y + 12 + visible, x + 4, 5, SHE_LOVES_PURPLE, "[___]");
+    text_at(y + 12 + visible, x + width - 9, 5, SHE_LOVES_PURPLE, "[___]");
 
     line(rows - 2, columns - 1, FANCY, status ? status : "");
     cabinet_center(rows - 1, 1, columns - 1, DIM, "Arrows/hjkl: move/set  Enter/Space: select");
@@ -365,7 +366,7 @@ TuiResult tui_player_handle(TuiPlayer *player, TerminalAction action)
 
 static void cover_frame(size_t width, size_t height, const char *status)
 {
-    printf(PURPLE "\033[3;3H╭");
+    printf(SHE_LOVES_PURPLE "\033[3;3H╭");
     
     for (size_t i = 2; i < width; ++i) { fputs("─", stdout); }
     
@@ -424,7 +425,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
     track_label(track, sizeof track, player);
 
-    text_at(5, x, width, PURPLE BOLDY, track);
+    text_at(5, x, width, SHE_LOVES_PURPLE BOLDY, track);
     text_at(6, x, width, DIM, player->album);
 
     unsigned long long elapsed = player->elapsed;
@@ -465,7 +466,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
         bool enabled = (i == PLAYER_SHUFFLE && player->shuffle) || (i == PLAYER_REPEAT && player->repeat);
 
-        const char *style = i == player->selected ? PURPLE BOLDY INVERSE : enabled ? GREEN BOLDY : PURPLE;
+        const char *style = i == player->selected ? SHE_LOVES_PURPLE BOLDY INVERSE : enabled ? GREEN BOLDY : SHE_LOVES_PURPLE;
         char button[32];
 
         snprintf(button, sizeof button, "[ %s ]", icons[i]);
@@ -631,7 +632,7 @@ static void pending_screen(const TuiState *state)
         return;
     }
     
-    line(2, width, PURPLE BOLDY, state->screen == SCREEN_LYRICS ? "Lyrics" : "Audio visualizer");
+    line(2, width, SHE_LOVES_PURPLE BOLDY, state->screen == SCREEN_LYRICS ? "Lyrics" : "Audio visualizer");
     
     if (state->player) {
         char track[512];
@@ -649,7 +650,7 @@ static void pending_screen(const TuiState *state)
             bool active = player->lyric_active != SIZE_MAX &&
                           cue->time_ms == lyrics->cues[player->lyric_active].time_ms;
             size_t length = active ? lyrics_visible_bytes(lyrics, i, player->position_ms, player->duration_ms) : strlen(cue->text);
-            text_span(row, 1, width, active ? PURPLE BOLDY : DIM, cue->text, length);
+            text_span(row, 1, width, active ? SHE_LOVES_PURPLE BOLDY : DIM, cue->text, length);
         }
     }
 
@@ -698,9 +699,9 @@ static void queue_overlay(TuiState *state)
     for (size_t row = 2; row < rows; ++row) {
         printf("\033[%zu;%zuH" RESET, row, x);
         for (size_t column = 0; column < width; ++column) { putchar(' '); }
-        printf("\033[%zu;%zuH" PURPLE "│" RESET, row, x);
+        printf("\033[%zu;%zuH" SHE_LOVES_PURPLE "│" RESET, row, x);
     }
-    text_at(2, x + 2, width - 3, PURPLE BOLDY, "Queue");
+    text_at(2, x + 2, width - 3, SHE_LOVES_PURPLE BOLDY, "Queue");
     TuiMenu *queue = state->queue;
     if (!queue || !queue->count) {
         text_at(4, x + 2, width - 3, DIM, "Your queue is empty.");
@@ -719,7 +720,7 @@ static void queue_overlay(TuiState *state)
             snprintf(label, sizeof label, "%s%s", queue->items[i].label,
                      queue->has_active && queue->active == i ? " [current]" : "");
             text_at(4 + i - queue->top, x + 2, width - 3,
-                    !queue->items[i].enabled ? DIM : i == queue->selected ? INVERSE PURPLE : RESET,
+                    !queue->items[i].enabled ? DIM : i == queue->selected ? INVERSE SHE_LOVES_PURPLE : RESET,
                     label);
         }
     }
