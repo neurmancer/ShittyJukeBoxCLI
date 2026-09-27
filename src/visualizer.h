@@ -16,9 +16,7 @@ typedef struct {
 } Spectrum;
 
 void spectrum_init(Spectrum *spectrum);
-/* 20 Hz..20 kHz logarithmic bands, -72..0 dBFS, stereo power combined after FFT.
- * Interpolated band edges prevent artificial holes below the FFT bin spacing.
- * Returns true when the display changed. Paused/identical snapshots are held. */
+
 bool spectrum_update(Spectrum *spectrum, const AudioSamples *samples);
 
 #endif

@@ -13,11 +13,23 @@
 --- 
 
 ## Emo Resurrection
+> 1. Evanescence - Bring me to life
+> 2. Evanescence - My Immortal
 
-
+---
 ## Nightcore
 
+
+---
+
 ## NWOBHM
+> 1. Diamond Head - Am I Evil?
+> 2. Diamond Head - In The Heat of The Night
+> 3. The Trooper 
+
+---
 
 ## POP
 
+
+---
