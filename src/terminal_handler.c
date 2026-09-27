@@ -160,6 +160,9 @@ static TerminalAction plain_key(unsigned byte)
         case '2': return(TERM_LYRICS);
         case '3': return(TERM_VISUALIZER);
         case 'Q': return(TERM_QUEUE);
+        case 'x': return(TERM_REMOVE);
+        case 'K': return(TERM_MOVE_UP);
+        case 'J': return(TERM_MOVE_DOWN);
         case 't': return(TERM_TYPEWRITER);
         case 's': return(TERM_SETTINGS);
         case '\t': return(TERM_NEXT_VIEW);

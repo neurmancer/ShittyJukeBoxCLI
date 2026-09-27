@@ -860,7 +860,6 @@ static bool sidebar(const char *title, size_t *rows, size_t *width, size_t *x)
 {
     size_t columns;
     terminal_size(rows, &columns);
-    terminal_cover_hide();
     *width = columns > 42 ? 40 : columns > 2 ? columns - 2 : 0;
     if (*rows < 8 || *width < 20) {
         char message[80];
@@ -905,7 +904,7 @@ static void typewriter_overlay(const TuiState *state)
 static void queue_overlay(TuiState *state)
 {
     size_t rows, width, x;
-    if (!sidebar("Queue", &rows, &width, &x)) { return; }
+    if (!sidebar(state->queue && state->queue->title ? state->queue->title : "Queue", &rows, &width, &x)) { return; }
     TuiMenu *queue = state->queue;
     if (!queue || !queue->count) {
         text_at(4, x + 2, width - 3, DIM, "Your queue is empty.");

@@ -27,6 +27,7 @@ typedef struct {
     size_t count;
     TuiItem *items;
     SongMenu *sections;
+    SongMenu custom;
 } Library;
 static void library_free(Library *library);
 
@@ -48,6 +49,10 @@ typedef struct {
 static int start_song(AudioPlayer *audio, TuiState *ui, Library *library, PlaybackSelection *selection, size_t genre, size_t index);
 static size_t next_song(const SongMenu *section, size_t index, bool shuffle, bool previous);
 static int import_lrc(Database *db, int64_t id, const char *path);
+static SongMenu *playback_section(Library *library, size_t genre);
+static void queue_bind(TuiState *ui, Library *library, PlaybackSelection *selection);
+static int queue_add(Library *library, size_t index);
+static void queue_edit(TuiState *ui, Library *library, PlaybackSelection *selection, TerminalAction action);
 
 
 
@@ -109,6 +114,7 @@ int main(int argc, char **argv)
         {"Genres", TUI_BUTTON, true, false},
         {"Settings", TUI_BUTTON, true, false},
         {"Player", TUI_BUTTON, true, false},
+        {"Queue your own songs", TUI_BUTTON, true, false},
         {"Quit", TUI_BUTTON, true, false}
     };
     
@@ -118,7 +124,7 @@ int main(int argc, char **argv)
     };
     
     TuiMenu menus[] = {
-        {.title = "ShittyJukeBox", .items = home_items, .count = 4, .wrap = true},
+        {.title = "ShittyJukeBox", .items = home_items, .count = 5, .wrap = true},
         {.title = "Genres", .items = library.items, .count = library.count, .wrap = true},
         {.title = "Settings", .items = settings_items, .count = 2}
     };
@@ -147,6 +153,19 @@ int main(int argc, char **argv)
         .selected = PLAYER_PLAY, .paused = true
     };
     
+    TuiItem queue_options[] = {
+        {"Add songs", TUI_BUTTON, true, false},
+        {"Edit custom queue", TUI_BUTTON, true, false},
+        {"Play custom queue", TUI_BUTTON, true, false},
+        {"Use default genre queue", TUI_BUTTON, true, false}
+    };
+    TuiMenu queue_menu = {.title = "Queue your own songs (session only)", .items = queue_options, .count = 4, .wrap = true};
+    TuiMenu queue_add_menu = {.title = "Add songs: Enter adds, Esc returns", .items = library.sections[0].menu.items,
+                             .count = library.sections[0].count, .wrap = true};
+    library.custom.menu = (TuiMenu){.title = "Custom queue: Enter plays, x removes, K/J moves"};
+    tui_menu_init(&queue_menu);
+    tui_menu_init(&queue_add_menu);
+    tui_menu_init(&library.custom.menu);
     TuiMenu queue = {.title = "Queue", .wrap = false};
     tui_menu_init(&queue);
     Spectrum spectrum;
@@ -154,7 +173,8 @@ int main(int argc, char **argv)
     TuiState ui = {
         .spectrum = &spectrum,
         .menus = {[SCREEN_HOME] = &menus[0], [SCREEN_GENRES] = &menus[1],
-                  [SCREEN_SETTINGS] = &menus[2]},
+                  [SCREEN_SETTINGS] = &menus[2], [SCREEN_QUEUE_MENU] = &queue_menu,
+                  [SCREEN_QUEUE_ADD] = &queue_add_menu, [SCREEN_QUEUE_EDIT] = &library.custom.menu},
         .queue = &queue,
         .player = &player
     };
@@ -193,7 +213,10 @@ int main(int argc, char **argv)
         TuiScreen previous_screen = ui.screen;
         bool transport_pressed = ui.overlay == OVERLAY_NONE && action == TERM_ACTIVATE &&
                                  ((previous_screen == SCREEN_PLAYER && player.selected == PLAYER_PLAY) || previous_screen == SCREEN_VISUALIZER);
-        TuiResult result = volume_changed ? TUI_CHANGED : tui_state_handle(&ui, action);
+        bool editing_queue = ui.overlay == OVERLAY_NONE && ui.screen == SCREEN_QUEUE_EDIT &&
+                             (action == TERM_REMOVE || action == TERM_MOVE_UP || action == TERM_MOVE_DOWN);
+        if (editing_queue) { queue_edit(&ui, &library, &selection, action); }
+        TuiResult result = volume_changed || editing_queue ? TUI_CHANGED : tui_state_handle(&ui, action);
         if (result == TUI_QUIT) { break; }
 
         if (previous_screen == SCREEN_SETTINGS) { player.repeat = settings_items[1].value; }
@@ -209,7 +232,7 @@ int main(int argc, char **argv)
             }
 
             else if (ui.screen == SCREEN_HOME) {
-                static const TuiScreen destinations[] = {SCREEN_GENRES, SCREEN_SETTINGS, SCREEN_PLAYER};
+                static const TuiScreen destinations[] = {SCREEN_GENRES, SCREEN_SETTINGS, SCREEN_PLAYER, SCREEN_QUEUE_MENU};
                 size_t selected = menus[0].selected;
                 if (selected < sizeof destinations / sizeof destinations[0]) {
                     tui_state_switch(&ui, destinations[selected]);
@@ -217,6 +240,44 @@ int main(int argc, char **argv)
                 }
 
                 else { running = false; }
+            }
+
+            else if (ui.screen == SCREEN_QUEUE_MENU) {
+                if (queue_menu.selected == 0) { tui_state_switch(&ui, SCREEN_QUEUE_ADD); }
+                else if (queue_menu.selected == 1) { tui_state_switch(&ui, SCREEN_QUEUE_EDIT); }
+                else if (queue_menu.selected == 2) {
+                    if (!library.custom.count) { ui.status = "Add songs to your custom queue first."; }
+                    else if (start_song(audio, &ui, &library, &selection, library.count, 0) == 0) {
+                        tui_state_switch(&ui, SCREEN_PLAYER);
+                    }
+                }
+                else {
+                    if (selection.song && selection.genre == library.count) {
+                        selection.genre = 0;
+                        for (size_t i = 0; i < library.sections[0].count; ++i) {
+                            if (library.sections[0].songs[i].id == selection.song->id) { selection.index = i; break; }
+                        }
+                        queue_bind(&ui, &library, &selection);
+                    }
+                    ui.status = "Default queue: follows the genre you play. Custom queue kept for this session.";
+                }
+            }
+
+            else if (ui.screen == SCREEN_QUEUE_ADD) {
+                if (queue_add_menu.selected < queue_add_menu.count) {
+                    if (queue_add(&library, queue_add_menu.selected) < 0) { ui.status = "Cannot allocate custom queue."; }
+                    else {
+                        if (selection.song && selection.genre == library.count) { queue_bind(&ui, &library, &selection); }
+                        ui.status = "Added to custom queue. Esc returns; choose Play custom queue to use it.";
+                    }
+                }
+            }
+
+            else if (ui.screen == SCREEN_QUEUE_EDIT) {
+                if (library.custom.menu.selected < library.custom.count &&
+                    start_song(audio, &ui, &library, &selection, library.count, library.custom.menu.selected) == 0) {
+                    tui_state_switch(&ui, SCREEN_PLAYER);
+                }
             }
 
             else if (ui.screen == SCREEN_GENRES && menus[1].selected < library.count) {
@@ -237,7 +298,7 @@ int main(int argc, char **argv)
             }
 
             else if (ui.screen == SCREEN_PLAYER && selection.song && player.selected != PLAYER_PLAY) {
-                SongMenu *section = &library.sections[selection.genre];
+                SongMenu *section = playback_section(&library, selection.genre);
                 size_t index = next_song(section, selection.index, player.shuffle, player.selected == PLAYER_PREVIOUS);
                 start_song(audio, &ui, &library, &selection, selection.genre, index);
             }
@@ -294,7 +355,7 @@ int main(int argc, char **argv)
             }
             if (status.state == AUDIO_FINISHED && handled_end != status.generation) {
                 handled_end = status.generation;
-                SongMenu *section = &library.sections[selection.genre];
+                SongMenu *section = playback_section(&library, selection.genre);
                 bool advance = player.repeat || player.shuffle || selection.index + 1 < section->count;
                 if (advance) {
                     size_t index = player.repeat ? selection.index : next_song(section, selection.index, player.shuffle, false);
@@ -388,8 +449,14 @@ static size_t next_song(const SongMenu *section, size_t index, bool shuffle, boo
 static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
                       PlaybackSelection *selection, size_t genre, size_t index)
 {
-    SongMenu *section = &library->sections[genre];
+    SongMenu *section = playback_section(library, genre);
+    if (index >= section->count) { return(-1); }
     DbSong *song = &section->songs[index];
+    if (genre == library->count) {
+        for (size_t i = 0; i < library->sections[0].count; ++i) {
+            if (library->sections[0].songs[i].id == song->id) { song = &library->sections[0].songs[i]; break; }
+        }
+    }
     if (audio_play(audio, song->id, song->media_uri) < 0) {
         ui->status = "Cannot allocate playback request.";
         return(-1);
@@ -402,18 +469,7 @@ static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
     cover_request(selection->covers, selection->cover_override ? selection->cover_override : song->cover_uri);
     ui->player->paused = false;
     ui->status = "";
-    for (size_t i = 0; i < library->count; ++i) { library->sections[i].menu.has_active = false; }
-    section->menu.has_active = true;
-    section->menu.active = index;
-    ui->menus[SCREEN_GENRES]->has_active = true;
-    ui->menus[SCREEN_GENRES]->active = genre;
-    if (ui->queue->items != section->menu.items) {
-        *ui->queue = (TuiMenu){.title = "Queue", .items = section->menu.items, .count = section->count};
-        tui_menu_init(ui->queue);
-        ui->queue->selected = index;
-    }
-    ui->queue->has_active = true;
-    ui->queue->active = index;
+    queue_bind(ui, library, selection);
     return(0);
 }
 
@@ -449,7 +505,16 @@ static void select_song(TuiState *ui, const DbSong *song)
 static int library_load(Database *db, Library *library)
 {
     if (database_genres(db, &library->genres, &library->count) < 0) { return(-1); }
-    if (!library->count) { return(0); }
+    DbGenre *genres = realloc(library->genres, (library->count + 1) * sizeof *genres);
+    if (!genres) { goto no_memory; }
+    library->genres = genres;
+    char *all_name = malloc(sizeof "All");
+    if (!all_name) { goto no_memory; }
+    memcpy(all_name, "All", sizeof "All");
+    memmove(genres + 1, genres, library->count * sizeof *genres);
+    /* Genre ID zero queries every song, including songs with no genre. */
+    genres[0] = (DbGenre){.id = 0, .name = all_name};
+    ++library->count;
     library->items = calloc(library->count, sizeof *library->items);
     library->sections = calloc(library->count, sizeof *library->sections);
     if (!library->items || !library->sections) { goto no_memory; }
@@ -457,6 +522,7 @@ static int library_load(Database *db, Library *library)
         library->items[i] = (TuiItem){library->genres[i].name, TUI_BUTTON, true, false};
         SongMenu *section = &library->sections[i];
         if (database_songs(db, library->genres[i].id, &section->songs, &section->count) < 0) { return(-1); }
+        library->genres[i].song_count = section->count;
         section->menu = (TuiMenu){.title = library->genres[i].name, .count = section->count, .wrap = true};
         if (section->count) {
             section->menu.items = calloc(section->count, sizeof *section->menu.items);
@@ -481,6 +547,8 @@ static void library_free(Library *library)
             free(library->sections[i].menu.items);
         }
     }
+    free(library->custom.songs);
+    free(library->custom.menu.items);
     free(library->sections);
     free(library->items);
     database_genres_free(library->genres, library->count);
