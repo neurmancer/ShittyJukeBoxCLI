@@ -13,7 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define OUTPUT_RATE 48000
+#define OUTPUT_RATE AUDIO_SAMPLE_RATE
+#define SAMPLE_HISTORY 65536
 #define FRAME_BYTES 4
 #define QUEUE_LIMIT (OUTPUT_RATE * FRAME_BYTES / 4)
 
@@ -26,6 +27,8 @@ struct AudioPlayer {
     atomic_uint_fast64_t generation;
     char *pending_uri;
     
+    int16_t sample_history[SAMPLE_HISTORY][2];
+    uint64_t sample_total;
     AudioStatus status;
     int volume_percent;
     SDL_AudioDeviceID device; /* Protected by mutex for immediate pause/stop. */
@@ -120,6 +123,17 @@ static int output_frame(Playback *play, SwrContext *resampler, AVFrame *frame)
 
         scale_volume((int16_t *)pcm, (size_t)samples * 2, play->player->volume_percent);
         int queued = cancelled(play) ? -2 : SDL_QueueAudio(play->device, pcm, (Uint32)samples * FRAME_BYTES);
+
+        if (queued == 0) {
+            const int16_t *stereo = (const int16_t *)pcm;
+            size_t first = (size_t)samples > SAMPLE_HISTORY ? (size_t)samples - SAMPLE_HISTORY : 0;
+            for (size_t i = first; i < (size_t)samples; ++i) {
+                size_t slot = (size_t)((play->samples + i) % SAMPLE_HISTORY);
+                play->player->sample_history[slot][0] = stereo[i * 2];
+                play->player->sample_history[slot][1] = stereo[i * 2 + 1];
+            }
+            play->player->sample_total = play->samples + (unsigned)samples;
+        }
 
         pthread_mutex_unlock(&play->player->mutex); //Better than fork bombs eh?
 
@@ -452,6 +466,7 @@ int audio_play(AudioPlayer *player, int64_t song_id, const char *uri)
     
     if (player->device) { SDL_PauseAudioDevice(player->device, 1); SDL_ClearQueuedAudio(player->device); }
     
+    player->sample_total = 0;
     player->status = (AudioStatus){.generation = generation, .song_id = song_id,
                                    .duration_ms = -1, .state = AUDIO_LOADING};
     pthread_cond_signal(&player->wake);
@@ -488,6 +503,7 @@ void audio_stop(AudioPlayer *player)
     
     if (player->device) { SDL_PauseAudioDevice(player->device, 1); SDL_ClearQueuedAudio(player->device); }
     
+    player->sample_total = 0;
     player->status = (AudioStatus){.generation = atomic_load(&player->generation), .duration_ms = -1};
     
     pthread_mutex_unlock(&player->mutex);
@@ -513,6 +529,30 @@ AudioStatus audio_status(AudioPlayer *player)
     
     pthread_mutex_unlock(&player->mutex);
     return(status);
+}
+
+void audio_samples(AudioPlayer *player, AudioSamples *samples)
+{
+    *samples = (AudioSamples){0};
+    pthread_mutex_lock(&player->mutex);
+    samples->generation = player->status.generation;
+    if (player->device && (player->status.state == AUDIO_PLAYING || player->status.state == AUDIO_PAUSED)) {
+        uint64_t pending = SDL_GetQueuedAudioSize(player->device) / FRAME_BYTES;
+        uint64_t played = player->sample_total > pending ? player->sample_total - pending : 0;
+        uint64_t first = played > AUDIO_ANALYSIS_FRAMES ? played - AUDIO_ANALYSIS_FRAMES : 0;
+        uint64_t oldest = player->sample_total > SAMPLE_HISTORY ? player->sample_total - SAMPLE_HISTORY : 0;
+        if (played && first >= oldest) {
+            size_t padding = AUDIO_ANALYSIS_FRAMES - (size_t)(played - first);
+            for (uint64_t i = first; i < played; ++i) {
+                size_t out = padding + (size_t)(i - first);
+                samples->pcm[out][0] = player->sample_history[i % SAMPLE_HISTORY][0] / 32768.0f;
+                samples->pcm[out][1] = player->sample_history[i % SAMPLE_HISTORY][1] / 32768.0f;
+            }
+            samples->ready = true;
+            samples->played_frames = played;
+        }
+    }
+    pthread_mutex_unlock(&player->mutex);
 }
 
 void audio_destroy(AudioPlayer *player)

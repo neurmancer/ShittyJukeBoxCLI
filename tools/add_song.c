@@ -132,7 +132,8 @@ static int file_lyrics(DbSong *song, int timed)
 static int choose_lyrics(DbSong *song, int updating)
 {
     for (;;) {
-        char *choice = ask(updating ?
+        char *choice = ask(updating == 2 ?
+            "Lyrics: [l] LRC file, [p] plain file, [g] Genius, [n] clear, Enter keep: " : updating ?
             "Lyrics: [l] LRC file, [p] plain file, [g] Genius, [n] clear, Enter cancel: " :
             "Lyrics: [l] LRC file, [p] plain file, [g] Genius, Enter none: ", 0);
         if (!choice) { return(-1); }
@@ -140,6 +141,7 @@ static int choose_lyrics(DbSong *song, int updating)
         int valid = !choice[0] || !choice[1];
         free(choice);
         if (!valid) { puts("Choose l, p, g, or n."); continue; }
+        if (!key && updating == 2) { return(0); }
         if (!key && updating) { return(-1); }
         if (!key || key == 'n') {
             free(song->lyrics); free(song->lyrics_uri); free(song->lyrics_format);
@@ -212,11 +214,113 @@ static void preview_song(const DbSong *song, const char *genre)
     preview_time("Solo end", song->solo_end_ms);
 }
 
+static int edit_text(const char *label, char **value, int required)
+{
+    for (;;) {
+        printf("%s [%s] (Enter keep%s): ", label, *value, required ? "" : ", - clear");
+        char *text = ask("", 0);
+        if (!text) { return(-1); }
+        if (!*text) { free(text); return(0); }
+        if (!strcmp(text, "-")) {
+            if (required) { free(text); puts("This field cannot be cleared."); continue; }
+            *text = '\0';
+        }
+        int changed = strcmp(*value, text) != 0;
+        free(*value);
+        *value = text;
+        return(changed);
+    }
+}
+
+static int edit_time(const char *label, int64_t *value)
+{
+    for (;;) {
+        preview_time(label, *value);
+        char *text = ask("New seconds (Enter keep, - clear): ", 0);
+        if (!text) { return(-1); }
+        if (!*text) { free(text); return(0); }
+        if (!strcmp(text, "-")) { free(text); *value = DB_TIME_UNKNOWN; return(1); }
+        int64_t time;
+        int valid = database_duration_parse(text, &time) == 0;
+        free(text);
+        if (!valid) { puts("Enter nonnegative seconds, e.g. 247.5."); continue; }
+        *value = time;
+        return(1);
+    }
+}
+
+static int edit_markers(DbSong *song)
+{
+    for (;;) {
+        if (edit_time("Lyrics start", &song->lyrics_start_ms) < 0 ||
+            edit_time("Lyrics end", &song->lyrics_end_ms) < 0 ||
+            edit_time("Solo start", &song->solo_start_ms) < 0 ||
+            edit_time("Solo end", &song->solo_end_ms) < 0) { return(-1); }
+        int valid = (song->lyrics_end_ms == DB_TIME_UNKNOWN ||
+                     (song->lyrics_start_ms != DB_TIME_UNKNOWN && song->lyrics_end_ms >= song->lyrics_start_ms)) &&
+                    ((song->solo_start_ms == DB_TIME_UNKNOWN && song->solo_end_ms == DB_TIME_UNKNOWN) ||
+                     (song->solo_start_ms != DB_TIME_UNKNOWN && song->solo_end_ms >= song->solo_start_ms));
+        const int64_t times[] = {song->lyrics_start_ms, song->lyrics_end_ms, song->solo_start_ms, song->solo_end_ms};
+        for (size_t i = 0; i < sizeof times / sizeof times[0]; ++i) {
+            if (song->duration_ms != DB_TIME_UNKNOWN && times[i] > song->duration_ms) { valid = 0; }
+        }
+        if (valid) { return(0); }
+        puts("Review markers: ends must follow starts, solos need both ends, and all markers must fit the duration.");
+    }
+}
+
+static int edit_song(Database *db, DbSong *song, char **genre)
+{
+    printf("Editing song %" PRId64 "\n", song->id);
+    preview_song(song, NULL);
+    if (edit_text("Title", &song->title, 1) < 0 ||
+        edit_text("Artist / author", &song->artist, 0) < 0 ||
+        edit_text("Album", &song->album, 0) < 0 ||
+        edit_text("Cover image URL or local path", &song->cover_uri, 0) < 0) { return(-1); }
+    char *old_audio = strdup(song->media_uri);
+    if (!old_audio) { return(-1); }
+    for (;;) {
+        if (edit_text("Audio URL or local path", &song->media_uri, 1) < 0) { free(old_audio); return(-1); }
+        int64_t owner;
+        int found = database_song_find(db, song->media_uri, &owner);
+        if (found < 0) { free(old_audio); return(-2); }
+        if (found || owner == song->id) { break; }
+        printf("That audio link belongs to song %" PRId64 ". Choose another link.\n", owner);
+    }
+    if (strcmp(old_audio, song->media_uri)) {
+        song->duration_ms = DB_TIME_UNKNOWN;
+        song->duration_source = DB_DURATION_UNKNOWN;
+        puts("Audio changed; duration will be detected again unless you enter it below.");
+    }
+    free(old_audio);
+    DbGenre *genres = NULL;
+    size_t count = 0;
+    if (database_song_genres(db, song->id, &genres, &count) < 0) { return(-2); }
+    fputs("Current genres: ", stdout);
+    for (size_t i = 0; i < count; ++i) { printf("%s%s", i ? ", " : "", genres[i].name); }
+    puts(count ? "" : "none");
+    database_genres_free(genres, count);
+    char *choice = ask("Genre (Enter keep all, - clear all, or name to replace all): ", 0);
+    if (!choice) { return(-1); }
+    if (*choice) {
+        if (!strcmp(choice, "-")) { *choice = '\0'; }
+        *genre = choice;
+    }
+
+    else { free(choice); }
+    int changed = edit_time("Duration", &song->duration_ms);
+    if (changed < 0) { return(-1); }
+    if (changed) { song->duration_source = song->duration_ms == DB_TIME_UNKNOWN ? DB_DURATION_UNKNOWN : DB_DURATION_MANUAL; }
+    if (choose_lyrics(song, 2) < 0 || edit_markers(song) < 0) { return(-1); }
+    return(0);
+}
+
 static void usage(const char *program)
 {
-    printf("Usage: %s [--db PATH] [--list | --lyrics SONG_ID | --migrate]\n"
+    printf("Usage: %s [--db PATH] [--list | --edit SONG_ID | --lyrics SONG_ID | --migrate]\n"
            "No action: interactively add a song. Ctrl-C or Ctrl-D cancels without saving.\n"
-           "--list: show IDs for lyrics updates. --lyrics: preview and replace lyrics.\n"
+           "--list: show song IDs. --lyrics: preview and replace lyrics.\n"
+           "--edit: edit a saved song; Enter keeps fields, - clears optional fields.\n"
            "Fields: title, artist, album, audio URL/path, cover URL/path, genre, duration,\n"
            "LRC/plain/Genius lyrics, and optional lyrics/solo timing markers.\n"
            "Duration is optional seconds; playback discovers it when omitted.\n"
@@ -231,7 +335,7 @@ int main(int argc, char **argv)
     /* No SA_RESTART: interrupt getline as well as network requests. */
     if (sigaction(SIGINT, &action_sigint, NULL) < 0) { perror("sigaction"); return(1); }
     const char *path = DATABASE_PATH;
-    enum { ADD, LIST, LYRICS, MIGRATE } action = ADD;
+    enum { ADD, LIST, LYRICS, MIGRATE, EDIT } action = ADD;
     int64_t selected = 0;
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "--help")) { usage(argv[0]); return(0); }
@@ -241,12 +345,13 @@ int main(int argc, char **argv)
 
         else if (!strcmp(argv[i], "--migrate") && action == ADD) { action = MIGRATE; }
 
-        else if (!strcmp(argv[i], "--lyrics") && i + 1 < argc && action == ADD) {
+        else if ((!strcmp(argv[i], "--lyrics") || !strcmp(argv[i], "--edit")) && i + 1 < argc && action == ADD) {
+            int editing = !strcmp(argv[i], "--edit");
             char *end;
             errno = 0;
             selected = strtoll(argv[++i], &end, 10);
             if (errno || *end || selected <= 0) { usage(argv[0]); return(1); }
-            action = LYRICS;
+            action = editing ? EDIT : LYRICS;
         }
 
         else { usage(argv[0]); return(1); }
@@ -273,7 +378,14 @@ int main(int argc, char **argv)
         result = 0;
         goto done;
     }
-    if (action == LYRICS) {
+    if (action == EDIT) {
+        if (database_song_get(&db, selected, &song) < 0) { goto failed; }
+        int edited = edit_song(&db, &song, &genre);
+        if (edited == -2) { goto failed; }
+        if (edited < 0) { goto cancelled; }
+    }
+
+    else if (action == LYRICS) {
         if (database_song_get(&db, selected, &song) < 0) { goto failed; }
         printf("Updating lyrics: %s - %s\n", song.artist, song.title);
         if (choose_lyrics(&song, 1) < 0) { goto cancelled; }
@@ -294,7 +406,7 @@ int main(int argc, char **argv)
         int found = database_song_find(&db, song.media_uri, &existing);
         if (found < 0) { goto failed; }
         if (!found) {
-            fprintf(stderr, "That audio link already belongs to song %" PRId64 ". Use --lyrics %" PRId64 " to update its lyrics.\n", existing, existing);
+            fprintf(stderr, "That audio link already belongs to song %" PRId64 ". Use --edit %" PRId64 " to edit it, or --lyrics %" PRId64 " for lyrics.\n", existing, existing, existing);
             goto done;
         }
         genre = ask("Genre (existing name or new genre): ", 1);
@@ -304,15 +416,25 @@ int main(int argc, char **argv)
         if (song.duration_ms != DB_TIME_UNKNOWN) { song.duration_source = DB_DURATION_MANUAL; }
         if (choose_lyrics(&song, 0) < 0 || timing_markers(&song) < 0) { goto cancelled; }
     }
-    preview_song(&song, genre);
+    if (action == EDIT) {
+        printf("\nUpdated song %" PRId64 " (same ID)\n", song.id);
+        printf("Genres: %s\n", genre ? (*genre ? "replace all with the genre below" : "clear all") : "keep existing memberships and ordering");
+    }
+    preview_song(&song, genre && *genre ? genre : NULL);
     if (!confirm() || interrupted) { goto cancelled; }
     if (database_begin(&db) < 0) { goto failed; }
     int64_t id = song.id, genre_id;
     int saved = action == LYRICS ? database_lyrics_replace(&db, id, song.lyrics, song.lyrics_format, song.lyrics_uri) :
                                   database_song_save(&db, &song, &id);
-    if (saved < 0 ||
-        (genre && (database_genre_save(&db, genre, &genre_id) < 0 ||
-                   database_song_genre_append(&db, id, genre_id) < 0)) || interrupted || database_commit(&db) < 0) {
+    if (saved >= 0 && genre) {
+        genre_id = 0;
+        if (*genre) { saved = database_genre_save(&db, genre, &genre_id); }
+        if (saved >= 0) {
+            saved = action == EDIT ? database_song_genres_replace(&db, id, genre_id) :
+                                     database_song_genre_append(&db, id, genre_id);
+        }
+    }
+    if (saved < 0 || interrupted || database_commit(&db) < 0) {
         database_rollback(&db);
         goto failed;
     }

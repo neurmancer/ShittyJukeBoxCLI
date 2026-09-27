@@ -416,15 +416,18 @@ void database_genres_free(DbGenre *genres, size_t count)
     free(genres);
 }
 
-int database_genres(Database *db, DbGenre **genres, size_t *count)
+static int read_genres(Database *db, int64_t song_id, DbGenre **genres, size_t *count)
 {
     *genres = NULL; 
     *count = 0;
     sqlite3_stmt *statement = NULL;
 
-    if (prepare(db, &statement, "SELECT g.id,g.name,count(s.song_id) FROM genres g " "LEFT JOIN song_genres s ON g.id=s.genre_id GROUP BY g.id ORDER BY g.id") < 0) { return(-1); }
-    
-    int result;
+    if (prepare(db, &statement, "SELECT g.id,g.name,count(s.song_id) FROM genres g "
+        "LEFT JOIN song_genres s ON g.id=s.genre_id WHERE ?1=0 OR EXISTS("
+        "SELECT 1 FROM song_genres owned WHERE owned.genre_id=g.id AND owned.song_id=?1) "
+        "GROUP BY g.id ORDER BY g.id") < 0) { return(-1); }
+    int result = sqlite3_bind_int64(statement, 1, song_id);
+    if (result != SQLITE_OK) { return(finish(db, statement, result)); }
     
     while ((result = sqlite3_step(statement)) == SQLITE_ROW) {
         
@@ -464,6 +467,30 @@ fucked:
     *count = 0;
     
     return(-1);
+}
+
+int database_genres(Database *db, DbGenre **genres, size_t *count)
+{
+    return(read_genres(db, 0, genres, count));
+}
+
+int database_song_genres(Database *db, int64_t song_id, DbGenre **genres, size_t *count)
+{
+    if (song_id <= 0) { return(fail(db, "Invalid song ID")); }
+    return(read_genres(db, song_id, genres, count));
+}
+
+/* Caller owns the transaction. Retain ordering if the chosen membership exists. */
+int database_song_genres_replace(Database *db, int64_t song_id, int64_t genre_id)
+{
+    if (song_id <= 0 || genre_id < 0) { return(fail(db, "Invalid song or genre ID")); }
+    sqlite3_stmt *statement = NULL;
+    if (prepare(db, &statement, "DELETE FROM song_genres WHERE song_id=?1 AND genre_id!=?2") < 0) { return(-1); }
+    int result = sqlite3_bind_int64(statement, 1, song_id);
+    if (result == SQLITE_OK) { result = sqlite3_bind_int64(statement, 2, genre_id); }
+    if (result == SQLITE_OK) { result = sqlite3_step(statement); }
+    if (finish(db, statement, result) < 0) { return(-1); }
+    return(genre_id ? database_song_genre_append(db, song_id, genre_id) : 0);
 }
 
 int database_song_genre(Database *db, int64_t song_id, int64_t genre_id, int position)

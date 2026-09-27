@@ -662,6 +662,7 @@ TuiResult tui_state_handle(TuiState *state, TerminalAction action)
     
     if (action == TERM_BACK) { return(state_back(state)); }
     
+    if (state->screen == SCREEN_VISUALIZER && action == TERM_ACTIVATE) { return(TUI_SELECTED); }
     if (state->screen == SCREEN_LYRICS) {
         size_t count = lyrics_count(state->player);
         size_t before = state->lyrics_top;
@@ -779,6 +780,82 @@ static void pending_screen(const TuiState *state)
     line(rows, width, DIM, "1:player 2:lyrics 3:FFT Q:queue t:typewriter Tab:next Esc:back q:quit");
 }
 
+static void visualizer_draw(const TuiState *state)
+{
+    size_t rows, columns;
+    terminal_size(&rows, &columns);
+    terminal_clear();
+    size_t width = columns > 1 ? columns - 1 : 0;
+    if (rows < 12 || columns < 32) {
+        line(1, width, BOLDY, "Visualizer needs 32 columns / 12 rows");
+        return;
+    }
+    cabinet_center(2, 1, width, SHE_LOVES_PURPLE BOLDY, "Audio visualizer");
+    if (state->player) {
+        char track[512];
+        track_label(track, sizeof track, state->player);
+        cabinet_center(4, 1, width, GREEN, track);
+    }
+    size_t chart_width = columns - 12;
+    if (chart_width > 96) { chart_width = 96; }
+    size_t bars = chart_width / 2;
+    if (bars > SPECTRUM_BANDS) { bars = SPECTRUM_BANDS; }
+    size_t bar_width = chart_width / bars - 1;
+    chart_width = bars * (bar_width + 1) - 1;
+    size_t x = (columns - chart_width) / 2 + 1;
+    size_t height = rows - 11;
+    if (height > 24) { height = 24; }
+    size_t y = 6 + (rows - 11 - height) / 2;
+    const Spectrum *spectrum = state->spectrum;
+    bool paused = spectrum && spectrum->ready && state->player && state->player->song_id &&
+                  state->player->paused && !state->player->loading;
+    const char *blocks[] = {" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"};
+    for (size_t bar = 0; bar < bars; ++bar) {
+        float level = 0, peak = 0;
+        if (spectrum && spectrum->ready) {
+            for (size_t band = bar * SPECTRUM_BANDS / bars; band < (bar + 1) * SPECTRUM_BANDS / bars; ++band) {
+                if (spectrum->levels[band] > level) { level = spectrum->levels[band]; }
+                if (spectrum->peaks[band] > peak) { peak = spectrum->peaks[band]; }
+            }
+        }
+        if (level > 1) { level = 1; }
+        if (peak > 1) { peak = 1; }
+        size_t units = (size_t)(level * height * 8);
+        size_t peak_row = peak > 0 ? (size_t)(peak * (height - 1)) : 0;
+        if (paused) {
+            units = height >= 3 ? (height / 2) * 8 : height * 4;
+            peak_row = units / 8 + 1; /* One empty row above the green body. */
+        }
+        for (size_t row = 0; row < height; ++row) {
+            size_t fill = units > row * 8 ? units - row * 8 : 0;
+            if (fill > 8) { fill = 8; }
+            bool cap = row == peak_row && (paused ? height >= 3 : peak > 0);
+            if (!fill && !cap) { continue; }
+            const char *glyph = fill ? blocks[fill] : "─";
+            const char *style = paused ? (fill ? GREEN : SHE_LOVES_PURPLE BOLDY) :
+                                row * 3 >= height * 2 ? SHE_LOVES_PURPLE BOLDY : GREEN;
+            printf("\033[%zu;%zuH%s", y + height - 1 - row, x + bar * (bar_width + 1), style);
+            for (size_t column = 0; column < bar_width; ++column) { fputs(glyph, stdout); }
+            fputs(RESET, stdout);
+        }
+    }
+    text_at(y + height + 1, x, 4, DIM, "20Hz");
+    if (chart_width >= 30) { text_at(y + height + 1, x + chart_width * 57 / 100, 3, DIM, "1k"); }
+    text_at(y + height + 1, x + chart_width - 5, 5, DIM, "20kHz");
+    if (!spectrum || !spectrum->ready) {
+        cabinet_center(y + height / 2, x, chart_width, DIM,
+                       state->player && state->player->song_id ? "Waiting for audio" : "Play a song to see its spectrum");
+    }
+    char status[512];
+    const char *playback = state->player && state->player->playback_status ? state->player->playback_status : "";
+    snprintf(status, sizeof status, "%s%s%s", playback,
+             *playback && state->status && *state->status ? " | " : "",
+             state->status ? state->status : "");
+    line(rows - 2, width, FANCY, status);
+    line(rows - 1, width, DIM, "Space: play/pause  Up/Down: volume  Q:queue  t:typewriter");
+    line(rows, width, DIM, "1:player 2:lyrics 3:FFT Tab:next Esc:back q:quit");
+}
+
 static bool sidebar(const char *title, size_t *rows, size_t *width, size_t *x)
 {
     size_t columns;
@@ -879,6 +956,8 @@ void tui_state_draw(TuiState *state)
             }
         }
     }
+
+    else if (state->screen == SCREEN_VISUALIZER) { visualizer_draw(state); }
 
     else { pending_screen(state); }
     if (state->overlay == OVERLAY_QUEUE) { queue_overlay(state); }

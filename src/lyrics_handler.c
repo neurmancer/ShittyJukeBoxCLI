@@ -383,38 +383,18 @@ size_t lyrics_visible_bytes(const Lyrics *lyrics, size_t cue, int64_t position_m
 
     if ((next < lyrics->count || duration_ms >= 0) && end > start) {
         window = (uint64_t)end - (uint64_t)start;
-    
-        if (window > 100) { window -= 50; }
     }
     uint64_t elapsed = (uint64_t)position_ms - (uint64_t)start;
     
     if (window <= 1 || elapsed >= window - 1) { return(length); }
 
-    /* Rush inside each word, then wait at its following space. Reset the lead
-     * for every word so it cannot accumulate across the line. change the rush pattern I undertook the sync labor */
-    long double progress = (long double)elapsed * (characters - 1) / (window - 1);
-    size_t bytes = 0, index = 0;
-    while (bytes < length) {
-        while (bytes < length && (text[bytes] == ' ' || text[bytes] == '\t')) { ++bytes; ++index; }
-        size_t word_byte = bytes, word_start = index;
-        while (bytes < length && text[bytes] != ' ' && text[bytes] != '\t') {
-            ++bytes;
-            while (bytes < length && ((unsigned char)text[bytes] & 0xc0) == 0x80) { ++bytes; }
-            ++index;
-        }
-        size_t word_end = bytes, word_characters = index - word_start;
-        while (bytes < length && (text[bytes] == ' ' || text[bytes] == '\t')) { ++bytes; ++index; }
-        if (progress >= (long double)index && bytes < length) { continue; }
-        if (!word_characters || progress < (long double)word_start) { return(word_byte); }
-
-        size_t visible = 1 + (size_t)((progress - word_start) * 1.2L);
-        if (visible >= word_characters) { return(bytes); }
-        bytes = word_byte;
-        while (bytes < word_end && visible--) {
-            ++bytes;
-            while (bytes < word_end && ((unsigned char)text[bytes] & 0xc0) == 0x80) { ++bytes; }
-        }
-        return(bytes);
+    /* Without inline stamps, interpolate the line uniformly. Never invent
+     * word boundaries or lead the supplied line timing. */
+    size_t visible = 1 + (size_t)((long double)elapsed * (characters - 1) / (window - 1));
+    size_t bytes = 0;
+    while (bytes < length && visible--) {
+        ++bytes;
+        while (bytes < length && ((unsigned char)text[bytes] & 0xc0) == 0x80) { ++bytes; }
     }
-    return(length);
+    return(bytes);
 }

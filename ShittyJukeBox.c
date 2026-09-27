@@ -149,7 +149,10 @@ int main(int argc, char **argv)
     
     TuiMenu queue = {.title = "Queue", .wrap = false};
     tui_menu_init(&queue);
+    Spectrum spectrum;
+    spectrum_init(&spectrum);
     TuiState ui = {
+        .spectrum = &spectrum,
         .menus = {[SCREEN_HOME] = &menus[0], [SCREEN_GENRES] = &menus[1],
                   [SCREEN_SETTINGS] = &menus[2]},
         .queue = &queue,
@@ -171,12 +174,11 @@ int main(int argc, char **argv)
 
     while (running) {
         bool timed_view = ui.screen == SCREEN_LYRICS && timed_lyrics.count && player.lyrics_visible && !player.paused;
-        bool word_timing = player.lyric_active < timed_lyrics.count && timed_lyrics.cues[player.lyric_active].word_count;
-        int refresh_ms = timed_view ? (word_timing ? 10 : 30) : 100;
+        int refresh_ms = timed_view ? 10 : ui.screen == SCREEN_VISUALIZER ? 33 : 100;
         TerminalAction action = terminal_read(refresh_ms);
         if (action == TERM_ERROR) { error = errno; break; }
         if (action == TERM_ARROW_UP || action == TERM_ARROW_DOWN) {
-            bool player_screen = ui.screen == SCREEN_PLAYER && ui.overlay == OVERLAY_NONE;
+            bool player_screen = (ui.screen == SCREEN_PLAYER || ui.screen == SCREEN_VISUALIZER) && ui.overlay == OVERLAY_NONE;
             action = action == TERM_ARROW_UP ? (player_screen ? TERM_VOLUME_UP : TERM_UP) :
                      (player_screen ? TERM_VOLUME_DOWN : TERM_DOWN);
         }
@@ -189,8 +191,8 @@ int main(int argc, char **argv)
             action = TERM_NONE;
         }
         TuiScreen previous_screen = ui.screen;
-        bool transport_pressed = previous_screen == SCREEN_PLAYER && ui.overlay == OVERLAY_NONE &&
-                                 action == TERM_ACTIVATE && player.selected == PLAYER_PLAY;
+        bool transport_pressed = ui.overlay == OVERLAY_NONE && action == TERM_ACTIVATE &&
+                                 ((previous_screen == SCREEN_PLAYER && player.selected == PLAYER_PLAY) || previous_screen == SCREEN_VISUALIZER);
         TuiResult result = volume_changed ? TUI_CHANGED : tui_state_handle(&ui, action);
         if (result == TUI_QUIT) { break; }
 
@@ -301,6 +303,11 @@ int main(int argc, char **argv)
             }
         }
         last_audio = status;
+        if (ui.screen == SCREEN_VISUALIZER) {
+            AudioSamples samples;
+            audio_samples(audio, &samples);
+            if (spectrum_update(&spectrum, &samples)) { result = TUI_CHANGED; }
+        }
 
         size_t cover_width, cover_height;
         unsigned char *pixels = cover_take(selection.covers, &cover_width, &cover_height);

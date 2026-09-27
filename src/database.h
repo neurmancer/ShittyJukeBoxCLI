@@ -82,6 +82,9 @@ void database_songs_free(DbSong *songs, size_t count);
 
 int database_genre_save(Database *db, const char *name, int64_t *id);
 int database_genres(Database *db, DbGenre **genres, size_t *count);
+int database_song_genres(Database *db, int64_t song_id, DbGenre **genres, size_t *count);
+/* Within a caller-owned transaction: replace memberships, or clear with genre_id=0. */
+int database_song_genres_replace(Database *db, int64_t song_id, int64_t genre_id);
 void database_genres_free(DbGenre *genres, size_t count);
 int database_song_genre(Database *db, int64_t song_id, int64_t genre_id, int position);
 int database_song_genre_append(Database *db, int64_t song_id, int64_t genre_id);

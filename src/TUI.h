@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "terminal_handler.h"
 #include "lyrics_handler.h"
+#include "visualizer.h"
 
 typedef enum { TUI_BUTTON, TUI_TOGGLE } TuiItemKind;
 
@@ -98,6 +99,7 @@ typedef struct {
     TuiMenu *menus[SCREEN_COUNT];
     TuiMenu *queue;
     TuiPlayer *player;
+    Spectrum *spectrum;
     size_t lyrics_top;
     TypewriterMode typewriter_mode;
     size_t typewriter_color;

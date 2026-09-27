@@ -10,7 +10,7 @@ AUDIO_LIBS = $(shell pkg-config --libs $(AUDIO_PACKAGES))
 TARGET = ShittyJukeBox
 DB ?= jukebox.db
 SOURCES = ShittyJukeBox.c src/audio_handler.c src/lyrics_handler.c \
-          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c
+          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c
 HEADERS = $(wildcard src/*.h)
 
 .PHONY: all run clean test test-audio add-song add-songs

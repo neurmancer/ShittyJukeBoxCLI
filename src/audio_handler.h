@@ -5,7 +5,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define AUDIO_SAMPLE_RATE 48000
+#define AUDIO_ANALYSIS_FRAMES 2048
+
 typedef struct AudioPlayer AudioPlayer;
+
+typedef struct {
+    float pcm[AUDIO_ANALYSIS_FRAMES][2];
+    uint64_t generation;
+    uint64_t played_frames;
+    bool ready;
+} AudioSamples;
 
 typedef enum { AUDIO_IDLE, AUDIO_LOADING, AUDIO_PLAYING, AUDIO_PAUSED, AUDIO_FINISHED, AUDIO_FAILED } AudioState;
 
@@ -37,5 +47,8 @@ void audio_stop(AudioPlayer *player);
 void audio_set_volume(AudioPlayer *player, int percent);
 
 AudioStatus audio_status(AudioPlayer *player);
+/* Post-volume stereo ending at the consumed playback position, never decoded-ahead audio.
+ * Copies under the mutex; analysis belongs outside the audio thread/lock. */
+void audio_samples(AudioPlayer *player, AudioSamples *samples);
 
 #endif

@@ -29,6 +29,10 @@ int lyrics_read(const char *path, char **source, Lyrics *lyrics, char *error, si
 void lyrics_free(Lyrics *lyrics);
 /* SIZE_MAX before the first cue. Stateless lookup also supports backward seeks. */
 size_t lyrics_active(const Lyrics *lyrics, int64_t position_ms);
+/* Inline <mm:ss.xxx> stamps start the following text segment; a trailing stamp
+ * ends the last segment. Reveal characters uniformly between exact boundaries.
+ * Plain LRC uses the line interval, or 100 ms/codepoint without a known end.
+ * Stateless playback-clock lookup keeps pause and backward seeks deterministic. */
 size_t lyrics_visible_bytes(const Lyrics *lyrics, size_t cue, int64_t position_ms,
                             int64_t duration_ms);
 
