@@ -51,6 +51,8 @@
 
 - THE FUCKING ASCII JUKEBOX HAVE RETURNED 
 
+- Audio visualizer using FFT 
+
 - Well...we don't have SkyNet anymore...
 
 - Mr. Rick Astley kindly got evacuated to the ring 0 and does not rickroll the user on exit (He did, in fact, give up)
@@ -66,7 +68,7 @@
 
 - [ ] Lyrics sync (AND TRUST ME THIS TIME IT'LL BE FUCKING PERFECT) (I AM BETTER THAN FUCKING SPOTIFY(yeah if old me gets the dibs on dispatch tables as Cyber-god status I AM FUCKING REINCARNATION OF KEN THOMPSON))
 
-- [ ] AUDIO VISUALIZER
+- [X] AUDIO VISUALIZER
 
 - [X] DATABASE MIGRATION AND CLEAN UP
 
