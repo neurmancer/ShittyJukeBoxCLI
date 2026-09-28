@@ -19,6 +19,11 @@ static char key_sequence[64];
 static size_t key_length;
 static int key_overflow;
 static unsigned modifier_taps;
+static int text_mode;
+static char text_input[5];
+
+void terminal_text_mode(int enabled) { text_mode = enabled; }
+const char *terminal_text(void) { return(text_input); }
 static int cover_loaded;
 static char cover_error[160];
 static char graphics_reply[512];
@@ -145,7 +150,26 @@ static int read_byte(unsigned char *byte, int timeout_ms)
 
 static TerminalAction plain_key(unsigned byte)
 {
+    if (text_mode) {
+        if (byte == '\t') { return(TERM_DOWN); }
+        if (byte == 127 || byte == '\b') { return(TERM_ERASE); }
+        if (byte == 21) { return(TERM_CLEAR_TEXT); }
+        if (byte >= 32 && byte <= 255) {
+            text_input[0] = (char)byte;
+            text_input[1] = '\0';
+            return(TERM_TEXT);
+        }
+    }
     switch (byte) {
+        case 'C': return(TERM_COVER);
+        case 'S': return(TERM_SHUFFLE);
+        case 'R': return(TERM_REPEAT);
+        case ' ': return(TERM_SPACE);
+        case 'p': return(TERM_PLAYLISTS);
+        case 'a': return(TERM_ADD_PLAYLIST);
+        case 'c': return(TERM_CREATE);
+        case 'r': return(TERM_RENAME);
+        case 'n': return(TERM_QUEUE_NEXT);
         case 27: return(TERM_BACK);
         case 'k': return(TERM_UP);
         case 'j': return(TERM_DOWN);
@@ -153,7 +177,7 @@ static TerminalAction plain_key(unsigned byte)
         case 'l': return(TERM_RIGHT);
         case 'g': return(TERM_FIRST);
         case 'G': return(TERM_LAST);
-        case '\r': case '\n': case ' ': return(TERM_ACTIVATE);
+        case '\r': case '\n': return(TERM_ACTIVATE);
         case 127: case '\b': return(TERM_BACK);
         case 'q': return(TERM_QUIT);
         case '1': return(TERM_PLAYER);
@@ -208,8 +232,20 @@ static TerminalAction escape_key(unsigned char final)
         unsigned mask = modifiers - 1;
         if ((mask & 4) && key == 'c') { raise(SIGINT); return(TERM_QUIT); }
         if ((mask & 4) && key == 'd') { return(TERM_END); }
+        if (text_mode && (mask & 4) && key == 'u') { return(TERM_CLEAR_TEXT); }
         if (mask & ~193u) { return(TERM_NONE); } /* Shift and lock keys only. */
         if ((mask & 1) && key >= 'a' && key <= 'z') { key -= 'a' - 'A'; }
+        if (text_mode && key >= 128 && key <= 0x10ffff && !(key >= 0xd800 && key <= 0xdfff)) {
+            size_t length = key < 0x800 ? 2 : key < 0x10000 ? 3 : 4;
+            unsigned value = key;
+            for (size_t i = length - 1; i > 0; --i) {
+                text_input[i] = (char)(0x80 | (value & 63));
+                value >>= 6;
+            }
+            text_input[0] = (char)((length == 2 ? 0xc0 : length == 3 ? 0xe0 : 0xf0) | value);
+            text_input[length] = '\0';
+            return(TERM_TEXT);
+        }
         return(plain_key(key));
     }
     if ((modifiers - 1) & ~192u) { return(TERM_NONE); }

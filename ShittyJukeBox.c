@@ -2,12 +2,15 @@
 #include "src/database.h"
 #include "src/audio_handler.h"
 #include "src/cover_handler.h"
+#include "src/shuffle.h"
+#include "src/playlists.h"
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <locale.h>
 #include <stdlib.h>
-#include <time.h>
+#include <wchar.h>
+#include <wctype.h>
 //She Loves Purple, So Do I...(yup everything may change this can not!)
 //Dear beloved(Belgaphor's Prime) you won't be forgotten
 
@@ -28,6 +31,10 @@ typedef struct {
     TuiItem *items;
     SongMenu *sections;
     SongMenu custom;
+    TuiMenu search;
+    char search_query[256];
+    size_t *search_indices;
+    char **search_labels;
 } Library;
 static void library_free(Library *library);
 
@@ -44,15 +51,21 @@ typedef struct {
     uint64_t generation;
     CoverLoader *covers;
     const char *cover_override;
+    size_t *order;
+    TuiItem *queue_items;
+    size_t order_count;
 } PlaybackSelection;
 
 static int start_song(AudioPlayer *audio, TuiState *ui, Library *library, PlaybackSelection *selection, size_t genre, size_t index);
-static size_t next_song(const SongMenu *section, size_t index, bool shuffle, bool previous);
+static size_t next_song(const SongMenu *section, const PlaybackSelection *selection, bool previous);
+static void shuffle_clear(PlaybackSelection *selection);
 static int import_lrc(Database *db, int64_t id, const char *path);
 static SongMenu *playback_section(Library *library, size_t genre);
 static void queue_bind(TuiState *ui, Library *library, PlaybackSelection *selection);
-static int queue_add(Library *library, size_t index);
-static void queue_edit(TuiState *ui, Library *library, PlaybackSelection *selection, TerminalAction action);
+static int queue_next(TuiState *ui, Library *library, PlaybackSelection *selection, const DbSong *song);
+static void search_update(Library *library);
+static void search_input(Library *library, TerminalAction action);
+static int playlist_play(AudioPlayer *audio, TuiState *ui, Library *library, PlaybackSelection *selection, const Playlists *panel);
 
 
 
@@ -108,13 +121,11 @@ int main(int argc, char **argv)
         database_close(&db);
         return(1);
     }
-    srand((unsigned)time(NULL));
     
     TuiItem home_items[] = {
         {"Genres", TUI_BUTTON, true, false},
         {"Settings", TUI_BUTTON, true, false},
         {"Player", TUI_BUTTON, true, false},
-        {"Queue your own songs", TUI_BUTTON, true, false},
         {"Quit", TUI_BUTTON, true, false}
     };
     
@@ -124,15 +135,25 @@ int main(int argc, char **argv)
     };
     
     TuiMenu menus[] = {
-        {.title = "ShittyJukeBox", .items = home_items, .count = 5, .wrap = true},
+        {.title = "ShittyJukeBox", .items = home_items, .count = 4, .wrap = true},
         {.title = "Genres", .items = library.items, .count = library.count, .wrap = true},
         {.title = "Settings", .items = settings_items, .count = 2}
     };
     
     for (size_t i = 0; i < sizeof menus / sizeof menus[0]; ++i) tui_menu_init(&menus[i]);
     
+    Playlists playlists = {0};
+    if (playlists_init(&playlists, &db) < 0) {
+        fprintf(stderr, "Playlists: %s\n", playlists.notice);
+        playlists_free(&playlists);
+        audio_destroy(audio);
+        library_free(&library);
+        database_close(&db);
+        return(1);
+    }
     if (terminal_init() < 0) {
         perror("Cannot initialize terminal");
+        playlists_free(&playlists);
         audio_destroy(audio);
         library_free(&library);
         database_close(&db);
@@ -153,19 +174,6 @@ int main(int argc, char **argv)
         .selected = PLAYER_PLAY, .paused = true
     };
     
-    TuiItem queue_options[] = {
-        {"Add songs", TUI_BUTTON, true, false},
-        {"Edit custom queue", TUI_BUTTON, true, false},
-        {"Play custom queue", TUI_BUTTON, true, false},
-        {"Use default genre queue", TUI_BUTTON, true, false}
-    };
-    TuiMenu queue_menu = {.title = "Queue your own songs (session only)", .items = queue_options, .count = 4, .wrap = true};
-    TuiMenu queue_add_menu = {.title = "Add songs: Enter adds, Esc returns", .items = library.sections[0].menu.items,
-                             .count = library.sections[0].count, .wrap = true};
-    library.custom.menu = (TuiMenu){.title = "Custom queue: Enter plays, x removes, K/J moves"};
-    tui_menu_init(&queue_menu);
-    tui_menu_init(&queue_add_menu);
-    tui_menu_init(&library.custom.menu);
     TuiMenu queue = {.title = "Queue", .wrap = false};
     tui_menu_init(&queue);
     Spectrum spectrum;
@@ -173,14 +181,16 @@ int main(int argc, char **argv)
     TuiState ui = {
         .spectrum = &spectrum,
         .menus = {[SCREEN_HOME] = &menus[0], [SCREEN_GENRES] = &menus[1],
-                  [SCREEN_SETTINGS] = &menus[2], [SCREEN_QUEUE_MENU] = &queue_menu,
-                  [SCREEN_QUEUE_ADD] = &queue_add_menu, [SCREEN_QUEUE_EDIT] = &library.custom.menu},
+                  [SCREEN_SETTINGS] = &menus[2]},
+        .search_query = library.search_query,
         .queue = &queue,
+        .playlists = &playlists,
         .player = &player
     };
     tui_state_init(&ui, preview ? SCREEN_PLAYER : SCREEN_HOME);
     int error = 0;
     size_t selected_genre = 0;
+    bool search_from_player = false;
     PlaybackSelection selection = {
         .covers = terminal_cover_supported() ? cover_create() : NULL, .cover_override = cover_path
     };
@@ -195,7 +205,12 @@ int main(int argc, char **argv)
     while (running) {
         bool timed_view = ui.screen == SCREEN_LYRICS && timed_lyrics.count && player.lyrics_visible && !player.paused;
         int refresh_ms = timed_view ? 10 : ui.screen == SCREEN_VISUALIZER ? 33 : 100;
+        terminal_text_mode((ui.screen == SCREEN_SONGS && ui.search_editing && ui.overlay == OVERLAY_NONE) ||
+                           (ui.overlay == OVERLAY_PLAYLISTS && (playlists.mode == PLAYLIST_CREATE || playlists.mode == PLAYLIST_RENAME || playlists.mode == PLAYLIST_COVER)));
         TerminalAction action = terminal_read(refresh_ms);
+        if (action == TERM_SPACE && !(ui.overlay == OVERLAY_PLAYLISTS && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE)) {
+            action = TERM_ACTIVATE;
+        }
         if (action == TERM_ERROR) { error = errno; break; }
         if (action == TERM_ARROW_UP || action == TERM_ARROW_DOWN) {
             bool player_screen = (ui.screen == SCREEN_PLAYER || ui.screen == SCREEN_VISUALIZER) && ui.overlay == OVERLAY_NONE;
@@ -211,28 +226,141 @@ int main(int argc, char **argv)
             action = TERM_NONE;
         }
         TuiScreen previous_screen = ui.screen;
+        bool was_shuffle = player.shuffle;
         bool transport_pressed = ui.overlay == OVERLAY_NONE && action == TERM_ACTIVATE &&
                                  ((previous_screen == SCREEN_PLAYER && player.selected == PLAYER_PLAY) || previous_screen == SCREEN_VISUALIZER);
-        bool editing_queue = ui.overlay == OVERLAY_NONE && ui.screen == SCREEN_QUEUE_EDIT &&
-                             (action == TERM_REMOVE || action == TERM_MOVE_UP || action == TERM_MOVE_DOWN);
-        if (editing_queue) { queue_edit(&ui, &library, &selection, action); }
-        TuiResult result = volume_changed || editing_queue ? TUI_CHANGED : tui_state_handle(&ui, action);
+        bool handled = false;
+        bool search_focus_changed = false;
+        if (action == TERM_PLAYLISTS) {
+            if (ui.overlay == OVERLAY_PLAYLISTS) { ui.overlay = OVERLAY_NONE; }
+            else if (playlists_picker(&playlists, 0) == 0) { ui.overlay = OVERLAY_PLAYLISTS; }
+            else { ui.status = playlists.notice; }
+            handled = true;
+        }
+        else if (action == TERM_ADD_PLAYLIST) {
+            int64_t id = 0;
+            if (ui.overlay == OVERLAY_QUEUE && queue.selected < queue.count) {
+                size_t index = selection.order ? selection.order[queue.selected] : queue.selected;
+                id = playback_section(&library, selection.genre)->songs[index].id;
+            }
+            else if (ui.overlay == OVERLAY_PLAYLISTS && playlists.mode == PLAYLIST_BROWSE && playlists.playlist_id &&
+                     playlists.menu.selected < playlists.menu.count) { id = playlists.ids[playlists.menu.selected]; }
+            else if (ui.overlay == OVERLAY_NONE && ui.screen == SCREEN_SONGS) {
+                TuiMenu *menu = ui.menus[SCREEN_SONGS];
+                if (menu->selected < menu->count) {
+                    id = ui.search_active ? library.sections[0].songs[library.search_indices[menu->selected]].id :
+                                           library.sections[selected_genre].songs[menu->selected].id;
+                }
+            }
+            else if (ui.overlay == OVERLAY_NONE && ui.screen == SCREEN_PLAYER && selection.song) { id = selection.song->id; }
+            if (id) {
+                if (playlists_picker(&playlists, id) == 0) { ui.overlay = OVERLAY_PLAYLISTS; }
+                else { ui.status = playlists.notice; }
+            }
+            handled = true;
+        }
+        else if (ui.overlay == OVERLAY_PLAYLISTS && action != TERM_QUIT && action != TERM_END) {
+            if (action == TERM_QUEUE) { ui.overlay = OVERLAY_QUEUE; }
+            else if (action == TERM_SHUFFLE && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE) { player.shuffle = !player.shuffle; }
+            else if (action == TERM_REPEAT && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE) { player.repeat = !player.repeat; }
+            else if (action == TERM_SPACE && ui.playlist_playing_id == playlists.playlist_id && selection.song && selection.genre == library.count) {
+                AudioStatus current = audio_status(audio);
+                if (current.state == AUDIO_FAILED || current.state == AUDIO_FINISHED || current.state == AUDIO_IDLE) {
+                    start_song(audio, &ui, &library, &selection, selection.genre, selection.index);
+                }
+                else { audio_pause(audio, !current.pause_requested); }
+            }
+            else if (action != TERM_NONE && action != TERM_RESIZE) {
+                if (action == TERM_SPACE) { action = TERM_ACTIVATE; }
+                PlaylistResult change = playlists_handle(&playlists, action);
+                if (change == PLAYLIST_CLOSE) { ui.overlay = OVERLAY_NONE; ui.status = playlists.notice; }
+                else if (change == PLAYLIST_PLAY && playlist_play(audio, &ui, &library, &selection, &playlists) == 0) {
+                    ui.playlist_playing_id = playlists.playlist_id;
+                    player.selected = PLAYER_PLAY;
+                    tui_state_switch(&ui, SCREEN_PLAYER);
+                    ui.overlay = OVERLAY_PLAYLISTS;
+                }
+            }
+            handled = action != TERM_NONE;
+            /* Never let sidebar keys reach the underlying player or song list. */
+            action = TERM_NONE;
+        }
+        if (ui.screen == SCREEN_PLAYER && ui.overlay == OVERLAY_NONE && action == TERM_SETTINGS) {
+            search_from_player = true;
+            tui_state_switch(&ui, SCREEN_SONGS);
+        }
+        if (ui.screen == SCREEN_SONGS && ui.overlay == OVERLAY_NONE) {
+            if (action == TERM_SETTINGS) {
+                ui.search_active = ui.search_editing = true;
+                library.search.title = library.sections[selected_genre].menu.title;
+                ui.menus[SCREEN_SONGS] = &library.search;
+                ui.status = "";
+                handled = true;
+            }
+
+            else if (action == TERM_BACK && ui.search_active) {
+                ui.search_active = ui.search_editing = false;
+                library.search_query[0] = '\0';
+                search_update(&library);
+                ui.menus[SCREEN_SONGS] = &library.sections[selected_genre].menu;
+                ui.status = "";
+                if (search_from_player) {
+                    tui_state_handle(&ui, TERM_BACK);
+                    search_from_player = false;
+                }
+                handled = true;
+            }
+
+            else if (ui.search_editing && (action == TERM_TEXT || action == TERM_ERASE || action == TERM_CLEAR_TEXT)) {
+                search_input(&library, action);
+                ui.status = "";
+                handled = true;
+            }
+
+            else if (action == TERM_UP || action == TERM_DOWN || action == TERM_FIRST || action == TERM_LAST) {
+                search_focus_changed = ui.search_editing;
+                ui.search_editing = false;
+            }
+        }
+        if (action == TERM_QUEUE_NEXT) {
+            const DbSong *song = NULL;
+            if (ui.overlay == OVERLAY_QUEUE && queue.selected < queue.count) {
+                size_t index = selection.order ? selection.order[queue.selected] : queue.selected;
+                song = &playback_section(&library, selection.genre)->songs[index];
+            }
+
+            else if (ui.screen == SCREEN_SONGS && ui.overlay == OVERLAY_NONE) {
+                TuiMenu *menu = ui.menus[SCREEN_SONGS];
+                if (menu->selected < menu->count) {
+                    song = ui.search_active ? &library.sections[0].songs[library.search_indices[menu->selected]] :
+                                             &library.sections[selected_genre].songs[menu->selected];
+                }
+            }
+            if (song) {
+                if (queue_next(&ui, &library, &selection, song) < 0) { ui.status = "Cannot allocate queue."; }
+                else { ui.status = "Queued next. Q: view queue."; }
+                handled = true;
+            }
+        }
+        TuiResult result = volume_changed || handled ? TUI_CHANGED : tui_state_handle(&ui, action);
+        if (search_focus_changed && result == TUI_UNCHANGED) { result = TUI_CHANGED; }
         if (result == TUI_QUIT) { break; }
 
-        if (previous_screen == SCREEN_SETTINGS) { player.repeat = settings_items[1].value; }
+        if (previous_screen == SCREEN_SETTINGS && !handled) { player.repeat = settings_items[1].value; }
 
         else { settings_items[1].value = player.repeat; }
         player.lyrics_visible = settings_items[0].value;
 
         if (result == TUI_SELECTED) {
             if (ui.overlay == OVERLAY_QUEUE) {
-                if (selection.song && queue.selected < queue.count) {
-                    start_song(audio, &ui, &library, &selection, selection.genre, queue.selected);
+                if (queue.selected < queue.count) {
+                    size_t index = selection.order ? selection.order[queue.selected] : queue.selected;
+                    start_song(audio, &ui, &library, &selection, selection.genre, index);
                 }
             }
 
             else if (ui.screen == SCREEN_HOME) {
-                static const TuiScreen destinations[] = {SCREEN_GENRES, SCREEN_SETTINGS, SCREEN_PLAYER, SCREEN_QUEUE_MENU};
+                static const TuiScreen destinations[] = {SCREEN_GENRES, SCREEN_SETTINGS, SCREEN_PLAYER};
                 size_t selected = menus[0].selected;
                 if (selected < sizeof destinations / sizeof destinations[0]) {
                     tui_state_switch(&ui, destinations[selected]);
@@ -242,71 +370,49 @@ int main(int argc, char **argv)
                 else { running = false; }
             }
 
-            else if (ui.screen == SCREEN_QUEUE_MENU) {
-                if (queue_menu.selected == 0) { tui_state_switch(&ui, SCREEN_QUEUE_ADD); }
-                else if (queue_menu.selected == 1) { tui_state_switch(&ui, SCREEN_QUEUE_EDIT); }
-                else if (queue_menu.selected == 2) {
-                    if (!library.custom.count) { ui.status = "Add songs to your custom queue first."; }
-                    else if (start_song(audio, &ui, &library, &selection, library.count, 0) == 0) {
-                        tui_state_switch(&ui, SCREEN_PLAYER);
-                    }
-                }
-                else {
-                    if (selection.song && selection.genre == library.count) {
-                        selection.genre = 0;
-                        for (size_t i = 0; i < library.sections[0].count; ++i) {
-                            if (library.sections[0].songs[i].id == selection.song->id) { selection.index = i; break; }
-                        }
-                        queue_bind(&ui, &library, &selection);
-                    }
-                    ui.status = "Default queue: follows the genre you play. Custom queue kept for this session.";
-                }
-            }
-
-            else if (ui.screen == SCREEN_QUEUE_ADD) {
-                if (queue_add_menu.selected < queue_add_menu.count) {
-                    if (queue_add(&library, queue_add_menu.selected) < 0) { ui.status = "Cannot allocate custom queue."; }
-                    else {
-                        if (selection.song && selection.genre == library.count) { queue_bind(&ui, &library, &selection); }
-                        ui.status = "Added to custom queue. Esc returns; choose Play custom queue to use it.";
-                    }
-                }
-            }
-
-            else if (ui.screen == SCREEN_QUEUE_EDIT) {
-                if (library.custom.menu.selected < library.custom.count &&
-                    start_song(audio, &ui, &library, &selection, library.count, library.custom.menu.selected) == 0) {
-                    tui_state_switch(&ui, SCREEN_PLAYER);
-                }
-            }
-
             else if (ui.screen == SCREEN_GENRES && menus[1].selected < library.count) {
                 selected_genre = menus[1].selected;
+                ui.search_active = ui.search_editing = false;
                 ui.menus[SCREEN_SONGS] = &library.sections[selected_genre].menu;
                 tui_state_switch(&ui, SCREEN_SONGS);
                 if (!library.sections[selected_genre].count) { ui.status = "This genre has no songs yet."; }
             }
 
             else if (ui.screen == SCREEN_SONGS) {
-                SongMenu *section = &library.sections[selected_genre];
-                if (section->menu.selected < section->count) {
-                    if (start_song(audio, &ui, &library, &selection, selected_genre, section->menu.selected) == 0) {
+                TuiMenu *menu = ui.menus[SCREEN_SONGS];
+                if (menu->selected < menu->count) {
+                    size_t genre = ui.search_active ? 0 : selected_genre;
+                    size_t index = ui.search_active ? library.search_indices[menu->selected] : menu->selected;
+                    if (start_song(audio, &ui, &library, &selection, genre, index) == 0) {
+                        ui.search_editing = false;
                         player.selected = PLAYER_PLAY;
-                        tui_state_switch(&ui, SCREEN_PLAYER);
+                        if (search_from_player) {
+                            tui_state_handle(&ui, TERM_BACK);
+                            search_from_player = false;
+                            ui.search_active = false;
+                            ui.menus[SCREEN_SONGS] = &library.sections[selected_genre].menu;
+                        }
+
+                        else { tui_state_switch(&ui, SCREEN_PLAYER); }
                     }
                 }
             }
 
             else if (ui.screen == SCREEN_PLAYER && selection.song && player.selected != PLAYER_PLAY) {
                 SongMenu *section = playback_section(&library, selection.genre);
-                size_t index = next_song(section, selection.index, player.shuffle, player.selected == PLAYER_PREVIOUS);
+                size_t index = next_song(section, &selection, player.selected == PLAYER_PREVIOUS);
                 start_song(audio, &ui, &library, &selection, selection.genre, index);
             }
 
             else if (ui.screen == SCREEN_PLAYER && !selection.song) { ui.status = "Select a song from Genres first."; }
         }
 
-        else if (result == TUI_CHANGED && ui.screen == SCREEN_PLAYER) { ui.status = ""; }
+        else if (result == TUI_CHANGED && ui.screen == SCREEN_PLAYER && !handled) { ui.status = ""; }
+
+        if (was_shuffle != player.shuffle && selection.song) {
+            shuffle_clear(&selection);
+            queue_bind(&ui, &library, &selection);
+        }
 
         if (transport_pressed && selection.song) {
             AudioStatus status = audio_status(audio);
@@ -358,12 +464,13 @@ int main(int argc, char **argv)
                 SongMenu *section = playback_section(&library, selection.genre);
                 bool advance = player.repeat || player.shuffle || selection.index + 1 < section->count;
                 if (advance) {
-                    size_t index = player.repeat ? selection.index : next_song(section, selection.index, player.shuffle, false);
+                    size_t index = player.repeat ? selection.index : next_song(section, &selection, false);
                     start_song(audio, &ui, &library, &selection, selection.genre, index);
                 }
             }
         }
         last_audio = status;
+        if (playlists_poll(&playlists)) { result = TUI_CHANGED; }
         if (ui.screen == SCREEN_VISUALIZER) {
             AudioSamples samples;
             audio_samples(audio, &samples);
@@ -384,6 +491,8 @@ int main(int argc, char **argv)
     int signal_number = terminal_signal();
     
     cover_destroy(selection.covers);
+    playlists_free(&playlists);
+    shuffle_clear(&selection);
     terminal_restore();
     lyrics_free(&timed_lyrics);
     audio_destroy(audio);
@@ -438,12 +547,120 @@ done:
     return(result);
 }
 
-static size_t next_song(const SongMenu *section, size_t index, bool shuffle, bool previous)
+static SongMenu *playback_section(Library *library, size_t genre)
 {
-    if (shuffle && section->count > 1) {
-        return((index + 1 + (size_t)rand() % (section->count - 1)) % section->count);
+    return(genre == library->count ? &library->custom : &library->sections[genre]);
+}
+
+static void shuffle_clear(PlaybackSelection *selection)
+{
+    free(selection->order);
+    free(selection->queue_items);
+    selection->order = NULL;
+    selection->queue_items = NULL;
+    selection->order_count = 0;
+}
+
+static void queue_bind(TuiState *ui, Library *library, PlaybackSelection *selection)
+{
+    SongMenu *section = playback_section(library, selection->genre);
+    bool custom = selection->genre == library->count;
+    if (ui->player->shuffle && !selection->order && section->count) {
+        size_t *order = section->count <= SIZE_MAX / sizeof *order ? malloc(section->count * sizeof *order) : NULL;
+        TuiItem *items = section->count <= SIZE_MAX / sizeof *items ? malloc(section->count * sizeof *items) : NULL;
+        if (!order || !items || shuffle_order(order, section->count, selection->index) < 0) {
+            free(order);
+            free(items);
+            ui->player->shuffle = false;
+            ui->status = "Cannot shuffle: allocation or system random source failed.";
+        }
+
+        else {
+            selection->order = order;
+            selection->queue_items = items;
+            selection->order_count = section->count;
+            for (size_t i = 0; i < section->count; ++i) { items[i] = section->menu.items[order[i]]; }
+        }
     }
-    return((index + (previous ? section->count - 1 : 1)) % section->count);
+    size_t position = selection->index;
+    if (selection->order) {
+        for (size_t i = 0; i < selection->order_count; ++i) {
+            if (selection->order[i] == selection->index) { position = i; break; }
+        }
+    }
+    for (size_t i = 0; i < library->count; ++i) {
+        library->sections[i].menu.has_active = false;
+    }
+    library->custom.menu.has_active = false;
+    section->menu.has_active = selection->song != NULL;
+    section->menu.active = selection->index;
+    ui->menus[SCREEN_GENRES]->has_active = selection->song && !custom;
+    ui->menus[SCREEN_GENRES]->active = selection->genre;
+    *ui->queue = (TuiMenu){.title = selection->order ? "Queue: shuffled" : custom ? "Queue: custom" : "Queue: current genre",
+                           .items = selection->order ? selection->queue_items : section->menu.items, .count = section->count,
+                           .selected = position, .has_active = selection->song != NULL,
+                           .active = position};
+}
+
+static int queue_next(TuiState *ui, Library *library, PlaybackSelection *selection, const DbSong *song)
+{
+    SongMenu *source = selection->song ? playback_section(library, selection->genre) : &library->custom;
+    size_t count = source->count;
+    if (count == SIZE_MAX || count + 1 > SIZE_MAX / sizeof(DbSong) ||
+        count + 1 > SIZE_MAX / sizeof(TuiItem) || count + 1 > SIZE_MAX / sizeof(size_t)) { return(-1); }
+    DbSong *songs = malloc((count + 1) * sizeof *songs);
+    TuiItem *items = malloc((count + 1) * sizeof *items);
+    size_t *order = selection->order ? malloc((count + 1) * sizeof *order) : NULL;
+    TuiItem *shuffled = selection->order ? malloc((count + 1) * sizeof *shuffled) : NULL;
+    if (!songs || !items || (selection->order && (!order || !shuffled))) {
+        free(songs); free(items); free(order); free(shuffled);
+        return(-1);
+    }
+    size_t insert = selection->song ? selection->index + 1 : 0;
+    for (size_t i = 0; i < count + 1; ++i) {
+        songs[i] = i == insert ? *song : source->songs[i < insert ? i : i - 1];
+        items[i] = (TuiItem){songs[i].title, TUI_BUTTON, true, false};
+    }
+    if (order) {
+        size_t at = 0;
+        for (size_t i = 0; i < count; ++i) {
+            size_t original = selection->order[i];
+            order[at++] = original < insert ? original : original + 1;
+            if (selection->song && original == selection->index) { order[at++] = insert; }
+        }
+        if (!selection->song) {
+            memmove(order + 1, order, count * sizeof *order);
+            order[0] = insert;
+        }
+        for (size_t i = 0; i < count + 1; ++i) { shuffled[i] = items[order[i]]; }
+    }
+    /* Copy before replacing: the hovered song can belong to the old queue. */
+    free(library->custom.songs);
+    free(library->custom.menu.items);
+    library->custom = (SongMenu){.songs = songs, .count = count + 1,
+                                .menu = {.items = items, .count = count + 1}};
+    shuffle_clear(selection);
+    selection->order = order;
+    selection->queue_items = shuffled;
+    selection->order_count = order ? count + 1 : 0;
+    selection->genre = library->count;
+    if (!selection->song) { selection->index = 0; }
+    queue_bind(ui, library, selection);
+    return(0);
+}
+
+static size_t next_song(const SongMenu *section, const PlaybackSelection *selection, bool previous)
+{
+    size_t index = selection->index;
+    if (selection->order) {
+        for (size_t i = 0; i < selection->order_count; ++i) {
+            if (selection->order[i] == index) {
+                size_t next = previous ? (i ? i - 1 : section->count - 1) : (i + 1) % section->count;
+                return(selection->order[next]);
+            }
+        }
+    }
+    return(previous ? (index ? index - 1 : section->count - 1) : (index + 1) % section->count);
 }
 
 static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
@@ -461,7 +678,9 @@ static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
         ui->status = "Cannot allocate playback request.";
         return(-1);
     }
+    if (genre < library->count) { ui->playlist_playing_id = 0; }
     selection->song = song;
+    if (selection->genre != genre) { shuffle_clear(selection); }
     selection->genre = genre;
     selection->index = index;
     selection->generation = audio_status(audio).generation;
@@ -470,6 +689,52 @@ static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
     ui->player->paused = false;
     ui->status = "";
     queue_bind(ui, library, selection);
+    return(0);
+}
+
+static int playlist_play(AudioPlayer *audio, TuiState *ui, Library *library,
+                         PlaybackSelection *selection, const Playlists *panel)
+{
+    size_t count = panel->menu.count;
+    SongMenu snapshot = {.count = count};
+    snapshot.songs = calloc(count, sizeof *snapshot.songs);
+    snapshot.menu.items = calloc(count, sizeof *snapshot.menu.items);
+    if (!snapshot.songs || !snapshot.menu.items) {
+        free(snapshot.songs); free(snapshot.menu.items);
+        ui->status = "Cannot allocate playlist queue.";
+        return(-1);
+    }
+    snapshot.menu.count = count;
+    for (size_t i = 0; i < count; ++i) {
+        bool found = false;
+        for (size_t j = 0; j < library->sections[0].count; ++j) {
+            if (library->sections[0].songs[j].id == panel->ids[i]) {
+                snapshot.songs[i] = library->sections[0].songs[j];
+                snapshot.menu.items[i] = (TuiItem){snapshot.songs[i].title, TUI_BUTTON, true, false};
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            free(snapshot.songs); free(snapshot.menu.items);
+            ui->status = "Library changed; restart to load the new songs.";
+            return(-1);
+        }
+    }
+    SongMenu previous = library->custom;
+    library->custom = snapshot;
+    PlaybackSelection next = *selection;
+    next.order = NULL;
+    next.queue_items = NULL;
+    next.order_count = 0;
+    if (start_song(audio, ui, library, &next, library->count, panel->menu.selected) < 0) {
+        library->custom = previous;
+        free(snapshot.songs); free(snapshot.menu.items);
+        return(-1);
+    }
+    shuffle_clear(selection);
+    *selection = next;
+    free(previous.songs); free(previous.menu.items);
     return(0);
 }
 
@@ -500,6 +765,77 @@ static void select_song(TuiState *ui, const DbSong *song)
     player->loading = true;
     player->playback_status = "Loading stream...";
     terminal_cover_free();
+}
+
+static wint_t search_character(const char **text)
+{
+    wchar_t character;
+    mbstate_t state = {0};
+    size_t length = mbrtowc(&character, *text, MB_CUR_MAX, &state);
+    if (length == (size_t)-1 || length == (size_t)-2) {
+        character = (unsigned char)**text;
+        length = 1;
+    }
+    *text += length;
+    /* Keep ASCII matching predictable even in a Turkish locale. */
+    return(character >= 'A' && character <= 'Z' ? (wint_t)(character + ('a' - 'A')) : towlower(character));
+}
+
+static bool search_prefix(const char *text, const char *query)
+{
+    while (*query) {
+        if (!*text || search_character(&text) != search_character(&query)) { return(false); }
+    }
+    return(true);
+}
+
+static bool search_contains(const char *text, const char *query)
+{
+    do {
+        if (search_prefix(text, query)) { return(true); }
+        if (!*text) { break; }
+        search_character(&text);
+    } while (*text);
+    return(false);
+}
+
+static void search_update(Library *library)
+{
+    library->search.count = 0;
+    SongMenu *all = &library->sections[0];
+    for (int rank = 0; rank < 3; ++rank) {
+        for (size_t i = 0; i < all->count; ++i) {
+            DbSong *song = &all->songs[i];
+            int score = search_prefix(song->title, library->search_query) ? 0 :
+                        search_contains(song->title, library->search_query) ? 1 :
+                        search_contains(song->artist, library->search_query) ? 2 : -1;
+            if (score == rank) {
+                size_t index = library->search.count++;
+                library->search_indices[index] = i;
+                library->search.items[index] = (TuiItem){library->search_labels[i], TUI_BUTTON, true, false};
+            }
+        }
+    }
+    tui_menu_init(&library->search);
+}
+
+static void search_input(Library *library, TerminalAction action)
+{
+    char *query = library->search_query;
+    size_t length = strlen(query);
+    if (action == TERM_CLEAR_TEXT) { query[0] = '\0'; }
+
+    else if (action == TERM_ERASE && length) {
+        do { --length; } while (length && ((unsigned char)query[length] & 0xc0) == 0x80);
+        query[length] = '\0';
+    }
+
+    else if (action == TERM_TEXT) {
+        const char *input = terminal_text();
+        size_t added = strlen(input);
+        if (added < sizeof library->search_query - length) { memcpy(query + length, input, added + 1); }
+    }
+    search_update(library);
 }
 
 static int library_load(Database *db, Library *library)
@@ -533,6 +869,22 @@ static int library_load(Database *db, Library *library)
         }
         tui_menu_init(&section->menu);
     }
+    size_t count = library->sections[0].count;
+    library->search = (TuiMenu){.title = "Search songs", .wrap = true};
+    if (count) {
+        library->search.items = calloc(count, sizeof *library->search.items);
+        library->search_indices = calloc(count, sizeof *library->search_indices);
+        library->search_labels = calloc(count, sizeof *library->search_labels);
+        if (!library->search.items || !library->search_indices || !library->search_labels) { goto no_memory; }
+        for (size_t i = 0; i < count; ++i) {
+            DbSong *song = &library->sections[0].songs[i];
+            size_t length = strlen(song->title) + strlen(song->artist) + 4;
+            library->search_labels[i] = malloc(length);
+            if (!library->search_labels[i]) { goto no_memory; }
+            snprintf(library->search_labels[i], length, "%s%s%s", song->title, *song->artist ? " - " : "", song->artist);
+        }
+    }
+    search_update(library);
     return(0);
 no_memory:
     snprintf(db->error, sizeof db->error, "Cannot allocate library menus");
@@ -541,6 +893,12 @@ no_memory:
 
 static void library_free(Library *library)
 {
+    if (library->search_labels) {
+        for (size_t i = 0; i < library->sections[0].count; ++i) { free(library->search_labels[i]); }
+    }
+    free(library->search_labels);
+    free(library->search_indices);
+    free(library->search.items);
     if (library->sections) {
         for (size_t i = 0; i < library->count; ++i) {
             database_songs_free(library->sections[i].songs, library->sections[i].count);

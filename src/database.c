@@ -2,14 +2,13 @@
 #include "database.h"
 #include <sqlite3.h>    //From forcing database join out of spite to use sqlite3...The exubrant child have died R.I.P Cybergod Neuro
 #include <ctype.h>
-#include <limits.h>
-#include <math.h>   
+#include <limits.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define DB_APPLICATION_ID 1397375576
-#define DB_VERSION 2
+#define DB_VERSION 4
 
 static int fail(Database *db, const char *message)
 {
@@ -151,6 +150,8 @@ int database_open(Database *db, const char *path)
             "ALTER TABLE songs ADD COLUMN lyrics_uri TEXT NOT NULL DEFAULT '';"
             "PRAGMA user_version=2;") < 0) { goto rollback; }
     }
+    /* Legacy playlist tables are moved atomically by playlists_init(). */
+    if (execute(db, "PRAGMA user_version=4") < 0) { goto rollback; }
     if (database_commit(db) < 0) { goto rollback; }
     return(0);
 
@@ -236,9 +237,12 @@ int database_lyrics_set(Database *db, int64_t id, const char *lyrics, const char
 int database_lyrics_replace(Database *db, int64_t id, const char *lyrics, const char *format, const char *source_uri)
 {
     if (!format || (strcmp(format, "plain") && strcmp(format, "lrc"))) { return(fail(db, "Invalid lyrics format")); }
+    
     sqlite3_stmt *statement = NULL;
+    
     if (prepare(db, &statement, "UPDATE songs SET lyrics=?1,lyrics_uri=?2,lyrics_format=?4,"
         "lyrics_start_ms=NULL,lyrics_end_ms=NULL WHERE id=?3") < 0) { return(-1); }
+    
     int result = bind_text(statement, 1, lyrics);
     if (result == SQLITE_OK) { result = bind_text(statement, 2, source_uri); }
     if (result == SQLITE_OK) { result = sqlite3_bind_int64(statement, 3, id); }
@@ -246,6 +250,7 @@ int database_lyrics_replace(Database *db, int64_t id, const char *lyrics, const 
     if (result == SQLITE_OK) { result = sqlite3_step(statement); }
     if (finish(db, statement, result) < 0) { return(-1); }
     if (!sqlite3_changes(db->handle)) { return(fail(db, "Song does not exist")); }
+    
     return(0);
 }
 

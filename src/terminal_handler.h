@@ -39,13 +39,18 @@ typedef enum {
     TERM_RESIZE, TERM_END, TERM_ERROR,
     TERM_ARROW_UP, TERM_ARROW_DOWN, TERM_VOLUME_UP, TERM_VOLUME_DOWN,
     TERM_PLAYER, TERM_LYRICS, TERM_VISUALIZER, TERM_QUEUE, TERM_NEXT_VIEW, TERM_SETTINGS, TERM_TYPEWRITER,
-    TERM_REMOVE, TERM_MOVE_UP, TERM_MOVE_DOWN
+    TERM_REMOVE, TERM_MOVE_UP, TERM_MOVE_DOWN,
+    TERM_TEXT, TERM_ERASE, TERM_CLEAR_TEXT, TERM_QUEUE_NEXT,
+    TERM_PLAYLISTS, TERM_ADD_PLAYLIST, TERM_CREATE, TERM_RENAME,
+    TERM_COVER, TERM_SPACE, TERM_SHUFFLE, TERM_REPEAT
 } TerminalAction;
 
 int terminal_init(void);
 void terminal_restore(void);
 
 TerminalAction terminal_read(int timeout_ms);
+void terminal_text_mode(int enabled);
+const char *terminal_text(void);
 
 int terminal_signal(void);
 

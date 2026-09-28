@@ -1,4 +1,4 @@
-# SHITTY JUKEBOX Ω² NOW OFFICAL BABYYYYYYYYYYy
+# SHITTY JUKEBOX Ω² NOW OFFICAL BABYYYYYYYYYYY
 
 
 > _I'll add shit here once I am happy with everything else_
@@ -53,6 +53,14 @@
 
 - Audio visualizer using FFT 
 
+- Song search feature added
+
+- The qeuueueue feature is also here
+
+- WELL...I _lowkey_ overengineered the shuffle with fisher-yates and CSPRNG but it worths lol...
+
+- **BETA FEATURE**: PLAYLIST CREATION ADDED NOW USERS CAN GROUP SONGS HOW THE FUCK THEY WANT
+
 - Well...we don't have SkyNet anymore...
 
 - Mr. Rick Astley kindly got evacuated to the ring 0 and does not rickroll the user on exit (He did, in fact, give up)
@@ -64,9 +72,9 @@
 
 ## In Dev
 
-- [-] Song database recreation
+- [X] Song database recreation
 
-- [ ] Lyrics sync (AND TRUST ME THIS TIME IT'LL BE FUCKING PERFECT) (I AM BETTER THAN FUCKING SPOTIFY(yeah if old me gets the dibs on dispatch tables as Cyber-god status I AM FUCKING REINCARNATION OF KEN THOMPSON))
+- [ ] Lyrics sync (AND TRUST ME THIS TIME IT'LL BE FUCKING PERFECT) (I AM BETTER THAN FUCKING SPOTIFY (at least morally 'cuz I don'p put the lyrics behind a fucking paywall)(yeah if old me gets the dibs on dispatch tables as Cyber-god status I AM FUCKING REINCARNATION OF KEN THOMPSON))
 
 - [X] AUDIO VISUALIZER
 

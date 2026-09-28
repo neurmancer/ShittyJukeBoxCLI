@@ -85,10 +85,11 @@ void tui_player_draw(const TuiPlayer *player, const char *status);
 typedef enum {
     SCREEN_HOME, SCREEN_GENRES, SCREEN_SETTINGS,
     SCREEN_PLAYER, SCREEN_LYRICS, SCREEN_VISUALIZER, SCREEN_SONGS,
-    SCREEN_QUEUE_MENU, SCREEN_QUEUE_ADD, SCREEN_QUEUE_EDIT, SCREEN_COUNT
+    SCREEN_COUNT
 } TuiScreen;
 
-typedef enum { OVERLAY_NONE, OVERLAY_QUEUE, OVERLAY_TYPEWRITER } TuiOverlay;
+typedef enum { OVERLAY_NONE, OVERLAY_QUEUE, OVERLAY_TYPEWRITER, OVERLAY_PLAYLISTS } TuiOverlay;
+struct Playlists;
 typedef enum { TYPEWRITER_NORMAL, TYPEWRITER_RGB, TYPEWRITER_BOLD, TYPEWRITER_MODE_COUNT } TypewriterMode;
 
 typedef struct {
@@ -99,6 +100,8 @@ typedef struct {
     /* Caller-owned models outlive this state. screen changes doesn't affect that (effect?affect? which is the correct one ) */
     TuiMenu *menus[SCREEN_COUNT];
     TuiMenu *queue;
+    struct Playlists *playlists;
+    int64_t playlist_playing_id;
     TuiPlayer *player;
     Spectrum *spectrum;
     size_t lyrics_top;
@@ -106,6 +109,9 @@ typedef struct {
     size_t typewriter_color;
     size_t typewriter_selected;
     const char *status;
+    const char *search_query;
+    bool search_active;
+    bool search_editing;
 } TuiState;
 
 void tui_state_init(TuiState *state, TuiScreen initial);

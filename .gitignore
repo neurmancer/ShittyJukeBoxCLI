@@ -6,6 +6,10 @@ songdata.h
 /jukebox.db-journal
 /jukebox.db-wal
 /jukebox.db-shm
+/playlists.db
+/playlists.db-journal
+/playlists.db-wal
+/playlists.db-shm
 
 /jukebox-add
 /legacy-backup/
