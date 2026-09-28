@@ -13,7 +13,7 @@
 ## My Therapy Songs
 
 > 1. Evanescence - Bring Me to Life (synced lyrics)
-> 2. Evanescence - My Immortal
+> 2. Evanescence - My Immortal (synced lyrics)
 > 3. Evanescence - Lithium
 > 4. Green Day - Boulevard of Broken Dreams
 > 5. HIM - (Don't Fear) The Reaper
@@ -28,7 +28,7 @@
 > 14. Papa Roach - Last Resort
 > 15. Paramore - Misery Business
 > 16. Scorpions - Still Loving You
-> 17. Three Days Grace - I Hate Everything About You
+> 17. Three Days Grace - I Hate Everything About You (synced lyrics)
 > 18. Three Days Grace - Pain
 
 ---

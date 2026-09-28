@@ -65,6 +65,8 @@
 
 - Mr. Rick Astley kindly got evacuated to the ring 0 and does not rickroll the user on exit (He did, in fact, give up)
 
+- Now there is a tiny `theme.lua file` to customize TUI's primary colors
+
 - I mean...**YOU FUCKING GOTTA TRY IT TO UNDERSTAND MY HYPE BRO** go fucking [compile](#how-to-run)
 
 ---
@@ -84,6 +86,7 @@
 
 - [ ] MPRIS + playerctl support 
 
+- [ ] Offline mode support (via local files or downloading the genres)
 
 ---
 
