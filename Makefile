@@ -3,6 +3,9 @@ CPPFLAGS ?=
 CFLAGS ?= -Wall -Wextra -std=c11
 LDFLAGS ?=
 LDLIBS = -lm -lsqlite3
+LUA_PACKAGE ?= lua5.4
+LUA_CFLAGS = $(shell pkg-config --cflags $(LUA_PACKAGE))
+LUA_LIBS = $(shell pkg-config --libs $(LUA_PACKAGE))
 AUDIO_PACKAGES = libavformat libavcodec libavutil libswresample libswscale sdl2
 AUDIO_CFLAGS = $(shell pkg-config --cflags $(AUDIO_PACKAGES))
 AUDIO_LIBS = $(shell pkg-config --libs $(AUDIO_PACKAGES))
@@ -10,7 +13,7 @@ AUDIO_LIBS = $(shell pkg-config --libs $(AUDIO_PACKAGES))
 TARGET = ShittyJukeBox
 DB ?= jukebox.db
 SOURCES = ShittyJukeBox.c src/audio_handler.c src/lyrics_handler.c \
-          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c src/shuffle.c src/playlists.c
+          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c src/shuffle.c src/playlists.c src/config.c
 HEADERS = $(wildcard src/*.h)
 
 .PHONY: all run clean test test-audio add-song add-songs
@@ -18,7 +21,7 @@ HEADERS = $(wildcard src/*.h)
 all: $(TARGET) jukebox-add
 
 $(TARGET): $(SOURCES) $(HEADERS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(AUDIO_CFLAGS) -pthread $(SOURCES) $(LDFLAGS) $(LDLIBS) $(AUDIO_LIBS) -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(AUDIO_CFLAGS) $(LUA_CFLAGS) -pthread $(SOURCES) $(LDFLAGS) $(LDLIBS) $(AUDIO_LIBS) $(LUA_LIBS) -o $@
 
 run: $(TARGET)
 	./$(TARGET)

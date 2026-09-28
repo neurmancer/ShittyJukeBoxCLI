@@ -4,6 +4,7 @@
 #include "src/cover_handler.h"
 #include "src/shuffle.h"
 #include "src/playlists.h"
+#include "src/config.h"
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -74,6 +75,8 @@ int main(int argc, char **argv)
     setlocale(LC_CTYPE, "");
     const char *cover_path = NULL;
     const char *database_path = DATABASE_PATH;
+    const char *config_path = "config/theme.lua";
+    bool config_explicit = false;
     bool preview = false;
     const char *lrc_path = NULL;
     int64_t lrc_song = 0;
@@ -82,6 +85,11 @@ int main(int argc, char **argv)
 
         else if (!strcmp(argv[i], "--cover") && i + 1 < argc) {
             cover_path = argv[++i];
+        }
+
+        else if (!strcmp(argv[i], "--config") && i + 1 < argc) {
+            config_path = argv[++i];
+            config_explicit = true;
         }
 
         else if (!strcmp(argv[i], "--db") && i + 1 < argc) { database_path = argv[++i]; }
@@ -95,9 +103,15 @@ int main(int argc, char **argv)
         }
 
         else {
-            fprintf(stderr, "Usage: %s [--db jukebox.db] [--preview] [--cover album.png] [--import-lrc SONG_ID FILE]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [--db jukebox.db] [--config config/theme.lua] [--preview] [--cover album.png] [--import-lrc SONG_ID FILE]\n", argv[0]);
             return(strcmp(argv[i], "--help") ? 1 : 0);
         }
+    }
+
+    char config_error[512];
+    if (!lrc_path && config_load(config_path, !config_explicit, config_error, sizeof config_error) < 0) {
+        fprintf(stderr, "Config: %s\n", config_error);
+        return(1);
     }
 
     Database db = {0};
@@ -263,6 +277,12 @@ int main(int argc, char **argv)
             if (action == TERM_QUEUE) { ui.overlay = OVERLAY_QUEUE; }
             else if (action == TERM_SHUFFLE && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE) { player.shuffle = !player.shuffle; }
             else if (action == TERM_REPEAT && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE) { player.repeat = !player.repeat; }
+            else if ((action == TERM_PREVIOUS_TRACK || action == TERM_NEXT_TRACK) &&
+                     playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE && selection.song) {
+                SongMenu *section = playback_section(&library, selection.genre);
+                size_t index = next_song(section, &selection, action == TERM_PREVIOUS_TRACK);
+                start_song(audio, &ui, &library, &selection, selection.genre, index);
+            }
             else if (action == TERM_SPACE && ui.playlist_playing_id == playlists.playlist_id && selection.song && selection.genre == library.count) {
                 AudioStatus current = audio_status(audio);
                 if (current.state == AUDIO_FAILED || current.state == AUDIO_FINISHED || current.state == AUDIO_IDLE) {

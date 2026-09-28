@@ -10,6 +10,28 @@
 #include <termios.h>
 #include <unistd.h>
 
+/* Keep defaults available even when a caller does not load a configuration. */
+#define COLOR_STYLES(rgb) { rgb, rgb BOLDY, rgb BOLDY INVERSE, \
+                            rgb BOLDY UNDERLINE, INVERSE rgb, INVERSE rgb BOLDY }
+char terminal_colors[THEME_COLOR_COUNT][THEME_STYLE_COUNT][64] = {
+    COLOR_STYLES("\033[38;2;193;112;255m"),
+    COLOR_STYLES("\033[38;2;0;235;116m"),
+    COLOR_STYLES("\033[38;2;90;150;255m")
+};
+#undef COLOR_STYLES
+
+void terminal_set_color(ThemeColor color, unsigned rgb)
+{
+    if (color < 0 || color >= THEME_COLOR_COUNT) { return; }
+    static const char *prefix[] = {"", "", "", "", INVERSE, INVERSE};
+    static const char *suffix[] = {"", BOLDY, BOLDY INVERSE, BOLDY UNDERLINE, "", BOLDY};
+    for (size_t i = 0; i < THEME_STYLE_COUNT; ++i) {
+        snprintf(terminal_colors[color][i], sizeof terminal_colors[color][i],
+                 "%s\033[38;2;%u;%u;%um%s", prefix[i],
+                 (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255, suffix[i]);
+    }
+}
+
 static struct termios original;
 static const int signals[] = {SIGINT, SIGTERM, SIGHUP, SIGQUIT, SIGWINCH};
 static struct sigaction previous[sizeof signals / sizeof signals[0]];
@@ -164,6 +186,8 @@ static TerminalAction plain_key(unsigned byte)
         case 'C': return(TERM_COVER);
         case 'S': return(TERM_SHUFFLE);
         case 'R': return(TERM_REPEAT);
+        case '[': return(TERM_PREVIOUS_TRACK);
+        case ']': return(TERM_NEXT_TRACK);
         case ' ': return(TERM_SPACE);
         case 'p': return(TERM_PLAYLISTS);
         case 'a': return(TERM_ADD_PLAYLIST);
