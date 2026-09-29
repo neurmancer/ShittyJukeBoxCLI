@@ -14,8 +14,8 @@
 
 > 1. Evanescence - Bring Me to Life (synced lyrics)
 > 2. Evanescence - My Immortal (synced lyrics)
-> 3. Evanescence - Lithium
-> 4. Green Day - Boulevard of Broken Dreams
+> 3. Evanescence - Lithium (Synced lyrics)
+> 4. Green Day - Boulevard of Broken Dreams (Synced lyrics)
 > 5. HIM - (Don't Fear) The Reaper
 > 6. My Chemical Romance - I Never Told You What I Do for a Living
 > 7. Metallica - Fade to Black
@@ -35,7 +35,7 @@
 
 ## ADHDCore
 
-> 1. Ain't My Fault
+> 1. Ain't My Fault (Synced Lyrics)
 > 2. All I Ever Wanted
 > 3. American Idiot
 > 4. Angel of Darkness
@@ -61,7 +61,7 @@
 > 2. Diamond Head - In The Heat Of The Night (synced lyrics)
 > 3. Iron Maiden - The Trooper
 > 4. Judas Priest - Prisoner of Your Eyes
-> 5. Motörhead - Ace of Spades (synced lyrics)
+> 5. Motörhead - Ace of Spades (line synced lyrics)
 > 6. Motörhead - Overkill
 > 7. Motörhead - Too Late Too Late
 > 8. Saxon - Denim&Leather
