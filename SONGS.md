@@ -85,3 +85,4 @@
 ---
 
 > this is where I literally sit still and fucking tune the seconds word by word (maybe syllbal by syllbal in future too dunno...)
+> we need MORE songs
