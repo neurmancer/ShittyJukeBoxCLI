@@ -72,6 +72,7 @@ typedef struct {
     bool paused;
     bool shuffle;
     bool repeat;
+    bool repeat_playlist;
 } TuiPlayer;
 
 /* TUI_SELECTED demands songs other controls fucks with the local UI state.

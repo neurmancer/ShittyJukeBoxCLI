@@ -396,7 +396,10 @@ TuiResult tui_player_handle(TuiPlayer *player, TerminalAction action)
     if (action == TERM_ACTIVATE) {
         switch (player->selected) {
             case PLAYER_SHUFFLE: player->shuffle = !player->shuffle; break;
-            case PLAYER_REPEAT: player->repeat = !player->repeat; break;
+            case PLAYER_REPEAT:
+                player->repeat = !(player->repeat || player->repeat_playlist);
+                player->repeat_playlist = false;
+                break;
             case PLAYER_PLAY:
                 if (player->song_id) { return(TUI_SELECTED); }
                 player->paused = !player->paused;
@@ -507,7 +510,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
     for (size_t i = 0; i < PLAYER_CONTROL_COUNT; ++i) {
 
-        bool enabled = (i == PLAYER_SHUFFLE && player->shuffle) || (i == PLAYER_REPEAT && player->repeat);
+        bool enabled = (i == PLAYER_SHUFFLE && player->shuffle) || (i == PLAYER_REPEAT && (player->repeat || player->repeat_playlist));
 
         const char *style = enabled ? (i == player->selected ? GREEN_ACTIVE : GREEN_BOLD) :
                             i == player->selected ? PURPLE_SELECTED : SHE_LOVES_PURPLE;
@@ -518,15 +521,19 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
         text_at(11, button_x + i * 7, 6, style, button);
     }
 
-    const char *names[] = {"Shuffle", "Previous", "Play / Pause", "Next", "Repeat"};
+    const char *names[] = {"Shuffle", "Prev", "Play / Pause", "Next", "Repeat"};
     size_t selected = player->selected < PLAYER_CONTROL_COUNT ? player->selected : PLAYER_PLAY;
 
     text_at(12, x, width, DIM, names[selected]);
+    
     char modes[96];
+    
     snprintf(modes, sizeof modes, "Volume: %d%%", player->volume_percent);
+    
     if (rows >= 17) { text_at(13, x, width, GREEN, modes); }
 
     const char *message = status ? status : "";
+    
     if (player->show_cover) {
         if (*terminal_cover_error()) { message = terminal_cover_error(); }
 
@@ -534,6 +541,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
         else if (columns < 78 || rows < 18) { message = "Cover hidden: enlarge terminal to at least 78 columns / 18 rows."; }
     }
+    
     line(rows - 2, columns - 1, FANCY, message);
     line(rows - 1, columns - 1, DIM, player->playback_status ? player->playback_status : "UI preview - audio is not connected");
     line(rows, columns - 1, DIM, "s:search p:playlists a:save Q:queue 2:lyrics 3:FFT t:typewriter Esc:back q:quit");
@@ -735,7 +743,7 @@ static void pending_screen(const TuiState *state)
             bool active = player->lyric_active < lyrics->count &&
                           cue->time_ms == lyrics->cues[player->lyric_active].time_ms;
             size_t column = lyrics_column(width, cue->text, strlen(cue->text));
-            /* Anchor the highlight to the full line so typing never shifts it. */
+            
             text_span(row, column, width - column + 1, DIM "\033[38;2;255;255;255m", cue->text, strlen(cue->text));
             if (active) {
                 size_t length = lyrics_visible_bytes(lyrics, i, player->position_ms, player->duration_ms);
@@ -793,113 +801,173 @@ static void visualizer_draw(const TuiState *state)
         line(1, width, BOLDY, "Visualizer needs 32 columns / 12 rows");
         return;
     }
-    cabinet_center(2, 1, width, PURPLE_BOLD, "Audio visualizer");
+    cabinet_center(2, 1, width, PURPLE_BOLD, "AUIDO BUT VISIBLE");
     if (state->player) {
         char track[512];
         track_label(track, sizeof track, state->player);
         cabinet_center(4, 1, width, GREEN, track);
     }
+
     size_t chart_width = columns - 12;
+    
     if (chart_width > 96) { chart_width = 96; }
+    
     size_t bars = chart_width / 2;
+    
     if (bars > SPECTRUM_BANDS) { bars = SPECTRUM_BANDS; }
+    
     size_t bar_width = chart_width / bars - 1;
+    
     chart_width = bars * (bar_width + 1) - 1;
+    
     size_t x = (columns - chart_width) / 2 + 1;
     size_t height = rows - 11;
+    
     if (height > 24) { height = 24; }
+    
     size_t y = 6 + (rows - 11 - height) / 2;
+    
     const Spectrum *spectrum = state->spectrum;
-    bool paused = spectrum && spectrum->ready && state->player && state->player->song_id &&
-                  state->player->paused && !state->player->loading;
-    const char *blocks[] = {" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"};
+    
+    bool paused = spectrum && spectrum->ready && state->player && state->player->song_id && state->player->paused && !state->player->loading;
+    
+    const char *blocks[] = {" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}; //UTF chars
+    
     for (size_t bar = 0; bar < bars; ++bar) {
         float level = 0, peak = 0;
+        
         if (spectrum && spectrum->ready) {
+        
             for (size_t band = bar * SPECTRUM_BANDS / bars; band < (bar + 1) * SPECTRUM_BANDS / bars; ++band) {
+        
                 if (spectrum->levels[band] > level) { level = spectrum->levels[band]; }
                 if (spectrum->peaks[band] > peak) { peak = spectrum->peaks[band]; }
             }
         }
+        
         if (level > 1) { level = 1; }
         if (peak > 1) { peak = 1; }
+        
         size_t units = (size_t)(level * height * 8);
         size_t peak_row = peak > 0 ? (size_t)(peak * (height - 1)) : 0;
+        
         if (paused) {
             units = height >= 3 ? (height / 2) * 8 : height * 4;
             peak_row = units / 8 + 1; /* One empty row above the green body. */
         }
+        
         for (size_t row = 0; row < height; ++row) {
+        
             size_t fill = units > row * 8 ? units - row * 8 : 0;
+        
             if (fill > 8) { fill = 8; }
+        
             bool cap = row == peak_row && (paused ? height >= 3 : peak > 0);
+        
             if (!fill && !cap) { continue; }
+        
             const char *glyph = fill ? blocks[fill] : "─";
             const char *style = paused ? (fill ? GREEN : PURPLE_BOLD) :
                                 row * 3 >= height * 2 ? PURPLE_BOLD : GREEN;
-            printf("\033[%zu;%zuH%s", y + height - 1 - row, x + bar * (bar_width + 1), style);
+        
+                                printf("\033[%zu;%zuH%s", y + height - 1 - row, x + bar * (bar_width + 1), style);
             for (size_t column = 0; column < bar_width; ++column) { fputs(glyph, stdout); }
+        
             fputs(RESET, stdout);
         }
     }
+    
     text_at(y + height + 1, x, 4, DIM, "20Hz");
+    
     if (chart_width >= 30) { text_at(y + height + 1, x + chart_width * 57 / 100, 3, DIM, "1k"); }
+    
     text_at(y + height + 1, x + chart_width - 5, 5, DIM, "20kHz");
+    
     if (!spectrum || !spectrum->ready) {
         cabinet_center(y + height / 2, x, chart_width, DIM,
                        state->player && state->player->song_id ? "Waiting for audio" : "Play a song to see its spectrum");
     }
+    
     char status[512];
     const char *playback = state->player && state->player->playback_status ? state->player->playback_status : "";
+    
     snprintf(status, sizeof status, "%s%s%s", playback,
              *playback && state->status && *state->status ? " | " : "",
              state->status ? state->status : "");
+    
     line(rows - 2, width, FANCY, status);
     line(rows - 1, width, DIM, "Space: play/pause  Up/Down: volume  Q:queue");
     line(rows, width, DIM, "1:player 2:lyrics 3:FFT Tab:next Esc:back q:quit");
 }
 
+/*
+    I know nobody will see this in the line 904 of one of fuck knows how many files but BRO I JUST WANTED TO BLAST 
+    EVANESCENCE WHAT AM I DOING
+
+
+*/
+
+
 static bool sidebar(const char *title, size_t *rows, size_t *width, size_t *x, bool left)
 {
     size_t columns;
+    
     terminal_size(rows, &columns);
+    
     *width = columns > 42 ? 40 : columns > 2 ? columns - 2 : 0;
+    
     if (*rows < 8 || *width < 20) {
         char message[80];
         snprintf(message, sizeof message, "%s: enlarge terminal", title);
         terminal_clear();
         line(1, columns > 1 ? columns - 1 : 0, BOLDY, message);
+    
         return(false);
     }
+    
     *x = left ? 1 : columns - *width;
+    
     for (size_t row = 2; row < *rows; ++row) {
         printf("\033[%zu;%zuH" RESET, row, *x);
+    
         for (size_t column = 0; column < *width; ++column) { putchar(' '); }
+    
         printf("\033[%zu;%zuH%s│" RESET, row, left ? *x + *width - 1 : *x, SHE_LOVES_PURPLE);
     }
+    
     text_at(2, *x + 2, *width - 3, PURPLE_BOLD, title);
+    
     return(true);
 }
 
 static void typewriter_overlay(const TuiState *state)
 {
     size_t rows, width, x;
+    
     if (!sidebar("Typewriter", &rows, &width, &x, false)) { return; }
+    
     size_t color = state->typewriter_color % (sizeof typewriter_colors / sizeof typewriter_colors[0]);
     size_t mode = (size_t)state->typewriter_mode % TYPEWRITER_MODE_COUNT;
+    
     char labels[2][64];
+    
     snprintf(labels[0], sizeof labels[0], "Mode: < %s >", typewriter_modes[mode]);
     snprintf(labels[1], sizeof labels[1], "Color: < %s >", typewriter_colors[color].name);
+    
     size_t options = mode == TYPEWRITER_BOLD ? 2 : 1;
+    
     for (size_t i = 0; i < options; ++i) {
         text_at(4 + i, x + 2, width - 3,
                 state->typewriter_selected == i ? PURPLE_INVERSE : RESET, labels[i]);
     }
+    
     if (rows >= 12) {
+    
         text_at(7, x + 2, width - 3, DIM, "Normal: bold white over dim lyrics");
         text_at(8, x + 2, width - 3, DIM, "RGB: rainbow  Bold: selected color");
         text_at(9, x + 2, width - 3, DIM, "Timed LRC lyrics; session settings");
     }
+    
     text_at(rows - 2, x + 2, width - 3, DIM, "Up/Down: pick  Left/Right: change");
     text_at(rows - 1, x + 2, width - 3, DIM, "Enter: cycle  t / Esc: close");
 }
@@ -907,29 +975,40 @@ static void typewriter_overlay(const TuiState *state)
 static void queue_overlay(TuiState *state)
 {
     size_t rows, width, x;
+    
     if (!sidebar(state->queue && state->queue->title ? state->queue->title : "Queue", &rows, &width, &x, false)) { return; }
+    
     TuiMenu *queue = state->queue;
+    
     if (!queue || !queue->count) {
         text_at(4, x + 2, width - 3, DIM, "Your queue is empty.");
     }
 
     else {
+    
         normalize(queue);
+    
         size_t visible = rows - 6;
+    
         if (queue->selected != SIZE_MAX) {
             if (queue->top > queue->selected) { queue->top = queue->selected; }
             if (queue->selected - queue->top >= visible) { queue->top = queue->selected - visible + 1; }
         }
+    
         if (queue->top >= queue->count) { queue->top = 0; }
+    
         for (size_t i = queue->top; i < queue->count && i - queue->top < visible; ++i) {
             char label[512];
+    
             snprintf(label, sizeof label, "%s%s", queue->items[i].label,
                      queue->has_active && queue->active == i ? " [current]" : "");
+    
             text_at(4 + i - queue->top, x + 2, width - 3,
                     !queue->items[i].enabled ? DIM : i == queue->selected ? PURPLE_INVERSE : RESET,
                     label);
         }
     }
+
     text_at(rows - 2, x + 2, width - 3, DIM, "n: play next  Q / Esc: close");
 }
 
@@ -940,23 +1019,32 @@ static void playlist_art(const Playlists *panel, size_t row, size_t column, size
             printf("\033[%zu;%zuH%s", row + y, column, SHE_LOVES_PURPLE);
             for (size_t x = 0; x < width; ++x) { putchar(y == 0 || y + 1 == height ? '-' : x == 0 || x + 1 == width ? '|' : ' '); }
         }
+    
         text_at(row + height / 2, column + 1, width - 2, DIM, *panel->cover_uri ? "NO PREVIEW" : "NO COVER");
         fputs(RESET, stdout);
+    
         return;
     }
+    
     size_t square = panel->cover_width < panel->cover_height ? panel->cover_width : panel->cover_height;
     size_t left = (panel->cover_width - square) / 2, top = (panel->cover_height - square) / 2;
+    
     for (size_t y = 0; y < height; ++y) {
+    
         printf("\033[%zu;%zuH", row + y, column);
         for (size_t x = 0; x < width; ++x) {
+    
             unsigned rgb[2][3];
+    
             for (size_t half = 0; half < 2; ++half) {
                 size_t sx = left + x * square / width, sy = top + (2 * y + half) * square / (2 * height);
                 const unsigned char *pixel = panel->cover_pixels + (sy * panel->cover_width + sx) * 4;
                 for (size_t channel = 0; channel < 3; ++channel) { rgb[half][channel] = pixel[channel] * pixel[3] / 255; }
             }
+    
             printf("\033[38;2;%u;%u;%um\033[48;2;%u;%u;%um▀", rgb[0][0], rgb[0][1], rgb[0][2], rgb[1][0], rgb[1][1], rgb[1][2]);
         }
+    
         fputs(RESET, stdout);
     }
 }
@@ -964,23 +1052,35 @@ static void playlist_art(const Playlists *panel, size_t row, size_t column, size
 static void playlist_title(const char *title, size_t row, size_t column, size_t width, size_t lines)
 {
     for (size_t line_number = 0; *title && line_number < lines; ++line_number) {
+    
         size_t bytes = 0, cells = 0, space = 0;
+    
         while (title[bytes]) {
+    
             wchar_t character;
             mbstate_t state = {0};
+    
             size_t length = mbrtowc(&character, title + bytes, strlen(title + bytes), &state);
+    
             if (length == (size_t)-1 || length == (size_t)-2) { length = 1; character = '?'; }
+    
             int size = wcwidth(character);
+    
             if (size < 0) { size = 1; }
             if (cells + (size_t)size > width) { break; }
             if (character == ' ') { space = bytes; }
+    
             bytes += length;
+    
             cells += (size_t)size;
         }
         if (title[bytes] && space) { bytes = space; }
         if (!bytes) { break; }
+    
         text_span(row + line_number, column, width, PURPLE_BOLD, title, bytes);
+    
         title += bytes;
+    
         while (*title == ' ') { ++title; }
     }
 }
@@ -988,162 +1088,243 @@ static void playlist_title(const char *title, size_t row, size_t column, size_t 
 static void playlist_detail(TuiState *state)
 {
     Playlists *panel = state->playlists;
+    
     size_t rows, columns;
+    
     terminal_size(&rows, &columns);
     terminal_cover_hide();
+    
     if (rows < 20 || columns < 44) {
         terminal_clear();
         line(1, columns > 1 ? columns - 1 : 0, BOLDY, "Playlist: enlarge terminal (44x20)");
+    
         return;
     }
+    
     size_t width = columns - (columns >= 64 ? 6 : 2);
+    
+
     for (size_t row = 2; row <= rows; ++row) {
         printf("\033[%zu;1H" RESET, row);
+    
         for (size_t x = 0; x < width; ++x) { putchar(' '); }
+    
         printf("\033[%zu;%zuH%s│" RESET, row, width, SHE_LOVES_PURPLE);
     }
+    
     size_t art_height = rows >= 28 ? 7 : 5, art_width = art_height * 2;
+    
     playlist_art(panel, 3, 3, art_width, art_height);
+    
     size_t title_x = art_width + 6, title_width = width - title_x - 2;
+    
     text_at(3, title_x, title_width, DIM, "PERSONAL PLAYLIST");
     playlist_title(panel->title, 4, title_x, title_width, art_height - 2);
+    
     uint64_t milliseconds = 0;
     bool unknown = false;
+    
     for (size_t i = 0; i < panel->menu.count; ++i) {
+    
         if (panel->durations[i] < 0) { unknown = true; }
+    
         else if (UINT64_MAX - milliseconds >= (uint64_t)panel->durations[i]) { milliseconds += (uint64_t)panel->durations[i]; }
     }
+    
     char info[96];
     unsigned long long seconds = milliseconds / 1000;
+    
     snprintf(info, sizeof info, "%zu songs · %llu:%02llu%s", panel->menu.count, seconds / 60, seconds % 60, unknown ? " + ?" : "");
     text_at(2 + art_height, title_x, title_width, DIM, info);
+    
     size_t controls = art_height + 4, heading = controls + 2, first = heading + 2;
+    
     bool paused = !state->player || state->player->paused || state->playlist_playing_id != panel->playlist_id;
+    
     text_at(controls, 3, 13, GREEN_BOLD, paused ? "[ Space ▶ ]" : "[ Space Ⅱ ]");
     text_at(controls, 17, 7, state->player && state->player->shuffle ? GREEN_BOLD : SHE_LOVES_PURPLE, "[ S ⇄ ]");
-    text_at(controls, 25, 7, state->player && state->player->repeat ? GREEN_BOLD : SHE_LOVES_PURPLE, "[ R ↻ ]");
+    text_at(controls, 25, 7, state->player && (state->player->repeat || state->player->repeat_playlist) ? GREEN_BOLD : SHE_LOVES_PURPLE, "[ R ↻ ]");
     text_at(controls, 34, width - 36, SHE_LOVES_PURPLE, "C: cover");
     text_at(heading, 3, width - 12, DIM, "#    TITLE / ARTIST");
     text_at(heading, width - 9, 7, DIM, "TIME");
     printf("\033[%zu;3H%s", heading + 1, SHE_LOVES_PURPLE);
+    
     for (size_t i = 0; i < width - 5; ++i) { fputs("─", stdout); }
+    
     fputs(RESET, stdout);
+    
     TuiMenu *menu = &panel->menu;
+    
     normalize(menu);
+    
     size_t visible = rows > first + 5 ? (rows - first - 5) / 2 : 0;
+    
     if (menu->selected != SIZE_MAX && visible) {
         if (menu->top > menu->selected) { menu->top = menu->selected; }
         if (menu->selected - menu->top >= visible) { menu->top = menu->selected - visible + 1; }
     }
+    
     for (size_t i = menu->top; i < menu->count && i - menu->top < visible; ++i) {
         size_t row = first + 2 * (i - menu->top);
+    
         char number[32], duration[32];
+    
         bool current = state->player && state->player->song_id == panel->ids[i];
+    
         snprintf(number, sizeof number, "%zu", i + 1);
+    
         text_at(row, 3, 4, current ? GREEN_BOLD : DIM, current ? "▶" : number);
         text_at(row, 8, width - 20, i == menu->selected ? PURPLE_INVERSE_BOLD : BOLDY, menu->items[i].label);
         text_at(row + 1, 8, width - 20, DIM, *panel->artists[i] ? panel->artists[i] : "Artist unknown");
+    
         if (panel->durations[i] < 0) { snprintf(duration, sizeof duration, "--:--"); }
+    
         else { unsigned long long length = (uint64_t)panel->durations[i] / 1000; snprintf(duration, sizeof duration, "%llu:%02llu", length / 60, length % 60); }
+    
         text_at(row, width - 9, 7, DIM, duration);
     }
+    
     if (!menu->count) { text_at(first, 3, width - 5, DIM, "No songs. Use a to add from library."); }
+    
     text_at(rows - 5, 3, width - 5, DIM, "Enter: play  x: remove  K/J: move");
     text_at(rows - 4, 3, width - 5, DIM, "C: cover  [ ]: skip  Esc: list  p: close");
     text_at(rows - 3, 3, width - 5, GREEN, panel->notice);
+    
     char now[512];
+    
     if (state->player && state->player->song_id) {
         size_t controls_x = width - 23;
+    
         text_at(rows - 2, 3, controls_x - 4, BOLDY, state->player->title);
         text_at(rows - 1, 3, controls_x - 4, DIM, state->player->artist);
         text_at(rows - 2, controls_x, 3, state->player->shuffle ? GREEN_BOLD : SHE_LOVES_PURPLE, "⇄");
         text_at(rows - 2, controls_x + 4, 3, SHE_LOVES_PURPLE, "◀◀");
         text_at(rows - 2, controls_x + 8, 3, GREEN_BOLD, state->player->paused ? "▶" : "Ⅱ");
         text_at(rows - 2, controls_x + 12, 3, SHE_LOVES_PURPLE, "▶▶");
-        text_at(rows - 2, controls_x + 16, 3, state->player->repeat ? GREEN_BOLD : SHE_LOVES_PURPLE, "↻");
+        text_at(rows - 2, controls_x + 16, 3, (state->player->repeat || state->player->repeat_playlist) ? GREEN_BOLD : SHE_LOVES_PURPLE, "↻");
+    
         if (state->player->duration_known) {
             snprintf(now, sizeof now, "%llu:%02llu / %llu:%02llu", state->player->elapsed / 60, state->player->elapsed % 60,
                      state->player->duration / 60, state->player->duration % 60);
         }
+    
         else { snprintf(now, sizeof now, "%llu:%02llu / --:--", state->player->elapsed / 60, state->player->elapsed % 60); }
+    
         text_at(rows - 1, controls_x, 21, DIM, now);
+    
         size_t bar = width - 5;
+    
         double fraction = state->player->duration ? (double)state->player->elapsed / state->player->duration : 0;
+    
         size_t filled = fraction >= 1 ? bar : (size_t)(fraction * bar);
+    
         printf("\033[%zu;3H", rows);
+    
         for (size_t i = 0; i < bar; ++i) { printf("%s%s", i < filled ? GREEN : SHE_LOVES_PURPLE, i < filled ? "━" : "─"); }
+    
         fputs(RESET, stdout);
     }
+    
     else { text_at(rows - 2, 3, width - 5, DIM, "No song selected"); }
 }
 
 static void playlists_overlay(TuiState *state)
 {
     Playlists *panel = state->playlists;
+    
     if (!panel) { return; }
     if (panel->playlist_id && panel->mode == PLAYLIST_BROWSE) { playlist_detail(state); return; }
+    
     size_t rows, width, x;
-    /* The left panel overlaps cover art; it is redrawn when the panel closes. */
+    /* The left panel overlaps cover art; CHILL it is redrawn when the panel closes. */
+    
     terminal_cover_hide();
+    
     if (!sidebar(panel->title, &rows, &width, &x, true)) { return; }
+    
     if (panel->mode == PLAYLIST_COVER) {
+    
         text_at(4, x + 2, width - 4, BOLDY, "Playlist cover:");
         text_at(5, x + 2, width - 4, DIM, "Local image path or direct HTTP URL");
         text_at(7, x + 2, width - 4, SHE_LOVES_PURPLE, panel->cover_input);
         text_at(9, x + 2, width - 4, DIM, "Empty value removes the cover.");
         text_at(rows - 2, x + 2, width - 4, DIM, "Enter: save  Ctrl+U: clear  Esc: cancel");
     }
+    
     else if (panel->mode == PLAYLIST_CREATE || panel->mode == PLAYLIST_RENAME) {
         text_at(4, x + 2, width - 4, BOLDY, panel->mode == PLAYLIST_CREATE ? "New playlist name:" : "Rename playlist:");
+    
         char input[160];
+    
         snprintf(input, sizeof input, "[ %s_ ]", panel->name);
+    
         text_at(6, x + 2, width - 4, SHE_LOVES_PURPLE, input);
         text_at(rows - 2, x + 2, width - 4, DIM, "Enter: save  Esc: cancel");
     }
+    
     else if (panel->mode == PLAYLIST_DELETE) {
+    
         text_at(4, x + 2, width - 4, BOLDY, "Delete this playlist?");
         text_at(5, x + 2, width - 4, SHE_LOVES_PURPLE, panel->name);
         text_at(6, x + 2, width - 4, DIM, "Songs remain in your library.");
         text_at(rows - 2, x + 2, width - 4, DIM, "Enter: delete  Esc: cancel");
     }
+    
     else {
         TuiMenu *menu = &panel->menu;
+    
         normalize(menu);
+    
         size_t visible = rows - 8;
+    
         if (menu->selected != SIZE_MAX && visible) {
             if (menu->top > menu->selected) { menu->top = menu->selected; }
             if (menu->selected - menu->top >= visible) { menu->top = menu->selected - visible + 1; }
         }
+    
         for (size_t i = menu->top; i < menu->count && i - menu->top < visible; ++i) {
             text_at(4 + i - menu->top, x + 2, width - 4,
                     i == menu->selected ? PURPLE_INVERSE : RESET, menu->items[i].label);
         }
+    
         if (!menu->count) { text_at(4, x + 2, width - 4, DIM, panel->playlist_id ? "No songs. Use a to add from library." : "No playlists. Press c to create."); }
+    
         text_at(rows - 3, x + 2, width - 4, DIM, panel->playlist_id ? "Enter: play  x: remove  K/J: move" :
                 panel->pending_song ? "Enter: add song  c: new playlist" : "Enter: open  c: create  r: rename");
+    
         text_at(rows - 2, x + 2, width - 4, DIM, panel->playlist_id ? "a: add to playlist  Esc: list  p: close" : "x: delete  p / Esc: close");
     }
+
     text_at(rows - 1, x + 2, width - 4, GREEN, panel->notice);
 }
 
 void tui_state_draw(TuiState *state)
 {
     terminal_frame_begin();
+    
     if (state->screen == SCREEN_SONGS && state->search_active && state->menus[SCREEN_SONGS]) {
         tui_menu_draw(state->menus[SCREEN_SONGS], state->status);
+    
         size_t rows, columns;
+    
         terminal_size(&rows, &columns);
+    
         if (rows >= 7 && columns >= 24) {
             char bar[320];
+    
             snprintf(bar, sizeof bar, "Search all: [ %s%s ]", state->search_query ? state->search_query : "", state->search_editing ? "_" : "");
+    
             line(2, columns - 1, PURPLE_BOLD, bar);
+    
             if (!state->menus[SCREEN_SONGS]->count) { line(3, columns - 1, DIM, "No matching songs."); }
+    
             line(rows - 1, columns - 1, DIM, state->search_editing ?
                  "Type title/artist  Up/Down/Tab: select result  Enter: play" :
-                 "Arrows: select  Enter: play  n: next  a: save  p: playlists  Q: queue");
+                 "Arrows: select  Enter: play  n: next  a: save  p: playlists  Q: queueue");
+    
             line(rows, columns - 1, DIM, state->search_editing ?
                  "Backspace: delete  Ctrl+U: clear  Esc: close search" :
-                 "s: edit search  Esc: close search");
+                 "s: edit  Esc: close search");
         }
     }
 
@@ -1168,9 +1349,12 @@ void tui_state_draw(TuiState *state)
         }
         if (state->player && state->player->song_id && (!state->status || !*state->status)) {
             size_t rows, columns;
+            
             terminal_size(&rows, &columns);
+            
             if (rows >= 7 && columns >= 24) {
                 char now[768];
+            
                 snprintf(now, sizeof now, "%s: %s | %llu:%02llu | 1: player",
                          state->player->playback_status ? state->player->playback_status : "Selected",
                          state->player->title, state->player->elapsed / 60, state->player->elapsed % 60);
@@ -1182,8 +1366,10 @@ void tui_state_draw(TuiState *state)
     else if (state->screen == SCREEN_VISUALIZER) { visualizer_draw(state); }
 
     else { pending_screen(state); }
+    
     if (state->overlay == OVERLAY_QUEUE) { queue_overlay(state); }
     if (state->overlay == OVERLAY_TYPEWRITER) { typewriter_overlay(state); }
     if (state->overlay == OVERLAY_PLAYLISTS) { playlists_overlay(state); }
+    
     terminal_frame_end();
 }

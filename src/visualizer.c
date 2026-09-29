@@ -3,6 +3,15 @@
 #include <math.h>
 #include <string.h>
 
+
+
+
+
+/*
+        DSP FUCKERY HAS ESCAPED THE CONTAINMENT
+*/
+
+
 void spectrum_init(Spectrum *spectrum)
 {
     *spectrum = (Spectrum){0};
@@ -18,7 +27,7 @@ static double power_at(const double *power, double frequency)
     double bin = frequency * AUDIO_ANALYSIS_FRAMES / AUDIO_SAMPLE_RATE;
     
     if (bin <= 1) { return(power[1]); }
-    if (bin >= AUDIO_ANALYSIS_FRAMES / 2) { return(power[AUDIO_ANALYSIS_FRAMES / 2]); }
+    if (bin >= AUDIO_ANALYSIS_FRAMES / 2.0) { return(power[AUDIO_ANALYSIS_FRAMES / 2]); }
     
     size_t lower = (size_t)bin;
     double fraction = bin - lower;

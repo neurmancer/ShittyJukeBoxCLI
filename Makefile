@@ -9,19 +9,21 @@ LUA_LIBS = $(shell pkg-config --libs $(LUA_PACKAGE))
 AUDIO_PACKAGES = libavformat libavcodec libavutil libswresample libswscale sdl2
 AUDIO_CFLAGS = $(shell pkg-config --cflags $(AUDIO_PACKAGES))
 AUDIO_LIBS = $(shell pkg-config --libs $(AUDIO_PACKAGES))
+MPRIS_CFLAGS = $(shell pkg-config --cflags gio-2.0)
+MPRIS_LIBS = $(shell pkg-config --libs gio-2.0)
 
 TARGET = ShittyJukeBox
 DB ?= jukebox.db
 SOURCES = ShittyJukeBox.c src/audio_handler.c src/lyrics_handler.c \
-          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c src/shuffle.c src/playlists.c src/config.c
+          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c src/shuffle.c src/playlists.c src/config.c src/mpris.c
 HEADERS = $(wildcard src/*.h)
 
-.PHONY: all run clean test test-audio add-song add-songs
+.PHONY: all run clean test test-audio test-mpris add-song add-songs
 
 all: $(TARGET) jukebox-add
 
 $(TARGET): $(SOURCES) $(HEADERS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(AUDIO_CFLAGS) $(LUA_CFLAGS) -pthread $(SOURCES) $(LDFLAGS) $(LDLIBS) $(AUDIO_LIBS) $(LUA_LIBS) -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(AUDIO_CFLAGS) $(LUA_CFLAGS) $(MPRIS_CFLAGS) -pthread $(SOURCES) $(LDFLAGS) $(LDLIBS) $(AUDIO_LIBS) $(LUA_LIBS) $(MPRIS_LIBS) -o $@
 
 run: $(TARGET)
 	./$(TARGET)
@@ -37,6 +39,9 @@ test:
 
 test-audio:
 	python3 tests/audio_check.py
+
+test-mpris: $(TARGET)
+	dbus-run-session -- python3 tests/mpris_check.py
 
 IMPORT_PACKAGES = libcurl libxml-2.0
 

@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define SEEK_REQUEST (-0x534a42)
 #define OUTPUT_RATE AUDIO_SAMPLE_RATE
 #define SAMPLE_HISTORY 65536
 #define FRAME_BYTES 4
@@ -24,6 +25,8 @@ struct AudioPlayer {
     pthread_cond_t wake;
     atomic_bool quitting;
     atomic_bool paused;
+    atomic_bool seek_pending;
+    int64_t seek_ms;
     atomic_uint_fast64_t generation;
     char *pending_uri;
     
@@ -44,6 +47,10 @@ typedef struct {
     SDL_AudioDeviceID device;
     
     uint64_t samples;
+    int64_t base_ms;
+    int64_t discard_until;
+    AVRational time_base;
+    int64_t stream_start;
 } Playback;
 
 static int cancelled(Playback *play)
@@ -69,7 +76,7 @@ static void publish(Playback *play, AudioState state, const char *error)
         if (error) { snprintf(player->status.error, sizeof player->status.error, "%s", error); }
         if (play->device) {
             uint64_t pending = SDL_GetQueuedAudioSize(play->device) / FRAME_BYTES;
-            player->status.position_ms = (int64_t)((play->samples > pending ? play->samples - pending : 0) * 1000 / OUTPUT_RATE);
+            player->status.position_ms = play->base_ms + (int64_t)((play->samples > pending ? play->samples - pending : 0) * 1000 / OUTPUT_RATE);
         }
     }
     
@@ -82,6 +89,7 @@ static int wait_output(Playback *play, bool drain)
 {
     while (!cancelled(play)) {
 
+        if (atomic_load(&play->player->seek_pending)) { return(SEEK_REQUEST); }
         bool paused = atomic_load(&play->player->paused);
 
         publish(play, paused ? AUDIO_PAUSED : AUDIO_PLAYING, NULL);
@@ -118,6 +126,17 @@ static int output_frame(Playback *play, SwrContext *resampler, AVFrame *frame)
     int samples = swr_convert(resampler, &pcm, capacity,
                              frame ? (const uint8_t **)frame->extended_data : NULL,
                              frame ? frame->nb_samples : 0);
+    if (samples > 0 && frame && play->discard_until >= 0) {
+        int64_t timestamp = frame->best_effort_timestamp;
+        if (timestamp != AV_NOPTS_VALUE) {
+            int64_t start = av_rescale_q(timestamp - play->stream_start, play->time_base, (AVRational){1, OUTPUT_RATE});
+            int64_t target = av_rescale(play->discard_until, OUTPUT_RATE, 1000);
+            int64_t skip = target > start ? target - start : 0;
+            if (skip >= samples) { av_freep(&pcm); return(0); }
+            if (skip) { memmove(pcm, pcm + skip * FRAME_BYTES, (size_t)(samples - skip) * FRAME_BYTES); samples -= (int)skip; }
+        }
+        play->discard_until = -1;
+    }
     if (samples > 0) {
         pthread_mutex_lock(&play->player->mutex);
 
@@ -198,7 +217,7 @@ static char *media_url(const char *uri)
 static void play_track(AudioPlayer *player, uint64_t generation, const char *uri)
 {
     
-    Playback play = {.player = player, .generation = generation};
+    Playback play = {.player = player, .generation = generation, .discard_until = -1};
     AVFormatContext *format = avformat_alloc_context();
     AVCodecContext *decoder = NULL;
     SwrContext *resampler = NULL;
@@ -238,6 +257,8 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     if (result < 0) { goto done; }
     
     int stream = result;
+    play.time_base = format->streams[stream]->time_base;
+    play.stream_start = format->streams[stream]->start_time == AV_NOPTS_VALUE ? 0 : format->streams[stream]->start_time;
     int64_t duration = -1;
     
     if (format->duration != AV_NOPTS_VALUE && format->duration >= 0) {
@@ -301,7 +322,47 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     
     if (!packet || !frame) { result = AVERROR(ENOMEM); goto done; }
     
+    pthread_mutex_lock(&player->mutex);
+    if (!cancelled(&play)) {
+        player->status.seekable = duration >= 0 && (!format->pb || (format->pb->seekable & AVIO_SEEKABLE_NORMAL));
+    }
+    pthread_mutex_unlock(&player->mutex);
     stage = "Decoding stream";
+decode:
+    if (atomic_load(&player->seek_pending)) {
+        pthread_mutex_lock(&player->mutex);
+        int64_t target = player->seek_ms;
+        atomic_store(&player->seek_pending, false);
+        pthread_mutex_unlock(&player->mutex);
+        play.deadline = av_gettime_relative() + 15000000;
+        int64_t timestamp = av_rescale_q(target, (AVRational){1, 1000}, play.time_base) + play.stream_start;
+        result = avformat_seek_file(format, stream, INT64_MIN, timestamp, timestamp, 0);
+        if (result >= 0) {
+            avcodec_flush_buffers(decoder);
+            swr_close(resampler);
+            if ((result = swr_init(resampler)) < 0) { goto done; }
+            av_packet_unref(packet);
+            av_frame_unref(frame);
+            pthread_mutex_lock(&player->mutex);
+            if (!cancelled(&play)) {
+                SDL_ClearQueuedAudio(play.device);
+                player->sample_total = 0;
+                memset(player->sample_history, 0, sizeof player->sample_history);
+                player->status.position_ms = target;
+                player->status.seek_position_ms = target;
+                ++player->status.seek_serial;
+            }
+            pthread_mutex_unlock(&player->mutex);
+            play.samples = 0;
+            play.base_ms = target;
+            play.discard_until = target;
+        }
+        else {
+            pthread_mutex_lock(&player->mutex);
+            if (!cancelled(&play)) { player->status.seekable = false; }
+            pthread_mutex_unlock(&player->mutex);
+        }
+    }
     while (!cancelled(&play)) {
         result = wait_output(&play, false);
         if (result < 0) { goto done; }
@@ -336,6 +397,7 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     
     if (result >= 0) { publish(&play, AUDIO_FINISHED, NULL); }
 done:
+    if (result == SEEK_REQUEST && !cancelled(&play)) { goto decode; }
     if (result < 0 && !cancelled(&play)) {
     
         AudioStatus status = audio_status(player);
@@ -415,6 +477,7 @@ AudioPlayer *audio_create(char *error, size_t size)
     
     atomic_init(&player->quitting, false);
     atomic_init(&player->paused, false);
+    atomic_init(&player->seek_pending, false);
     atomic_init(&player->generation, 0);
     
     player->status.duration_ms = -1;
@@ -463,6 +526,7 @@ int audio_play(AudioPlayer *player, int64_t song_id, const char *uri)
     uint64_t generation = atomic_fetch_add(&player->generation, 1) + 1;
     
     atomic_store(&player->paused, false);
+    atomic_store(&player->seek_pending, false);
     
     if (player->device) { SDL_PauseAudioDevice(player->device, 1); SDL_ClearQueuedAudio(player->device); }
     
@@ -496,6 +560,8 @@ void audio_stop(AudioPlayer *player)
     
     pthread_mutex_lock(&player->mutex);
     atomic_fetch_add(&player->generation, 1);
+    atomic_store(&player->seek_pending, false);
+    atomic_store(&player->paused, false);
     
     free(player->pending_uri);
     
@@ -507,6 +573,20 @@ void audio_stop(AudioPlayer *player)
     player->status = (AudioStatus){.generation = atomic_load(&player->generation), .duration_ms = -1};
     
     pthread_mutex_unlock(&player->mutex);
+}
+
+bool audio_seek(AudioPlayer *player, int64_t position_ms)
+{
+    pthread_mutex_lock(&player->mutex);
+    bool allowed = player->status.seekable && position_ms >= 0 &&
+                   (player->status.state == AUDIO_PLAYING || player->status.state == AUDIO_PAUSED) &&
+                   (player->status.duration_ms < 0 || position_ms <= player->status.duration_ms);
+    if (allowed) {
+        player->seek_ms = position_ms;
+        atomic_store(&player->seek_pending, true);
+    }
+    pthread_mutex_unlock(&player->mutex);
+    return(allowed);
 }
 
 void audio_set_volume(AudioPlayer *player, int percent)

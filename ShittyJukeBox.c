@@ -5,7 +5,12 @@
 #include "src/shuffle.h"
 #include "src/playlists.h"
 #include "src/config.h"
+#include "src/mpris.h"
 #include <errno.h>
+#ifdef SJB_SYSTEM_INSTALL
+#include <pwd.h>
+#include <unistd.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <locale.h>
@@ -26,7 +31,13 @@ typedef struct {
     TuiMenu menu;
 } SongMenu;
 
+typedef struct ExternalSong {
+    DbSong song;
+    struct ExternalSong *next;
+} ExternalSong;
+
 typedef struct {
+    ExternalSong *external;
     DbGenre *genres;
     size_t count;
     TuiItem *items;
@@ -69,6 +80,127 @@ static void search_input(Library *library, TerminalAction action);
 static int playlist_play(AudioPlayer *audio, TuiState *ui, Library *library, PlaybackSelection *selection, const Playlists *panel);
 
 
+typedef struct {
+    AudioPlayer *audio;
+    TuiState *ui;
+    Library *library;
+    PlaybackSelection *selection;
+    bool *running;
+} RemotePlayer;
+
+static size_t queue_position(const PlaybackSelection *selection)
+{
+    if (selection->order) {
+        for (size_t i = 0; i < selection->order_count; ++i) {
+            if (selection->order[i] == selection->index) { return(i); }
+        }
+    }
+    return(selection->index);
+}
+
+static MprisState remote_read(void *opaque)
+{
+    RemotePlayer *remote = opaque;
+    PlaybackSelection *selection = remote->selection;
+    SongMenu *section = playback_section(remote->library, selection->genre);
+    size_t position = queue_position(selection);
+    bool wrap = remote->ui->player->repeat_playlist || remote->ui->player->repeat;
+    return((MprisState){
+        .audio = audio_status(remote->audio), .song = selection->song,
+        .art_uri = selection->cover_override ? selection->cover_override : selection->song ? selection->song->cover_uri : "",
+        .track = selection->generation, .shuffle = remote->ui->player->shuffle,
+        .loop = remote->ui->player->repeat ? 1 : remote->ui->player->repeat_playlist ? 2 : 0,
+        .can_play = selection->song || remote->library->sections[0].count,
+        .can_next = selection->song && (wrap || position + 1 < section->count),
+        .can_previous = selection->song && (wrap || position > 0)
+    });
+}
+
+static bool remote_control(void *opaque, MprisCommand command, int64_t value, const char *text)
+{
+    RemotePlayer *remote = opaque;
+    PlaybackSelection *selection = remote->selection;
+    TuiPlayer *player = remote->ui->player;
+    AudioStatus status = audio_status(remote->audio);
+    bool stopped = status.state == AUDIO_IDLE || status.state == AUDIO_FINISHED || status.state == AUDIO_FAILED;
+    if (command == MPRIS_QUIT) { *remote->running = false; }
+    else if (command == MPRIS_VOLUME) {
+        audio_set_volume(remote->audio, (int)value);
+        player->volume_percent = audio_status(remote->audio).volume_percent;
+    }
+    else if (command == MPRIS_LOOP) {
+        player->repeat = value == 1;
+        remote->ui->player->repeat_playlist = value == 2;
+        remote->ui->menus[SCREEN_SETTINGS]->items[1].value = player->repeat || player->repeat_playlist;
+    }
+    else if (command == MPRIS_SHUFFLE && player->shuffle != (bool)value) {
+        player->shuffle = value;
+        shuffle_clear(selection);
+        if (selection->song) { queue_bind(remote->ui, remote->library, selection); }
+    }
+    else if (command == MPRIS_STOP) { audio_stop(remote->audio); }
+    else if (command == MPRIS_SEEK) { audio_seek(remote->audio, value); }
+    else if (command == MPRIS_PAUSE) {
+        if (!stopped) { audio_pause(remote->audio, true); }
+    }
+    else if (command == MPRIS_PLAY || command == MPRIS_TOGGLE) {
+        if (stopped) {
+            if (!selection->song && !remote->library->sections[0].count) { return(true); }
+            return(start_song(remote->audio, remote->ui, remote->library, selection,
+                              selection->song ? selection->genre : 0, selection->song ? selection->index : 0) == 0);
+        }
+        audio_pause(remote->audio, command == MPRIS_TOGGLE ? !status.pause_requested : false);
+    }
+    else if (command == MPRIS_NEXT || command == MPRIS_PREVIOUS) {
+        MprisState state = remote_read(remote);
+        if (!(command == MPRIS_NEXT ? state.can_next : state.can_previous)) { return(true); }
+        SongMenu *section = playback_section(remote->library, selection->genre);
+        size_t index = next_song(section, selection, command == MPRIS_PREVIOUS);
+        if (start_song(remote->audio, remote->ui, remote->library, selection, selection->genre, index) < 0) { return(false); }
+        if (stopped) { audio_stop(remote->audio); }
+        else if (status.pause_requested) { audio_pause(remote->audio, true); }
+    }
+    else if (command == MPRIS_OPEN) {
+        SongMenu *all = &remote->library->sections[0];
+        for (size_t i = 0; i < all->count; ++i) {
+            if (!strcmp(all->songs[i].media_uri, text)) {
+                return(start_song(remote->audio, remote->ui, remote->library, selection, 0, i) == 0);
+            }
+        }
+        ExternalSong *external = calloc(1, sizeof *external);
+        if (!external) { return(false); }
+        external->song = database_song_init();
+        external->song.artist = calloc(1, 1);
+        external->song.album = calloc(1, 1);
+        external->song.cover_uri = calloc(1, 1);
+        external->song.lyrics = calloc(1, 1);
+        external->song.lyrics_format = calloc(1, 1);
+        external->song.lyrics_uri = calloc(1, 1);
+        external->song.id = remote->library->external ? remote->library->external->song.id - 1 : -1;
+        free(external->song.media_uri);
+        free(external->song.title);
+        external->song.media_uri = malloc(strlen(text) + 1);
+        const char *title = strrchr(text, '/');
+        title = title && title[1] ? title + 1 : text;
+        external->song.title = malloc(strlen(title) + 1);
+        if (!external->song.media_uri || !external->song.title || !external->song.artist || !external->song.album ||
+            !external->song.cover_uri || !external->song.lyrics || !external->song.lyrics_format || !external->song.lyrics_uri) {
+            database_song_free(&external->song); free(external); return(false);
+        }
+        strcpy(external->song.media_uri, text);
+        strcpy(external->song.title, title);
+        if (queue_next(remote->ui, remote->library, selection, &external->song) < 0) {
+            database_song_free(&external->song); free(external); return(false);
+        }
+        external->next = remote->library->external;
+        remote->library->external = external;
+        size_t index = selection->song ? selection->index + 1 : 0;
+        return(start_song(remote->audio, remote->ui, remote->library, selection, remote->library->count, index) == 0);
+    }
+    return(true);
+}
+
+
 
 int main(int argc, char **argv)
 {
@@ -77,6 +209,7 @@ int main(int argc, char **argv)
     const char *database_path = DATABASE_PATH;
     const char *config_path = "config/theme.lua";
     bool config_explicit = false;
+    bool database_explicit = false;
     bool preview = false;
     const char *lrc_path = NULL;
     int64_t lrc_song = 0;
@@ -92,7 +225,7 @@ int main(int argc, char **argv)
             config_explicit = true;
         }
 
-        else if (!strcmp(argv[i], "--db") && i + 1 < argc) { database_path = argv[++i]; }
+        else if (!strcmp(argv[i], "--db") && i + 1 < argc) { database_path = argv[++i]; database_explicit = true; }
 
         else if (!strcmp(argv[i], "--import-lrc") && i + 2 < argc && !lrc_path) {
             char *end;
@@ -107,6 +240,27 @@ int main(int argc, char **argv)
             return(strcmp(argv[i], "--help") ? 1 : 0);
         }
     }
+
+#ifdef SJB_SYSTEM_INSTALL
+    char installed_database[4096], installed_config[4096];
+    if (!database_explicit || (!config_explicit && !lrc_path)) {
+        const char *user_home = getenv("HOME");
+        if (!user_home || !*user_home) {
+            struct passwd *account = getpwuid(getuid());
+            user_home = account ? account->pw_dir : NULL;
+        }
+        if (!user_home || !*user_home ||
+            snprintf(installed_database, sizeof installed_database, "%s/.sjb/jukebox.db", user_home) >= (int)sizeof installed_database ||
+            snprintf(installed_config, sizeof installed_config, "%s/.sjb/config/theme.lua", user_home) >= (int)sizeof installed_config) {
+            fprintf(stderr, "Cannot resolve ~/.sjb; pass --db and --config explicitly.\n");
+            return(1);
+        }
+        if (!database_explicit) { database_path = installed_database; }
+        if (!config_explicit) { config_path = installed_config; }
+    }
+#else
+    (void)database_explicit;
+#endif
 
     char config_error[512];
     if (!lrc_path && config_load(config_path, !config_explicit, config_error, sizeof config_error) < 0) {
@@ -214,6 +368,10 @@ int main(int argc, char **argv)
     uint64_t handled_end = 0;
     if (!preview) { player.playback_status = playback_status; }
     bool running = true;
+    RemotePlayer remote = {.audio = audio, .ui = &ui, .library = &library, .selection = &selection, .running = &running};
+    char mpris_error[256] = "";
+    Mpris *mpris = mpris_create(remote_read, remote_control, &remote, mpris_error, sizeof mpris_error);
+    if (!mpris) { ui.status = mpris_error; }
     tui_state_draw(&ui);
 
     while (running) {
@@ -276,7 +434,7 @@ int main(int argc, char **argv)
         else if (ui.overlay == OVERLAY_PLAYLISTS && action != TERM_QUIT && action != TERM_END) {
             if (action == TERM_QUEUE) { ui.overlay = OVERLAY_QUEUE; }
             else if (action == TERM_SHUFFLE && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE) { player.shuffle = !player.shuffle; }
-            else if (action == TERM_REPEAT && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE) { player.repeat = !player.repeat; }
+            else if (action == TERM_REPEAT && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE) { player.repeat = !(player.repeat || player.repeat_playlist); player.repeat_playlist = false; }
             else if ((action == TERM_PREVIOUS_TRACK || action == TERM_NEXT_TRACK) &&
                      playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE && selection.song) {
                 SongMenu *section = playback_section(&library, selection.genre);
@@ -366,9 +524,12 @@ int main(int argc, char **argv)
         if (search_focus_changed && result == TUI_UNCHANGED) { result = TUI_CHANGED; }
         if (result == TUI_QUIT) { break; }
 
-        if (previous_screen == SCREEN_SETTINGS && !handled) { player.repeat = settings_items[1].value; }
+        if (previous_screen == SCREEN_SETTINGS && !handled && settings_items[1].value != (player.repeat || player.repeat_playlist)) {
+            player.repeat = settings_items[1].value;
+            player.repeat_playlist = false;
+        }
 
-        else { settings_items[1].value = player.repeat; }
+        else { settings_items[1].value = player.repeat || player.repeat_playlist; }
         player.lyrics_visible = settings_items[0].value;
 
         if (result == TUI_SELECTED) {
@@ -454,7 +615,7 @@ int main(int argc, char **argv)
                 selection.song->duration_source != DB_DURATION_FFMPEG)) {
                 selection.song->duration_ms = status.duration_ms;
                 selection.song->duration_source = DB_DURATION_FFMPEG;
-                if (database_duration_set(&db, selection.song->id, status.duration_ms, DB_DURATION_FFMPEG) < 0) {
+                if (selection.song->id > 0 && database_duration_set(&db, selection.song->id, status.duration_ms, DB_DURATION_FFMPEG) < 0) {
                     ui.status = database_error(&db);
                 }
             }
@@ -482,13 +643,22 @@ int main(int argc, char **argv)
             if (status.state == AUDIO_FINISHED && handled_end != status.generation) {
                 handled_end = status.generation;
                 SongMenu *section = playback_section(&library, selection.genre);
-                bool advance = player.repeat || player.shuffle || selection.index + 1 < section->count;
+                bool advance = player.repeat || player.repeat_playlist || queue_position(&selection) + 1 < section->count;
                 if (advance) {
                     size_t index = player.repeat ? selection.index : next_song(section, &selection, false);
                     start_song(audio, &ui, &library, &selection, selection.genre, index);
                 }
             }
         }
+        if (status.state == AUDIO_IDLE && selection.song) {
+            player.paused = true;
+            player.loading = false;
+            player.position_ms = 0;
+            player.elapsed = 0;
+            player.playback_status = "Stopped";
+            if (last_audio.state != AUDIO_IDLE) { result = TUI_CHANGED; }
+        }
+        if (mpris_poll(mpris)) { result = TUI_CHANGED; }
         last_audio = status;
         if (playlists_poll(&playlists)) { result = TUI_CHANGED; }
         if (ui.screen == SCREEN_VISUALIZER) {
@@ -510,6 +680,7 @@ int main(int argc, char **argv)
 
     int signal_number = terminal_signal();
     
+    mpris_destroy(mpris);
     cover_destroy(selection.covers);
     playlists_free(&playlists);
     shuffle_clear(&selection);
@@ -692,6 +863,11 @@ static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
     if (genre == library->count) {
         for (size_t i = 0; i < library->sections[0].count; ++i) {
             if (library->sections[0].songs[i].id == song->id) { song = &library->sections[0].songs[i]; break; }
+        }
+    }
+    if (song->id < 0) {
+        for (ExternalSong *external = library->external; external; external = external->next) {
+            if (external->song.id == song->id) { song = &external->song; break; }
         }
     }
     if (audio_play(audio, song->id, song->media_uri) < 0) {
@@ -927,6 +1103,12 @@ static void library_free(Library *library)
     }
     free(library->custom.songs);
     free(library->custom.menu.items);
+    while (library->external) {
+        ExternalSong *next = library->external->next;
+        database_song_free(&library->external->song);
+        free(library->external);
+        library->external = next;
+    }
     free(library->sections);
     free(library->items);
     database_genres_free(library->genres, library->count);

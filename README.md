@@ -69,6 +69,8 @@
 
 - I mean...**YOU FUCKING GOTTA TRY IT TO UNDERSTAND MY HYPE BRO** go fucking [compile](#how-to-run)
 
+- playerCTL full-ish support
+
 ---
 
 
@@ -84,9 +86,10 @@
 
 - [X] Cover art display 
 
-- [ ] MPRIS + playerctl support 
+- [X] MPRIS + playerctl support 
 
 - [ ] Offline mode support (via local files or downloading the genres)
+
 
 ---
 
@@ -126,8 +129,15 @@
 ./build.sh # to build duh...
 
 ./ShittyJukeBox 
+
+#or for system-wide installation
+
+./build --system    # requries sudo privs to accsess /usr/local/bin/ and dependency installations
+
+
 ```
 
 ## Legal stuff
 
 > I'll add the legal stuff in a min suits _chill_ it's almost 1AM again... still...Chill for a moment badges
+> Well Imma postpone this section as much as I can lol(I have homework)
