@@ -75,6 +75,7 @@ TuiResult tui_menu_handle(TuiMenu *menu, TerminalAction action)
     
         if (item->kind == TUI_TOGGLE) {
             bool before = item->value;
+            
             if (action == TERM_LEFT) { item->value = false; }
             if (action == TERM_RIGHT) { item->value = true; }
             if (action == TERM_ACTIVATE) { item->value = !item->value; }
@@ -801,7 +802,7 @@ static void visualizer_draw(const TuiState *state)
         line(1, width, BOLDY, "Visualizer needs 32 columns / 12 rows");
         return;
     }
-    cabinet_center(2, 1, width, PURPLE_BOLD, "AUIDO BUT VISIBLE");
+    cabinet_center(2, 1, width, PURPLE_BOLD, "AUDIO BUT VISIBLE");
     if (state->player) {
         char track[512];
         track_label(track, sizeof track, state->player);
@@ -1316,7 +1317,7 @@ void tui_state_draw(TuiState *state)
     
             line(2, columns - 1, PURPLE_BOLD, bar);
     
-            if (!state->menus[SCREEN_SONGS]->count) { line(3, columns - 1, DIM, "No matching songs."); }
+            if (!state->menus[SCREEN_SONGS]->count) { line(3, columns - 1, DIM, "Just staric..."); }
     
             line(rows - 1, columns - 1, DIM, state->search_editing ?
                  "Type title/artist  Up/Down/Tab: select result  Enter: play" :
