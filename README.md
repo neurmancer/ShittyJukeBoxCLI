@@ -90,6 +90,8 @@
 
 - [ ] Offline mode support (via local files or downloading the genres)
 
+- [ ] There is a known bug(haunting) going on with `In The Heat of The Night` where it plays perfectly when selected but aborts and terminates
+the process when you hit on it on queueueue untill I find why, I declare it is haunted
 
 ---
 
