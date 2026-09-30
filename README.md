@@ -59,7 +59,7 @@
 
 - WELL...I _lowkey_ overengineered the shuffle with fisher-yates and CSPRNG but it worths lol...
 
-- **BETA FEATURE**: PLAYLIST CREATION ADDED NOW USERS CAN GROUP SONGS HOW THE FUCK THEY WANT
+- **BETA FEATURE**: PLAYLIST CREATION ADDED NOW USERS CAN GROUP SONGS HOW THE FUCK THEY WANT and add custom playlist covers (local or online)
 
 - Well...we don't have SkyNet anymore...
 
@@ -91,7 +91,10 @@
 - [ ] Offline mode support (via local files or downloading the genres)
 
 - [ ] There is a known bug(haunting) going on with `In The Heat of The Night` where it plays perfectly when selected but aborts and terminates
-the process when you hit on it on queueueue untill I find why, I declare it is haunted
+the process when you hit on it on queueueue untill I find why, I declare it is haunted (same goes for a few more songs)
+
+- [ ] rewind, fastforward and jump to wanted line feature (on stand-by till I get my left arm's functionality I guess...)
+
 
 ---
 
@@ -101,6 +104,9 @@ the process when you hit on it on queueueue untill I find why, I declare it is h
 
 > Q: What do I need to run this?
 > A: FFMPeg and SDL on the system and a c compiler for now... and I advise using kitty emulator for best experience(were I you, I'd do as the dev says...yk me...I am the dev)
+
+> Q: You promoted kitty all the time in readme is that an ad? Are they paying you? 
+> A: Nope the image rendering capability is enough payment to me
 
 > Q: Why termios instead of ncurses you already started to use 3rd party libs?
 > A: Yup...but I still wanna feel my fair share of questionable life choices and misery
@@ -134,8 +140,7 @@ the process when you hit on it on queueueue untill I find why, I declare it is h
 
 #or for system-wide installation
 
-./build --system    # requries sudo privs to accsess /usr/local/bin/ and dependency installations
-
+./build.sh --system    # requries sudo privs to accsess /usr/local/bin/ and dependency installations
 
 ```
 
