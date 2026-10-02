@@ -1,13 +1,5 @@
 /*
-    Sup? Today's fuckery isn't a fuckery actually... It's a need for me.
-    Anyways what are we building? A 'Current Song' displayer for Steelseries Apex5/Apex7 on keyboard OLED screen because Linux does not have Steelseries GG software
-    Hence...I took the matters on my own hands 
-    This probably gonna have anothe repo for other people who might wanna use so...
-
-    and this file requires playerctl on the system to get what you listening...
-
-    and here is the compiling flags: cc apex5Oled.c -o apex_oled $(pkg-config --cflags --libs hidapi-libusb) 
-    (yeah this one was big so...)
+    Same oled  project but for my own player lol 
 */
 
 

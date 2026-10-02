@@ -19,6 +19,7 @@
 - [You are here](#table-of-contents)
 - [Bragging](#bragging)
 - [LOOK AT THE FUCKING SONGS](SONGS.md)
+- [Niche Shit](oled_support/README.md)
 - [In Dev](#in-dev)
 - [Q&A](#qa)
 - [Compile&Shit](#how-to-run)
