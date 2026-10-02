@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include <sched.h>
+#include <errno.h>
 #include <time.h>
 #include "audio_handler.h"
 #include <SDL.h>
@@ -27,6 +28,7 @@ struct AudioPlayer {
     atomic_bool paused;
     atomic_bool seek_pending;
     int64_t seek_ms;
+    bool seek_in_progress;
     atomic_uint_fast64_t generation;
     char *pending_uri;
     
@@ -111,7 +113,8 @@ static void scale_volume(int16_t *pcm, size_t samples, int percent)
 
 static int output_frame(Playback *play, SwrContext *resampler, AVFrame *frame)
 {
-    if (wait_output(play, false) < 0) { return(AVERROR_EXIT); }
+    int ready = wait_output(play, false);
+    if (ready < 0) { return(ready); }
 
     int capacity = swr_get_out_samples(resampler, frame ? frame->nb_samples : 0);
 
@@ -175,7 +178,9 @@ static int receive_frames(Playback *play, AVCodecContext *decoder, SwrContext *r
     int result;
     
     while ((result = avcodec_receive_frame(decoder, frame)) >= 0) {
+ 
         result = output_frame(play, resampler, frame);
+ 
         av_frame_unref(frame);
         if (result < 0) { return(result); }
     }
@@ -187,16 +192,13 @@ static int receive_frames(Playback *play, AVCodecContext *decoder, SwrContext *r
 
 static char *media_url(const char *uri)
 {
-    /* Legacy Drive links request a preview page. Request the file instead. */
-    
     const char *prefix = "https://drive.google.com/uc?";
     
     if (!strncmp(uri, prefix, strlen(prefix))) {
     
         const char *open = strstr(uri + strlen(prefix), "export=open");
     
-        if (open && (open == uri + strlen(prefix) || open[-1] == '&') &&
-            (open[11] == '\0' || open[11] == '&')) {
+        if (open && (open == uri + strlen(prefix) || open[-1] == '&') && (open[11] == '\0' || open[11] == '&')) {
             size_t before = (size_t)(open - uri);
             char *url = malloc(strlen(uri) + 5);
     
@@ -214,12 +216,132 @@ static char *media_url(const char *uri)
     return(strdup(uri));
 }
 
+static int cached_read(void *opaque, uint8_t *buffer, int size)
+{
+    FILE *cache = opaque;
+    
+    size_t bytes = fread(buffer, 1, (size_t)size, cache);
+    
+    if (bytes) { return((int)bytes); }
+    
+    return(ferror(cache) ? AVERROR(EIO) : AVERROR_EOF);
+}
+
+static int64_t cached_seek(void *opaque, int64_t offset, int whence)
+{
+    FILE *cache = opaque;
+    
+    whence &= ~AVSEEK_FORCE;
+    if (whence == AVSEEK_SIZE) {
+    
+        off_t position = ftello(cache);
+    
+        if (position < 0 || fseeko(cache, 0, SEEK_END) < 0) { return(AVERROR(errno)); }
+    
+        off_t size = ftello(cache);
+    
+        if (fseeko(cache, position, SEEK_SET) < 0) { return(AVERROR(errno)); }
+    
+        return(size < 0 ? AVERROR(EIO) : size);
+    }
+    
+    if (whence != SEEK_SET && whence != SEEK_CUR && whence != SEEK_END) { return(AVERROR(EINVAL)); }
+    if (fseeko(cache, (off_t)offset, whence) < 0) { return(AVERROR(errno)); }
+    
+    off_t position = ftello(cache);
+    
+    return(position < 0 ? AVERROR(errno) : position);
+}
+
+static int cache_stream(Playback *play, const char *url, FILE **cache, AVIOContext **cached)
+{
+    const int64_t limit = INT64_C(512) * 1024 * 1024;
+    
+    AVIOContext *input = NULL;
+    AVDictionary *options = NULL;
+    
+    *cache = tmpfile();
+    
+    if (!*cache) { return(AVERROR(errno)); }
+    
+    av_dict_set(&options, "rw_timeout", "15000000", 0);
+    av_dict_set(&options, "tls_verify", "1", 0);
+    av_dict_set(&options, "seekable", "0", 0);
+    av_dict_set(&options, "multiple_requests", "1", 0);
+    av_dict_set(&options, "protocol_whitelist", "http,https,tcp,tls", 0);
+    
+    AVIOInterruptCB interrupt = {interrupt_io, play};
+    
+    play->deadline = av_gettime_relative() + INT64_C(300000000);
+    
+    publish(play, AUDIO_LOADING, "Buffering stream...");
+    
+    int result = avio_open2(&input, url, AVIO_FLAG_READ, &interrupt, &options);
+
+
+    av_dict_free(&options);
+
+    if (result < 0) { avio_closep(&input); return(result); }
+
+    int64_t expected = avio_seek(input, 0, AVSEEK_SIZE), total = 0;
+
+    if (expected > limit) { result = AVERROR(EFBIG); goto done; }
+
+    unsigned char buffer[65536];
+
+    while (!interrupt_io(play)) {
+        result = avio_read(input, buffer, sizeof buffer);
+
+        if (result == AVERROR_EOF || !result) { break; }
+        if (result < 0) { goto done; }
+        if (total > limit - result) { result = AVERROR(EFBIG); goto done; }
+        if (fwrite(buffer, 1, (size_t)result, *cache) != (size_t)result) { result = AVERROR(EIO); goto done; }
+
+        total += result;
+
+        char progress[128];
+
+
+        if (expected > 0) {
+            snprintf(progress, sizeof progress, "Buffering stream: %lld%%", (long long)(total * 100 / expected));
+        }
+    
+        else { snprintf(progress, sizeof progress, "Buffering stream: %lld KiB", (long long)(total / 1024)); }
+    
+        publish(play, AUDIO_LOADING, progress);
+    }
+    
+    if (interrupt_io(play)) { result = AVERROR_EXIT; goto done; }
+    if (!total || (expected > 0 && total != expected)) { result = AVERROR(EIO); goto done; }
+    if (fflush(*cache) != 0 || fseeko(*cache, 0, SEEK_SET) < 0) { result = AVERROR(errno); goto done; }
+    
+    uint8_t *io_buffer = av_malloc(32768);
+    
+    if (!io_buffer) { result = AVERROR(ENOMEM); goto done; }
+    /* Cache the whole fucking track so seeking never pokes the HTTP connection. */
+    *cached = avio_alloc_context(io_buffer, 32768, 0, *cache, cached_read, NULL, cached_seek);
+    
+    if (!*cached) { av_free(io_buffer); result = AVERROR(ENOMEM); goto done; }
+    
+    (*cached)->seekable = AVIO_SEEKABLE_NORMAL;
+    
+    publish(play, AUDIO_LOADING, "");
+    
+    result = 0;
+done:
+    avio_closep(&input);
+    return(result);
+}
+
 static void play_track(AudioPlayer *player, uint64_t generation, const char *uri)
 {
     
     Playback play = {.player = player, .generation = generation, .discard_until = -1};
     AVFormatContext *format = avformat_alloc_context();
+    
     AVCodecContext *decoder = NULL;
+    FILE *cache = NULL;
+    AVIOContext *cached = NULL;
     SwrContext *resampler = NULL;
     AVPacket *packet = NULL;
     AVFrame *frame = NULL;
@@ -234,7 +356,16 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     if (!format || !url) { goto done; }
     
     format->interrupt_callback = (AVIOInterruptCB){interrupt_io, &play};
-    
+    if (!strncmp(url, "http://", 7) || !strncmp(url, "https://", 8)) {
+        stage = "Buffering stream";
+        result = cache_stream(&play, url, &cache, &cached);
+        if (result < 0 || cancelled(&play)) { goto done; }
+        format->pb = cached;
+        format->flags |= AVFMT_FLAG_CUSTOM_IO;
+        av_dict_set(&options, "protocol_whitelist", "file", 0);
+        stage = "Opening cached stream";
+    }
+
     av_dict_set(&options, "rw_timeout", "5000000", 0);
     av_dict_set(&options, "tls_verify", "1", 0);
     
@@ -333,6 +464,7 @@ decode:
         pthread_mutex_lock(&player->mutex);
         int64_t target = player->seek_ms;
         atomic_store(&player->seek_pending, false);
+        player->seek_in_progress = true;
         pthread_mutex_unlock(&player->mutex);
         play.deadline = av_gettime_relative() + 15000000;
         int64_t timestamp = av_rescale_q(target, (AVRational){1, 1000}, play.time_base) + play.stream_start;
@@ -350,6 +482,7 @@ decode:
                 memset(player->sample_history, 0, sizeof player->sample_history);
                 player->status.position_ms = target;
                 player->status.seek_position_ms = target;
+                player->seek_in_progress = false;
                 ++player->status.seek_serial;
             }
             pthread_mutex_unlock(&player->mutex);
@@ -359,7 +492,7 @@ decode:
         }
         else {
             pthread_mutex_lock(&player->mutex);
-            if (!cancelled(&play)) { player->status.seekable = false; }
+            if (!cancelled(&play)) { player->status.seekable = false; player->seek_in_progress = false; }
             pthread_mutex_unlock(&player->mutex);
         }
     }
@@ -424,6 +557,8 @@ done:
     swr_free(&resampler);
     avcodec_free_context(&decoder);
     avformat_close_input(&format);
+    if (cached) { av_freep(&cached->buffer); avio_context_free(&cached); }
+    if (cache) { fclose(cache); }
     av_dict_free(&options);
     
     free(url);
@@ -527,6 +662,7 @@ int audio_play(AudioPlayer *player, int64_t song_id, const char *uri)
     
     atomic_store(&player->paused, false);
     atomic_store(&player->seek_pending, false);
+    player->seek_in_progress = false;
     
     if (player->device) { SDL_PauseAudioDevice(player->device, 1); SDL_ClearQueuedAudio(player->device); }
     
@@ -561,6 +697,7 @@ void audio_stop(AudioPlayer *player)
     pthread_mutex_lock(&player->mutex);
     atomic_fetch_add(&player->generation, 1);
     atomic_store(&player->seek_pending, false);
+    player->seek_in_progress = false;
     atomic_store(&player->paused, false);
     
     free(player->pending_uri);
@@ -583,6 +720,24 @@ bool audio_seek(AudioPlayer *player, int64_t position_ms)
                    (player->status.duration_ms < 0 || position_ms <= player->status.duration_ms);
     if (allowed) {
         player->seek_ms = position_ms;
+        atomic_store(&player->seek_pending, true);
+    }
+    pthread_mutex_unlock(&player->mutex);
+    return(allowed);
+}
+
+bool audio_seek_relative(AudioPlayer *player, int64_t offset_ms)
+{
+    pthread_mutex_lock(&player->mutex);
+    bool allowed = player->status.seekable &&
+                   (player->status.state == AUDIO_PLAYING || player->status.state == AUDIO_PAUSED);
+    if (allowed) {
+        int64_t base = atomic_load(&player->seek_pending) || player->seek_in_progress ? player->seek_ms : player->status.position_ms;
+        int64_t limit = player->status.duration_ms >= 0 ? player->status.duration_ms : INT64_MAX;
+        if (base > limit) { base = limit; }
+        int64_t target = offset_ms > 0 && offset_ms > limit - base ? limit :
+                         offset_ms < 0 && offset_ms < -base ? 0 : base + offset_ms;
+        player->seek_ms = target;
         atomic_store(&player->seek_pending, true);
     }
     pthread_mutex_unlock(&player->mutex);

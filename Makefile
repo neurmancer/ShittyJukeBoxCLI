@@ -18,7 +18,7 @@ SOURCES = ShittyJukeBox.c src/audio_handler.c src/lyrics_handler.c src/offline.c
           src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c src/shuffle.c src/playlists.c src/config.c src/mpris.c
 HEADERS = $(wildcard src/*.h)
 
-.PHONY: all run clean test test-audio test-mpris test-offline add-song add-songs
+.PHONY: all run clean test test-audio test-mpris test-offline test-seek test-stream-cache add-song add-songs
 
 all: $(TARGET) jukebox-add
 
@@ -42,6 +42,12 @@ test-audio:
 
 test-offline:
 	python3 tests/offline_check.py
+
+test-seek:
+	python3 tests/seek_check.py
+
+test-stream-cache:
+	python3 tests/stream_cache_check.py
 
 test-mpris: $(TARGET)
 	dbus-run-session -- python3 tests/mpris_check.py

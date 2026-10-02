@@ -123,6 +123,14 @@ Clear the text being edited.
 Open or close the typewriter style panel, except in the visualizer.
 .SS Playback and queue
 .TP
+.B "Comma (,), period (.)"
+Seek backward or forward by 10 seconds in the player, lyrics, or visualizer
+when no panel is open.
+Repeated presses accumulate; the target is clamped to the track's start or end.
+Seeking preserves the paused or playing state.
+The track must be loaded and its source must support seeking.
+Unavailable or failed seeks are reported in the interface.
+.TP
 .B "Up, Down"
 Raise or lower volume in the player and visualizer when no panel is open.
 In other contexts, move through the menu or lyrics.
@@ -141,6 +149,32 @@ or the current song from the player.
 .TP
 .B D
 Download all songs in the catalog.
+.SS Jumping to lyrics
+For timed LRC lyrics, use Up/Down or h/j/k/l in the lyrics view to select a line.
+The selected line is highlighted at the top of the displayed lyrics;
+automatic scrolling is suspended while selecting.
+Use g or G to select the first or last line.
+.PP
+Press Enter or Space to seek to the selected line's timestamp and resume
+following playback.
+Without a selection, Enter seeks to the current line, or the first line
+if playback has not reached a lyric yet.
+Press f to resume following playback without seeking.
+Plain lyrics without timestamps cannot be used as seek targets.
+.SS Online buffering
+HTTP(S) tracks are downloaded completely into a temporary disk cache before
+playback starts.
+The interface displays buffering progress during this initial wait.
+Playback and seeking then read the local cache without issuing HTTP range
+requests, so seeking does not depend on the server accepting them.
+.PP
+Each track's cache is limited to 512 MiB, with a five-minute total buffering
+deadline and a 15-second network I/O timeout.
+Failed or incomplete transfers produce a playback error.
+Skipping, stopping, or quitting cancels buffering; the temporary file is
+closed and removed when the track closes.
+This buffering mode is intended for finite media files, not endless live streams.
+Use d for a permanent offline copy in ~/.sjb/songs.
 .SS Playlists
 .TP
 .B p

@@ -183,6 +183,9 @@ static TerminalAction plain_key(unsigned byte)
         }
     }
     switch (byte) {
+        case ',': return(TERM_REWIND);
+        case '.': return(TERM_FAST_FORWARD);
+        case 'f': return(TERM_FOLLOW_LYRICS);
         case 'd': return(TERM_DOWNLOAD);
         case 'D': return(TERM_DOWNLOAD_ALL);
         case 'C': return(TERM_COVER);

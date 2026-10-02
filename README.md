@@ -144,10 +144,10 @@ the process when you hit on it on queueueue untill I find why, I declare it is h
 ./build.sh --system    # requries sudo privs to accsess /usr/local/bin/ and dependency installations
 
 man 1 sjb # for usage (if installed with --system)
-
 ```
 
 ## Legal stuff
 
-> I'll add the legal stuff in a min suits _chill_ it's almost 1AM again... still...Chill for a moment badges
-> Well Imma postpone this section as much as I can lol(I have homework)
+here is the boring shit [LICENSE](LICENSE.md)
+
+same thing but for 3rd party shit [3rd party LICENSES](THIRD_PARTY_LICENSE.md)

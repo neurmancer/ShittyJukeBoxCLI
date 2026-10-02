@@ -385,6 +385,7 @@ int main(int argc, char **argv)
     };
     OfflineDownload *download = NULL;
     char download_status[512] = "";
+    char seek_status[160] = "";
     char volume_status[96] = "";
     char playback_status[256] = "Choose a song to start playback";
     AudioStatus last_audio = {.state = AUDIO_IDLE};
@@ -434,7 +435,35 @@ int main(int argc, char **argv)
                                  ((previous_screen == SCREEN_PLAYER && player.selected == PLAYER_PLAY) || previous_screen == SCREEN_VISUALIZER);
         bool handled = quit_handled;
         bool search_focus_changed = false;
-        if (action == TERM_DOWNLOAD || action == TERM_DOWNLOAD_ALL) {
+        if (ui.overlay == OVERLAY_NONE &&
+            (ui.screen == SCREEN_PLAYER || ui.screen == SCREEN_LYRICS || ui.screen == SCREEN_VISUALIZER) &&
+            (action == TERM_REWIND || action == TERM_FAST_FORWARD ||
+             (ui.screen == SCREEN_LYRICS && action == TERM_ACTIVATE))) {
+            bool requested = false;
+            if (action == TERM_ACTIVATE) {
+                if (!timed_lyrics.count || !player.lyrics_visible) {
+                    snprintf(seek_status, sizeof seek_status, "Jumping to a line requires timed LRC lyrics.");
+                }
+                else {
+                    size_t index = ui.lyrics_browsing ? ui.lyrics_top :
+                                   player.lyric_active < timed_lyrics.count ? player.lyric_active : 0;
+                    int64_t target = timed_lyrics.cues[index].time_ms;
+                    requested = audio_seek(audio, target < 0 ? 0 : target);
+                    snprintf(seek_status, sizeof seek_status, "%s", requested ? "Seeking to lyric..." : "This track cannot seek to that lyric.");
+                }
+            }
+            else {
+                requested = audio_seek_relative(audio, action == TERM_REWIND ? -10000 : 10000);
+                snprintf(seek_status, sizeof seek_status, "%s", requested ? "Seeking..." : "Seeking is unavailable for this track right now.");
+            }
+            if (requested) {
+                ui.lyrics_browsing = false;
+                ui.lyrics_top = player.lyric_active == SIZE_MAX || player.lyric_active < 2 ? 0 : player.lyric_active - 2;
+            }
+            ui.status = seek_status;
+            handled = true;
+        }
+        else if (action == TERM_DOWNLOAD || action == TERM_DOWNLOAD_ALL) {
             int64_t id = 0;
             if (ui.overlay == OVERLAY_QUEUE && queue.selected < queue.count) {
                 size_t index = selection.order ? selection.order[queue.selected] : queue.selected;
@@ -669,6 +698,16 @@ int main(int argc, char **argv)
         }
 
         AudioStatus status = audio_status(audio);
+        if (status.generation == last_audio.generation && status.seek_serial != last_audio.seek_serial) {
+            snprintf(seek_status, sizeof seek_status, "Seeked to %lld:%02lld.",
+                     (long long)(status.seek_position_ms / 60000), (long long)(status.seek_position_ms / 1000 % 60));
+            ui.status = seek_status;
+            result = TUI_CHANGED;
+        }
+        else if (status.generation == last_audio.generation && last_audio.seekable && !status.seekable) {
+            ui.status = "Seeking failed; this stream no longer supports seeking.";
+            result = TUI_CHANGED;
+        }
         if (selection.song && status.song_id == selection.song->id && status.generation == selection.generation) {
             if (status.duration_ms >= 0 && (selection.song->duration_ms != status.duration_ms ||
                 selection.song->duration_source != DB_DURATION_FFMPEG)) {
@@ -682,7 +721,7 @@ int main(int argc, char **argv)
             player.duration = player.duration_known ? (unsigned long long)selection.song->duration_ms / 1000 : 0;
             size_t active = lyrics_active(&timed_lyrics, status.position_ms);
             if (active != player.lyric_active) {
-                ui.lyrics_top = active == SIZE_MAX ? 0 : active > 2 ? active - 2 : 0;
+                if (!ui.lyrics_browsing) { ui.lyrics_top = active == SIZE_MAX ? 0 : active > 2 ? active - 2 : 0; }
                 player.lyric_active = active;
             }
             if (timed_lyrics.count && player.lyrics_visible && ui.screen == SCREEN_LYRICS &&
@@ -693,10 +732,11 @@ int main(int argc, char **argv)
             player.loading = status.state == AUDIO_LOADING;
             player.paused = status.pause_requested || status.state == AUDIO_FINISHED || status.state == AUDIO_FAILED;
             const char *labels[] = {"Stopped", "Loading stream...", "Playing", "Paused", "Finished", "Playback failed"};
-            snprintf(playback_status, sizeof playback_status, "%s", status.state == AUDIO_FAILED ? status.error : status.state == AUDIO_LOADING && status.pause_requested ? "Loading (paused)..." : labels[status.state]);
+            snprintf(playback_status, sizeof playback_status, "%s", (status.state == AUDIO_FAILED || (status.state == AUDIO_LOADING && *status.error && !status.pause_requested)) ? status.error : status.state == AUDIO_LOADING && status.pause_requested ? "Loading (paused)..." : labels[status.state]);
             player.playback_status = playback_status;
             if (status.generation != last_audio.generation || status.state != last_audio.state || status.pause_requested != last_audio.pause_requested ||
-                status.position_ms / 1000 != last_audio.position_ms / 1000 || status.duration_ms != last_audio.duration_ms) {
+                status.position_ms / 1000 != last_audio.position_ms / 1000 || status.duration_ms != last_audio.duration_ms ||
+                strcmp(status.error, last_audio.error)) {
                 result = TUI_CHANGED;
             }
             if (status.state == AUDIO_FINISHED && handled_end != status.generation) {
@@ -1023,6 +1063,7 @@ static void select_song(TuiState *ui, const DbSong *song)
     player->elapsed = 0;
     player->paused = true;
     ui->lyrics_top = 0;
+    ui->lyrics_browsing = false;
     player->show_cover = false;
     player->loading = true;
     player->playback_status = "Loading stream...";

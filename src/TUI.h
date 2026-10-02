@@ -106,6 +106,7 @@ typedef struct {
     TuiPlayer *player;
     Spectrum *spectrum;
     size_t lyrics_top;
+    bool lyrics_browsing;
     TypewriterMode typewriter_mode;
     size_t typewriter_color;
     size_t typewriter_selected;

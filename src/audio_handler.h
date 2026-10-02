@@ -50,6 +50,7 @@ void audio_pause(AudioPlayer *player, bool paused);
 void audio_stop(AudioPlayer *player);
 
 bool audio_seek(AudioPlayer *player, int64_t position_ms);
+bool audio_seek_relative(AudioPlayer *player, int64_t offset_ms);
 
 void audio_set_volume(AudioPlayer *player, int percent);
 

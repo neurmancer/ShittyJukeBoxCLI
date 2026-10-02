@@ -545,7 +545,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
     
     line(rows - 2, columns - 1, FANCY, message);
     line(rows - 1, columns - 1, DIM, player->playback_status ? player->playback_status : "UI preview - audio is not connected");
-    line(rows, columns - 1, DIM, "d:download D:all s:search p:playlists Q:queue 2:lyrics 3:FFT t:typewriter Esc:back q:quit");
+    line(rows, columns - 1, DIM, "d:download D:all ,/.:seek s:search p:playlists Q:queue 2:lyrics 3:FFT t:typewriter Esc:back q:quit");
 
     fflush(stdout);
 }
@@ -703,14 +703,28 @@ TuiResult tui_state_handle(TuiState *state, TerminalAction action)
     if (state->screen == SCREEN_LYRICS) {
         size_t count = lyrics_count(state->player);
         size_t before = state->lyrics_top;
-    
+
         if (!count) { return(TUI_UNCHANGED); }
+        bool timed = state->player->timed_lyrics && state->player->timed_lyrics->count;
+        if (action == TERM_FOLLOW_LYRICS && timed) {
+            state->lyrics_browsing = false;
+            size_t active = state->player->lyric_active;
+            state->lyrics_top = active == SIZE_MAX || active < 2 ? 0 : active - 2;
+            return(TUI_CHANGED);
+        }
+        bool moving = action == TERM_DOWN || action == TERM_RIGHT || action == TERM_UP ||
+                      action == TERM_LEFT || action == TERM_FIRST || action == TERM_LAST;
+        if (timed && moving && !state->lyrics_browsing) {
+            state->lyrics_top = state->player->lyric_active < count ? state->player->lyric_active : 0;
+        }
+        if (timed && moving) { state->lyrics_browsing = true; }
+        if (timed && action == TERM_ACTIVATE) { return(TUI_SELECTED); }
         if ((action == TERM_DOWN || action == TERM_RIGHT) && state->lyrics_top < count - 1) { ++state->lyrics_top; }
         if ((action == TERM_UP || action == TERM_LEFT) && state->lyrics_top) { --state->lyrics_top; }
         if (action == TERM_FIRST) { state->lyrics_top = 0; }
         if (action == TERM_LAST) { state->lyrics_top = count - 1; }
     
-        return(before == state->lyrics_top ? TUI_UNCHANGED : TUI_CHANGED);
+        return(before == state->lyrics_top && !(timed && moving) ? TUI_UNCHANGED : TUI_CHANGED);
     }
     
     TuiResult result = TUI_UNCHANGED;
@@ -770,8 +784,10 @@ static void pending_screen(const TuiState *state)
                           cue->time_ms == lyrics->cues[player->lyric_active].time_ms;
             size_t column = lyrics_column(width, cue->text, strlen(cue->text));
             
-            text_span(row, column, width - column + 1, DIM "\033[38;2;255;255;255m", cue->text, strlen(cue->text));
-            if (active) {
+            bool selected = state->lyrics_browsing && i == state->lyrics_top;
+            text_span(row, column, width - column + 1, selected ? PURPLE_INVERSE : DIM "\033[38;2;255;255;255m",
+                      *cue->text ? cue->text : selected ? "[instrumental]" : "", *cue->text ? strlen(cue->text) : selected ? 14 : 0);
+            if (active && !selected) {
                 size_t length = lyrics_visible_bytes(lyrics, i, player->position_ms, player->duration_ms);
                 size_t color = state->typewriter_color % (sizeof typewriter_colors / sizeof typewriter_colors[0]);
                 char style[80];
@@ -814,7 +830,7 @@ static void pending_screen(const TuiState *state)
     }
     
     line(rows - 1, width, FANCY, state->status);
-    line(rows, width, DIM, "1:player 2:lyrics 3:FFT Q:queue t:typewriter Tab:next Esc:back q:quit");
+    line(rows, width, DIM, "Up/Down:line Enter:jump f:follow ,/.:seek 1:player 3:FFT q:quit");
 }
 
 static void visualizer_draw(const TuiState *state)
@@ -922,7 +938,7 @@ static void visualizer_draw(const TuiState *state)
              state->status ? state->status : "");
     
     line(rows - 2, width, FANCY, status);
-    line(rows - 1, width, DIM, "Space:play/pause Up/Down:volume d:download D:all Q:queue");
+    line(rows - 1, width, DIM, "Space:play/pause Up/Down:volume ,/.:seek d:download D:all Q:queue");
     line(rows, width, DIM, "1:player 2:lyrics 3:FFT Tab:next Esc:back q:quit");
 }
 
