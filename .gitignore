@@ -1,7 +1,8 @@
 
 RULES.md
-tests/
-/ShittyJukeBox
+tests/*
+!tests/offline_check.py
+/sjb
 songdata.h
 /jukebox.db-journal
 /jukebox.db-wal
@@ -10,7 +11,7 @@ songdata.h
 /playlists.db-journal
 /playlists.db-wal
 /playlists.db-shm
-
+/tests
 /jukebox-add
 /legacy-backup/
 tools/*

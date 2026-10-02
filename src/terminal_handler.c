@@ -183,6 +183,8 @@ static TerminalAction plain_key(unsigned byte)
         }
     }
     switch (byte) {
+        case 'd': return(TERM_DOWNLOAD);
+        case 'D': return(TERM_DOWNLOAD_ALL);
         case 'C': return(TERM_COVER);
         case 'S': return(TERM_SHUFFLE);
         case 'R': return(TERM_REPEAT);
@@ -298,7 +300,7 @@ TerminalAction terminal_read(int timeout_ms)
     int result = read_byte(&byte, escape_state ? 40 : timeout_ms);
     
     if (result == -1) { return(TERM_ERROR); }
-    if (result == -2) { escape_state = 0; return(TERM_END); }
+    if (result == -2) { escape_state = 0; return(TERM_EOF); }
     if (!result) {
     
         if (stopped) { return(TERM_QUIT); }

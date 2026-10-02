@@ -1,0 +1,338 @@
+.TH SJB 1 "2026-10-02" "sjb" "User Commands"
+.SH NAME
+sjb \- terminal music player with streaming and offline libraries
+.SH SYNOPSIS
+.B sjb
+.RI [ options ]
+.br
+.B sjb \-\-offline
+.RI [ options ]
+.br
+.B sjb \-\-path
+.I directory
+.RI [ options ]
+.br
+.B sjb \-\-import\-lrc
+.I song_id file
+.RI [ options ]
+.SH DESCRIPTION
+.B sjb
+plays music from a SQLite catalog or a directory of local MP3 files.
+It provides a terminal interface with genre browsing, search, a playback
+queue, shuffle, playlists, lyrics, album artwork, and an audio visualizer.
+Audio is decoded with FFmpeg and played through SDL.
+.PP
+Run without arguments to open the catalog.
+A build installed with
+.B "./build.sh \-\-system"
+uses the catalog and configuration under
+.IR ~/.sjb .
+A development build uses paths relative to the current working directory.
+.SH OPTIONS
+.TP
+.BI \-\-db " file"
+Use the specified catalog instead of the default database.
+Cannot be combined with
+.B \-\-offline
+or
+.BR \-\-path .
+.TP
+.BI \-\-config " file"
+Read the color theme from the specified Lua file.
+A missing default theme is allowed; an explicitly selected theme must be readable.
+.TP
+.B \-\-offline
+Scan and play downloaded MP3 files in
+.IR ~/.sjb/songs .
+The directory must already exist.
+.TP
+.BI \-\-path " directory"
+Scan and play a local MP3 library rooted at
+.IR directory .
+This option selects offline mode.
+See
+.BR "LOCAL LIBRARIES" .
+.TP
+.BI \-\-cover " file"
+Override the album artwork used during playback.
+With
+.BR \-\-preview ,
+load a local PNG for the preview screen.
+.TP
+.B \-\-preview
+Open the player layout with sample display data.
+.TP
+.BI \-\-import\-lrc " song_id file"
+Import UTF-8 LRC lyrics into the selected library, replacing the song's
+existing lyrics, then exit without opening the interactive player.
+.I song_id
+must be a positive database ID.
+May be combined with
+.B \-\-db
+for a catalog, or with
+.B \-\-offline
+or
+.B \-\-path
+for a local library.
+.TP
+.B \-\-help
+Print usage information and exit.
+.SH KEY BINDINGS
+Keys are case-sensitive.
+Available actions depend on the current screen; the footer shows controls
+for that screen.
+Printable keys enter text while editing a search, playlist name, or cover path.
+.SS Navigation
+.TP
+.B "Arrow keys, h j k l"
+Move through menus or adjust the selected control.
+.TP
+.B "Enter, Space"
+Activate the selected item or control.
+On the player screen, select the play/pause control to toggle playback.
+.TP
+.B "g, G"
+Move to the first or last item.
+.TP
+.B "Esc, Backspace"
+Close the current panel or return to the previous screen.
+Backspace deletes text when editing.
+.TP
+.B "q, Ctrl-D"
+Open the quit confirmation screen.
+Cancel is selected by default.
+Select Quit and press Enter or Space to exit; press Esc or q to cancel.
+The home menu's Quit item and MPRIS quit requests use the same confirmation.
+Playback continues while confirmation is open.
+Signals such as Ctrl-C and a closed terminal still terminate immediately.
+.TP
+.B "1, 2, 3"
+Show the player, lyrics, or visualizer.
+.TP
+.B Tab
+Cycle through player, lyrics, and visualizer views.
+.TP
+.B s
+Open search from the player, or edit search in the song list.
+On the home, genres, and settings screens, switch between settings and genres.
+.TP
+.B Ctrl-U
+Clear the text being edited.
+.TP
+.B t
+Open or close the typewriter style panel, except in the visualizer.
+.SS Playback and queue
+.TP
+.B "Up, Down"
+Raise or lower volume in the player and visualizer when no panel is open.
+In other contexts, move through the menu or lyrics.
+.TP
+.B Q
+Open or close the queue.
+Press Enter on a queue entry to play it.
+.TP
+.B n
+Insert the highlighted song immediately after the current song.
+Available in the song list and queue.
+.TP
+.B d
+Download the highlighted catalog song in the song list, queue, or playlist,
+or the current song from the player.
+.TP
+.B D
+Download all songs in the catalog.
+.SS Playlists
+.TP
+.B p
+Open or close the playlists panel.
+.TP
+.B a
+Choose a playlist to receive the selected song.
+.TP
+.B "c, r"
+Create a playlist or rename the selected playlist in the playlist list.
+.TP
+.B x
+Delete the selected playlist, or remove the selected song from an open playlist.
+.TP
+.B "K, J"
+Move the selected playlist song up or down.
+.TP
+.B C
+Edit the open playlist's cover path or URL.
+.TP
+.B "S, R"
+Toggle shuffle or track repeat while browsing an open playlist.
+.TP
+.B "[, ]"
+Play the previous or next track while browsing an open playlist.
+.SH DOWNLOADS
+Downloads are started with
+.B d
+or
+.B D
+inside the normal player; there is no download command-line option.
+Only one download job runs at a time.
+Playback and navigation remain available while it runs.
+Completion and failure messages appear in the interface.
+Quitting cancels the active download.
+.PP
+Songs are saved under
+.IR ~/.sjb/songs ,
+inside a subdirectory named for the first catalog genre, if one exists.
+Songs without a genre are saved directly in the root.
+Only validated MP3 responses are accepted.
+Incomplete transfers are not added as playable songs.
+.PP
+Filenames use the database title followed by
+.BR .mp3 ,
+not a filename supplied by the server.
+Path separators and control characters are replaced, and long components
+are shortened to fit the filename scheme.
+When a name is already occupied by another file, a song-ID suffix is used
+to distinguish the download without overwriting it.
+An existing valid download from the same source is reused.
+.PP
+A companion
+.B .mp3.sjb
+file records the catalog title, artist, album, and source URI.
+Keep this file beside the MP3 to preserve catalog names in offline mode
+even when the embedded tags differ.
+.SH LOCAL LIBRARIES
+The directory passed to
+.B \-\-path
+is the library root.
+Each immediate subdirectory defines a genre using its directory name.
+Tracks in deeper directories remain in the genre of that top-level directory.
+MP3 files directly in the root have no genre and appear in
+.BR All .
+All also includes every track found in genre directories.
+.PP
+Files with a case-insensitive
+.B .mp3
+extension are inspected for MP3 audio.
+Invalid files, hidden entries, and symbolic links are skipped.
+Embedded title, artist, album, and cover data are used where available;
+the filename supplies a title when no title tag is present.
+Downloaded tracks use their companion catalog metadata in preference to tags.
+.PP
+The library is rescanned at startup.
+Tracks that remain at the same path retain their IDs; missing tracks are
+removed from the index.
+Each library root has its own database and playlists under
+.IR ~/.sjb/libraries .
+Scanning a local directory does not modify the online catalog.
+.SH FILES
+.TP
+.I ~/.sjb/jukebox.db
+Default catalog for a system-installed build.
+.TP
+.I ~/.sjb/playlists.db
+Saved playlists for the default installed catalog.
+For a custom catalog, the playlist database is placed beside that catalog.
+.TP
+.I ~/.sjb/config/theme.lua
+Default theme for a system-installed build.
+Returns a Lua table containing a
+.B colors
+table with
+.BR purple ,
+.BR green ,
+and
+.B blue
+values in
+.B #RRGGBB
+notation.
+.TP
+.IR jukebox.db ", " config/theme.lua
+Default catalog and theme paths for a development build, relative to the
+current working directory.
+.TP
+.I ~/.sjb/songs/
+Downloaded MP3 files and companion metadata.
+.TP
+.I ~/.sjb/libraries/<root-hash>/jukebox.db
+Index for the canonical path of a local library root.
+.TP
+.I ~/.sjb/libraries/<root-hash>/playlists.db
+Playlists belonging to that local library.
+.SH ENVIRONMENT
+.TP
+.B HOME
+Home directory used for user data and installed defaults.
+.TP
+.B TERM
+Terminal type.
+Album artwork display requires
+.BR xterm-kitty .
+.TP
+.B "TMUX, STY"
+If either variable is set, terminal artwork display is disabled.
+.SH EXAMPLES
+Open the installed catalog:
+.PP
+.nf
+.RS
+sjb
+.RE
+.fi
+.PP
+Play downloaded songs:
+.PP
+.nf
+.RS
+sjb \-\-offline
+.RE
+.fi
+.PP
+Use a local music directory:
+.PP
+.nf
+.RS
+sjb \-\-path "$HOME/Music"
+.RE
+.fi
+.PP
+For this directory layout,
+.B Loose Track
+appears only in All;
+.B Album Track
+appears in both Rock and All:
+.PP
+.nf
+.RS
+Music/
+    Loose Track.mp3
+    Rock/
+        Album Track.mp3
+.RE
+.fi
+.PP
+Import timed lyrics into a catalog:
+.PP
+.nf
+.RS
+sjb \-\-db ./jukebox.db \-\-import\-lrc 2 ./song.lrc
+.RE
+.fi
+.SH EXIT STATUS
+.TP
+.B 0
+Normal termination, successful lyrics import, or help output.
+.TP
+.B 1
+Invalid arguments or an initialization, import, or terminal-input error.
+.TP
+.B 128 + signal number
+Termination after a handled signal.
+.SH NOTES
+An interactive terminal is required for the player interface.
+Artwork is optional; playback does not require a graphics-capable terminal.
+MPRIS controls are exposed on the session D-Bus when available,
+allowing compatible clients such as
+.B playerctl
+to control playback.
+.SH SEE ALSO
+.BR ffmpeg (1),
+.BR playerctl (1),
+.BR sqlite3 (1)

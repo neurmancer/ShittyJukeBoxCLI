@@ -113,11 +113,14 @@ typedef struct {
     const char *search_query;
     bool search_active;
     bool search_editing;
+    bool quit_requested;
+    size_t quit_selected;
 } TuiState;
 
 void tui_state_init(TuiState *state, TuiScreen initial);
 void tui_state_switch(TuiState *state, TuiScreen screen);
 void tui_state_draw(TuiState *state);
+void tui_quit_request(TuiState *state);
 
 TuiResult tui_state_handle(TuiState *state, TerminalAction action);
 

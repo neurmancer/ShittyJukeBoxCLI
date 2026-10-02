@@ -40,10 +40,11 @@ static unsigned char *decode_cover(CoverRequest *request, const char *uri, size_
     AVCodecContext *codec = NULL;
     AVPacket *packet = av_packet_alloc();
     AVFrame *frame = av_frame_alloc();
+    AVFrame *rgba = av_frame_alloc();
     struct SwsContext *scale = NULL;
     AVDictionary *options = NULL;
     unsigned char *pixels = NULL;
-    if (!format || !packet || !frame) { goto done; }
+    if (!format || !packet || !frame || !rgba) { goto done; }
     format->interrupt_callback = (AVIOInterruptCB){interrupted, request};
     format->probesize = 1024 * 1024;
     format->max_analyze_duration = AV_TIME_BASE;
@@ -87,20 +88,23 @@ static unsigned char *decode_cover(CoverRequest *request, const char *uri, size_
     scale = sws_getContext(frame->width, frame->height, frame->format, w, h,
                           AV_PIX_FMT_RGBA, SWS_BILINEAR, NULL, NULL, NULL);
     if (!scale) { goto done; }
+    /* Give SIMD its elbow room before it stomps on the fucking heap. */
+    rgba->format = AV_PIX_FMT_RGBA;
+    rgba->width = w;
+    rgba->height = h;
+    if (av_frame_get_buffer(rgba, 32) < 0) { goto done; }
+    if (sws_scale(scale, (const unsigned char *const *)frame->data, frame->linesize,
+                  0, frame->height, rgba->data, rgba->linesize) != h || interrupted(request)) { goto done; }
     pixels = malloc((size_t)w * h * 4);
     if (!pixels) { goto done; }
-    unsigned char *destination[] = {pixels, NULL, NULL, NULL};
-    int strides[] = {w * 4, 0, 0, 0};
-    if (sws_scale(scale, (const unsigned char *const *)frame->data, frame->linesize,
-                  0, frame->height, destination, strides) != h || interrupted(request)) {
-        free(pixels);
-        pixels = NULL;
-        goto done;
+    for (int row = 0; row < h; ++row) {
+        memcpy(pixels + (size_t)row * w * 4, rgba->data[0] + (size_t)row * rgba->linesize[0], (size_t)w * 4);
     }
     *width = (size_t)w;
     *height = (size_t)h;
 done:
     sws_freeContext(scale);
+    av_frame_free(&rgba);
     av_frame_free(&frame);
     av_packet_free(&packet);
     avcodec_free_context(&codec);

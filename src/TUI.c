@@ -545,7 +545,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
     
     line(rows - 2, columns - 1, FANCY, message);
     line(rows - 1, columns - 1, DIM, player->playback_status ? player->playback_status : "UI preview - audio is not connected");
-    line(rows, columns - 1, DIM, "s:search p:playlists a:save Q:queue 2:lyrics 3:FFT t:typewriter Esc:back q:quit");
+    line(rows, columns - 1, DIM, "d:download D:all s:search p:playlists Q:queue 2:lyrics 3:FFT t:typewriter Esc:back q:quit");
 
     fflush(stdout);
 }
@@ -628,9 +628,34 @@ static TuiResult typewriter_handle(TuiState *state, TerminalAction action)
     return(TUI_CHANGED);
 }
 
+void tui_quit_request(TuiState *state)
+{
+    if (!state->quit_requested) {
+        state->quit_requested = true;
+        state->quit_selected = 0;
+    }
+}
+
 TuiResult tui_state_handle(TuiState *state, TerminalAction action)
 {
-    if (action == TERM_QUIT || action == TERM_END) { return(TUI_QUIT); }
+    if (state->quit_requested) {
+        if (action == TERM_BACK || action == TERM_QUIT) { state->quit_requested = false; return(TUI_CHANGED); }
+        if (action == TERM_LEFT || action == TERM_UP || action == TERM_ARROW_UP || action == TERM_FIRST) {
+            state->quit_selected = 0;
+            return(TUI_CHANGED);
+        }
+        if (action == TERM_RIGHT || action == TERM_DOWN || action == TERM_ARROW_DOWN || action == TERM_LAST) {
+            state->quit_selected = 1;
+            return(TUI_CHANGED);
+        }
+        if (action == TERM_ACTIVATE || action == TERM_SPACE) {
+            if (state->quit_selected) { return(TUI_QUIT); }
+            state->quit_requested = false;
+            return(TUI_CHANGED);
+        }
+        return(action == TERM_RESIZE ? TUI_CHANGED : TUI_UNCHANGED);
+    }
+    if (action == TERM_QUIT || action == TERM_END) { tui_quit_request(state); return(TUI_CHANGED); }
     if (action == TERM_RESIZE) { return(TUI_CHANGED); }
     if (action == TERM_QUEUE) {
         state->overlay = state->overlay == OVERLAY_QUEUE ? OVERLAY_NONE : OVERLAY_QUEUE;
@@ -897,7 +922,7 @@ static void visualizer_draw(const TuiState *state)
              state->status ? state->status : "");
     
     line(rows - 2, width, FANCY, status);
-    line(rows - 1, width, DIM, "Space: play/pause  Up/Down: volume  Q:queue");
+    line(rows - 1, width, DIM, "Space:play/pause Up/Down:volume d:download D:all Q:queue");
     line(rows, width, DIM, "1:player 2:lyrics 3:FFT Tab:next Esc:back q:quit");
 }
 
@@ -1010,7 +1035,7 @@ static void queue_overlay(TuiState *state)
         }
     }
 
-    text_at(rows - 2, x + 2, width - 3, DIM, "n: play next  Q / Esc: close");
+    text_at(rows - 2, x + 2, width - 3, DIM, "d:download n:next Q/Esc:close");
 }
 
 static void playlist_art(const Playlists *panel, size_t row, size_t column, size_t width, size_t height)
@@ -1302,6 +1327,14 @@ static void playlists_overlay(TuiState *state)
 void tui_state_draw(TuiState *state)
 {
     terminal_frame_begin();
+    if (state->quit_requested) {
+        TuiItem items[] = {{"Nah blast the music", TUI_BUTTON, true, false},
+                           {"GET ME OUT OF HERE", TUI_BUTTON, true, false}};
+        TuiMenu menu = {.title = "Leaving already UnU?", .items = items, .count = 2, .selected = state->quit_selected};
+        tui_menu_draw(&menu, "Quit stops playback and cancels downloads. Esc / q: cancel");
+        terminal_frame_end();
+        return;
+    }
     
     if (state->screen == SCREEN_SONGS && state->search_active && state->menus[SCREEN_SONGS]) {
         tui_menu_draw(state->menus[SCREEN_SONGS], state->status);
@@ -1321,7 +1354,7 @@ void tui_state_draw(TuiState *state)
     
             line(rows - 1, columns - 1, DIM, state->search_editing ?
                  "Type title/artist  Up/Down/Tab: select result  Enter: play" :
-                 "Arrows: select  Enter: play  n: next  a: save  p: playlists  Q: queueue");
+                 "Arrows:select Enter:play d:download D:all n:next a:save Q:queue");
     
             line(rows, columns - 1, DIM, state->search_editing ?
                  "Backspace: delete  Ctrl+U: clear  Esc: close search" :
@@ -1344,7 +1377,7 @@ void tui_state_draw(TuiState *state)
                 size_t rows, columns;
                 terminal_size(&rows, &columns);
                 if (rows >= 7 && columns >= 24) {
-                    line(rows, columns - 1, DIM, "s: search  n: next  a: add to playlist  p: playlists  Q: queue  Esc: back");
+                    line(rows, columns - 1, DIM, "d:download D:all s:search n:next a:save p:playlists Q:queue Esc:back");
                 }
             }
         }

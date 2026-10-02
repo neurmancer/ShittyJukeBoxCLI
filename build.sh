@@ -7,7 +7,8 @@ cd -- "$(dirname -- "$0")"
 usage() {
     printf 'Usage: %s [--system | --help]\n' "$0"
     printf '  No option: build and run the jukebox.\n'
-    printf '  --system: install /usr/local/bin/ShittyJukeBox and seed databases/config in $HOME/.sjb.\n'
+    printf '  --system: install /usr/local/bin/sjb and seed databases/config in $HOME/.sjb.\n'
+    printf '            Install the manual in /usr/local/share/man/man1.\n'
 }
 
 if (( $# == 0 )); then
@@ -112,7 +113,7 @@ if (( ${#missing[@]} )); then
 fi
 
 # When invoked through sudo, keep the data in the invoking user's home and owned
-# by that user. Only the executable belongs to root.
+# by that user. Root gets the executable and the manual.
 sjb_home=${HOME:?HOME must identify the user receiving the installation}
 sjb_uid=$(id -u)
 sjb_gid=$(id -g)
@@ -129,9 +130,9 @@ project_dir=$PWD
 build_dir=$(mktemp -d)
 trap 'rm -rf -- "$build_dir"' EXIT
 
-printf 'Dependencies ready. Building ShittyJukeBox...\n'
+printf 'Dependencies ready. Building sjb...\n'
 # A separate output prevents the system defaults from leaking into local builds.
-make TARGET="$build_dir/ShittyJukeBox" CPPFLAGS="${CPPFLAGS:-} -DSJB_SYSTEM_INSTALL" "$build_dir/ShittyJukeBox"
+make TARGET="$build_dir/sjb" CPPFLAGS="${CPPFLAGS:-} -DSJB_SYSTEM_INSTALL" "$build_dir/sjb"
 install -d -m700 -o "$sjb_uid" -g "$sjb_gid" -- "$sjb_data" "$sjb_data/config"
 for database in jukebox.db playlists.db; do
     if [[ -e "$sjb_data/$database" || -L "$sjb_data/$database" ]]; then
@@ -155,7 +156,9 @@ while IFS= read -r -d '' config_file; do
         install -m600 -o "$sjb_uid" -g "$sjb_gid" -- "$config_file" "$destination"
     fi
 done < <(find config -type f -print0)
-as_root install -Dm755 -- "$build_dir/ShittyJukeBox" /usr/local/bin/ShittyJukeBox
-printf 'Installed /usr/local/bin/ShittyJukeBox\n'
+as_root install -Dm755 -- "$build_dir/sjb" /usr/local/bin/sjb
+as_root install -Dm644 -- "$project_dir/man/sjb.1" /usr/local/share/man/man1/sjb.1
+printf 'Installed /usr/local/bin/sjb\n'
+printf 'Installed /usr/local/share/man/man1/sjb.1; read with man 1 sjb\n'
 printf 'User databases and config: %s\n' "$sjb_data"
-printf 'Run ShittyJukeBox from any directory; --db and --config override these defaults.\n'
+printf 'Run sjb from any directory; --db and --config override these defaults.\n'

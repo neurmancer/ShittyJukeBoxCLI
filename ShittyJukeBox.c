@@ -6,6 +6,8 @@
 #include "src/playlists.h"
 #include "src/config.h"
 #include "src/mpris.h"
+#include "src/offline.h"
+#include <glib.h>
 #include <errno.h>
 #ifdef SJB_SYSTEM_INSTALL
 #include <pwd.h>
@@ -86,6 +88,7 @@ typedef struct {
     Library *library;
     PlaybackSelection *selection;
     bool *running;
+    bool offline;
 } RemotePlayer;
 
 static size_t queue_position(const PlaybackSelection *selection)
@@ -123,7 +126,7 @@ static bool remote_control(void *opaque, MprisCommand command, int64_t value, co
     TuiPlayer *player = remote->ui->player;
     AudioStatus status = audio_status(remote->audio);
     bool stopped = status.state == AUDIO_IDLE || status.state == AUDIO_FINISHED || status.state == AUDIO_FAILED;
-    if (command == MPRIS_QUIT) { *remote->running = false; }
+    if (command == MPRIS_QUIT) { tui_quit_request(remote->ui); }
     else if (command == MPRIS_VOLUME) {
         audio_set_volume(remote->audio, (int)value);
         player->volume_percent = audio_status(remote->audio).volume_percent;
@@ -161,6 +164,7 @@ static bool remote_control(void *opaque, MprisCommand command, int64_t value, co
         else if (status.pause_requested) { audio_pause(remote->audio, true); }
     }
     else if (command == MPRIS_OPEN) {
+        if (remote->offline && text[0] != '/' && !g_str_has_prefix(text, "file:///")) { return(false); }
         SongMenu *all = &remote->library->sections[0];
         for (size_t i = 0; i < all->count; ++i) {
             if (!strcmp(all->songs[i].media_uri, text)) {
@@ -211,10 +215,16 @@ int main(int argc, char **argv)
     bool config_explicit = false;
     bool database_explicit = false;
     bool preview = false;
+    bool offline = false;
+    const char *music_path = NULL;
     const char *lrc_path = NULL;
     int64_t lrc_song = 0;
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "--preview")) { preview = true; }
+
+        else if (!strcmp(argv[i], "--offline")) { offline = true; }
+
+        else if (!strcmp(argv[i], "--path") && i + 1 < argc) { music_path = argv[++i]; offline = true; }
 
         else if (!strcmp(argv[i], "--cover") && i + 1 < argc) {
             cover_path = argv[++i];
@@ -236,9 +246,16 @@ int main(int argc, char **argv)
         }
 
         else {
-            fprintf(stderr, "Usage: %s [--db jukebox.db] [--config config/theme.lua] [--preview] [--cover album.png] [--import-lrc SONG_ID FILE]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [--db jukebox.db] [--config config/theme.lua] [--preview] [--cover album.png] [--import-lrc SONG_ID FILE]\n"
+                            "  --offline              Play downloaded MP3s from ~/.sjb/songs\n"
+                            "  --path DIR             Play local MP3s; subfolders are genres, root files appear in All\n", argv[0]);
             return(strcmp(argv[i], "--help") ? 1 : 0);
         }
+    }
+
+    if (offline && database_explicit) {
+        fprintf(stderr, "--db selects the online catalog; use --path or --offline separately.\n");
+        return(1);
     }
 
 #ifdef SJB_SYSTEM_INSTALL
@@ -270,7 +287,11 @@ int main(int argc, char **argv)
 
     Database db = {0};
     Library library = {0};
-    if (database_open(&db, database_path) < 0 || (!lrc_path && library_load(&db, &library) < 0)) {
+    char *default_root = offline && !music_path ? offline_default_root() : NULL;
+    const char *root = music_path ? music_path : default_root;
+    int opened = offline ? offline_open(&db, root) : database_open(&db, database_path);
+    g_free(default_root);
+    if (opened < 0 || (!lrc_path && library_load(&db, &library) < 0)) {
         fprintf(stderr, "Library: %s\n", database_error(&db));
         library_free(&library);
         database_close(&db);
@@ -362,13 +383,15 @@ int main(int argc, char **argv)
     PlaybackSelection selection = {
         .covers = terminal_cover_supported() ? cover_create() : NULL, .cover_override = cover_path
     };
+    OfflineDownload *download = NULL;
+    char download_status[512] = "";
     char volume_status[96] = "";
     char playback_status[256] = "Choose a song to start playback";
     AudioStatus last_audio = {.state = AUDIO_IDLE};
     uint64_t handled_end = 0;
     if (!preview) { player.playback_status = playback_status; }
     bool running = true;
-    RemotePlayer remote = {.audio = audio, .ui = &ui, .library = &library, .selection = &selection, .running = &running};
+    RemotePlayer remote = {.audio = audio, .ui = &ui, .library = &library, .selection = &selection, .running = &running, .offline = offline};
     char mpris_error[256] = "";
     Mpris *mpris = mpris_create(remote_read, remote_control, &remote, mpris_error, sizeof mpris_error);
     if (!mpris) { ui.status = mpris_error; }
@@ -377,13 +400,21 @@ int main(int argc, char **argv)
     while (running) {
         bool timed_view = ui.screen == SCREEN_LYRICS && timed_lyrics.count && player.lyrics_visible && !player.paused;
         int refresh_ms = timed_view ? 10 : ui.screen == SCREEN_VISUALIZER ? 33 : 100;
-        terminal_text_mode((ui.screen == SCREEN_SONGS && ui.search_editing && ui.overlay == OVERLAY_NONE) ||
-                           (ui.overlay == OVERLAY_PLAYLISTS && (playlists.mode == PLAYLIST_CREATE || playlists.mode == PLAYLIST_RENAME || playlists.mode == PLAYLIST_COVER)));
+        terminal_text_mode(!ui.quit_requested && ((ui.screen == SCREEN_SONGS && ui.search_editing && ui.overlay == OVERLAY_NONE) ||
+                           (ui.overlay == OVERLAY_PLAYLISTS && (playlists.mode == PLAYLIST_CREATE || playlists.mode == PLAYLIST_RENAME || playlists.mode == PLAYLIST_COVER))));
         TerminalAction action = terminal_read(refresh_ms);
+        if (terminal_signal() || action == TERM_EOF) { break; }
+        if (action == TERM_ERROR) { error = errno; break; }
+        bool quit_handled = false;
+        if (ui.quit_requested || action == TERM_QUIT || action == TERM_END) {
+            TuiResult change = tui_state_handle(&ui, action);
+            if (change == TUI_QUIT) { break; }
+            quit_handled = change == TUI_CHANGED;
+            action = TERM_NONE;
+        }
         if (action == TERM_SPACE && !(ui.overlay == OVERLAY_PLAYLISTS && playlists.playlist_id && playlists.mode == PLAYLIST_BROWSE)) {
             action = TERM_ACTIVATE;
         }
-        if (action == TERM_ERROR) { error = errno; break; }
         if (action == TERM_ARROW_UP || action == TERM_ARROW_DOWN) {
             bool player_screen = (ui.screen == SCREEN_PLAYER || ui.screen == SCREEN_VISUALIZER) && ui.overlay == OVERLAY_NONE;
             action = action == TERM_ARROW_UP ? (player_screen ? TERM_VOLUME_UP : TERM_UP) :
@@ -401,9 +432,37 @@ int main(int argc, char **argv)
         bool was_shuffle = player.shuffle;
         bool transport_pressed = ui.overlay == OVERLAY_NONE && action == TERM_ACTIVATE &&
                                  ((previous_screen == SCREEN_PLAYER && player.selected == PLAYER_PLAY) || previous_screen == SCREEN_VISUALIZER);
-        bool handled = false;
+        bool handled = quit_handled;
         bool search_focus_changed = false;
-        if (action == TERM_PLAYLISTS) {
+        if (action == TERM_DOWNLOAD || action == TERM_DOWNLOAD_ALL) {
+            int64_t id = 0;
+            if (ui.overlay == OVERLAY_QUEUE && queue.selected < queue.count) {
+                size_t index = selection.order ? selection.order[queue.selected] : queue.selected;
+                id = playback_section(&library, selection.genre)->songs[index].id;
+            }
+            else if (ui.overlay == OVERLAY_PLAYLISTS && playlists.mode == PLAYLIST_BROWSE && playlists.playlist_id &&
+                     playlists.menu.selected < playlists.menu.count) { id = playlists.ids[playlists.menu.selected]; }
+            else if (ui.overlay == OVERLAY_NONE && ui.screen == SCREEN_SONGS) {
+                TuiMenu *menu = ui.menus[SCREEN_SONGS];
+                if (menu->selected < menu->count) {
+                    id = ui.search_active ? library.sections[0].songs[library.search_indices[menu->selected]].id :
+                                           library.sections[selected_genre].songs[menu->selected].id;
+                }
+            }
+            else if (ui.overlay == OVERLAY_NONE && selection.song) { id = selection.song->id; }
+            if (offline || preview) { snprintf(download_status, sizeof download_status, "Open the online catalog to download songs."); }
+            else if (download) { snprintf(download_status, sizeof download_status, "A download is already running."); }
+            else if (action == TERM_DOWNLOAD && id <= 0) { snprintf(download_status, sizeof download_status, "Select a catalog song to download."); }
+            else {
+                char *root = offline_default_root();
+                download = offline_download_start(&db, root, action == TERM_DOWNLOAD_ALL ? 0 : id,
+                                                   download_status, sizeof download_status);
+                g_free(root);
+            }
+            ui.status = download_status;
+            handled = true;
+        }
+        else if (action == TERM_PLAYLISTS) {
             if (ui.overlay == OVERLAY_PLAYLISTS) { ui.overlay = OVERLAY_NONE; }
             else if (playlists_picker(&playlists, 0) == 0) { ui.overlay = OVERLAY_PLAYLISTS; }
             else { ui.status = playlists.notice; }
@@ -548,7 +607,7 @@ int main(int argc, char **argv)
                     if (ui.screen == SCREEN_SETTINGS) { ui.status = "Settings last for this session."; }
                 }
 
-                else { running = false; }
+                else { tui_quit_request(&ui); }
             }
 
             else if (ui.screen == SCREEN_GENRES && menus[1].selected < library.count) {
@@ -658,6 +717,12 @@ int main(int argc, char **argv)
             player.playback_status = "Stopped";
             if (last_audio.state != AUDIO_IDLE) { result = TUI_CHANGED; }
         }
+        if (download && offline_download_poll(download, download_status, sizeof download_status)) {
+            offline_download_destroy(download);
+            download = NULL;
+            ui.status = download_status;
+            result = TUI_CHANGED;
+        }
         if (mpris_poll(mpris)) { result = TUI_CHANGED; }
         last_audio = status;
         if (playlists_poll(&playlists)) { result = TUI_CHANGED; }
@@ -680,6 +745,7 @@ int main(int argc, char **argv)
 
     int signal_number = terminal_signal();
     
+    offline_download_destroy(download);
     mpris_destroy(mpris);
     cover_destroy(selection.covers);
     playlists_free(&playlists);

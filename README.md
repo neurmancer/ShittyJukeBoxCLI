@@ -89,9 +89,9 @@
 
 - [X] MPRIS + playerctl support 
 
-- [ ] Offline mode support (via local files or downloading the genres)
+- [X] Offline mode support (via local files or downloading the genres)
 
-- [ ] There is a known bug(haunting) going on with `In The Heat of The Night` where it plays perfectly when selected but aborts and terminates
+- [X] There is a known bug(haunting) going on with `In The Heat of The Night` where it plays perfectly when selected but aborts and terminates
 the process when you hit on it on queueueue untill I find why, I declare it is haunted (same goes for a few more songs)
 
 - [ ] rewind, fastforward and jump to wanted line feature (on stand-by till I get my left arm's functionality I guess...)
@@ -137,11 +137,13 @@ the process when you hit on it on queueueue untill I find why, I declare it is h
 
 ./build.sh # to build duh...
 
-./ShittyJukeBox 
+./sjb 
 
 #or for system-wide installation
 
 ./build.sh --system    # requries sudo privs to accsess /usr/local/bin/ and dependency installations
+
+man 1 sjb # for usage (if installed with --system)
 
 ```
 
