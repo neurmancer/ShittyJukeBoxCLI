@@ -6,6 +6,7 @@
 
 > **WHY Ω²?** 'Cuz squared the resistance against DMCA, squared the entropy, squared the song amount, squared the overengineering and squared the sleep-deprivation 
 
+> to get the jokes you gotta seee [legacy jukebox](https://github.com/neurmancer/ShittyJukeBoxCLI/tree/legacy_jukebox)
 
 > _so without furher shit let's start bragging_
 
@@ -92,10 +93,9 @@
 - [X] Offline mode support (via local files or downloading the genres)
 
 - [X] There is a known bug(haunting) going on with `In The Heat of The Night` where it plays perfectly when selected but aborts and terminates
-the process when you hit on it on queueueue untill I find why, I declare it is haunted (same goes for a few more songs)
+the process when you hit on it on queueueue untill I find why, I declare it is haunted (same goes for a few more songs)(**Solved**)
 
-- [ ] rewind, fastforward and jump to wanted line feature (on stand-by till I get my left arm's functionality I guess...)
-
+- [X] rewind, fastforward and jump to wanted line feature (on stand-by till I get my left arm's functionality I guess...)
 
 ---
 
@@ -125,7 +125,7 @@ the process when you hit on it on queueueue untill I find why, I declare it is h
 > A: Say what?
 
 > Q: Just say it...
-> A: We're the same person (__Where is my mind__ dın dın dın dıdı)
+> A: We're the same person (__Where is my mind__ do do duru duru)
 
 ---
 
