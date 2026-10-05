@@ -28,6 +28,11 @@ if [[ ! -f "$SRC" ]]; then
 fi
 ok "Found $SRC"
 
+if ! pkg-config --exists glib-2.0; then
+    err "GLib development files and pkg-config are required for UTF-8 text support"
+    exit 1
+fi
+
 # ---------- 2. Check playerctl ----------
 if ! command -v playerctl &>/dev/null; then
     err "playerctl not installed"
@@ -91,9 +96,9 @@ ok "udev rules reloaded"
 echo
 echo "=== Compiling ==="
 if pkg-config --exists hidapi-libusb 2>/dev/null; then
-    cc "$SRC" -o "$BIN" $(pkg-config --cflags --libs hidapi-libusb)
+    cc "$SRC" -o "$BIN" $(pkg-config --cflags --libs hidapi-libusb glib-2.0)
 else
-    cc "$SRC" -o "$BIN" -lhidapi-libusb
+    cc "$SRC" -o "$BIN" -lhidapi-libusb $(pkg-config --cflags --libs glib-2.0)
 fi
 ok "Built ./$BIN"
 
@@ -112,4 +117,3 @@ done
 if [[ $found -eq 0 ]]; then
     warn "No matching hidraw node found yet – unplug/replug the keyboard"
 fi
-

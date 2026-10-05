@@ -3,11 +3,14 @@
 */
 
 
+#define _DEFAULT_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <hidapi/hidapi.h>
 #include <unistd.h>
+#include <glib.h>
+#include <limits.h>
 
 #define VENDOR_ID     0x1038
 #define PRODUCT_ID    0x161c
@@ -150,16 +153,40 @@ void drawChar(unsigned char *framebuffer, int x, int y, char c) {
     }
 }
 
-void drawString(unsigned char *framebuffer, int x, int y, const char *str) {
-    while (*str) {
-        drawChar(framebuffer, x, y, *str);
-        x += 6;
-        str++;
+static char *displayText(const char *text)
+{
+    char *valid = g_utf8_make_valid(text, -1);
+    char *out = valid;
+    for (const char *p = valid; *p;) {
+        gunichar character = g_utf8_get_char(p);
+        p = g_utf8_next_char(p);
+        if (character == 0x0131) { character = 'i'; }
+        out += g_unichar_to_utf8(character, out);
     }
+    *out = '\0';
+    char *ascii = g_str_to_ascii(valid, "en");
+    g_free(valid);
+    /* Tiny-ass font gets readable letters, not one blank per UTF-8 byte. */
+    for (char *p = ascii; *p; ++p) {
+        if ((unsigned char)*p < 32 || (unsigned char)*p == 127) { *p = ' '; }
+    }
+    return(ascii);
+}
+
+void drawString(unsigned char *framebuffer, int x, int y, const char *str) {
+    char *text = displayText(str);
+    for (const char *p = text; *p && x < SCREEN_WIDTH; ++p) {
+        drawChar(framebuffer, x, y, *p);
+        x += 6;
+    }
+    g_free(text);
 }
 
 int stringWidth(const char *str) {
-    return((int)strlen(str) * 6);
+    char *text = displayText(str);
+    size_t length = strlen(text);
+    g_free(text);
+    return(length > INT_MAX / 6 ? INT_MAX : (int)length * 6);
 }
 
 void clearFrameBuffer(unsigned char *framebuffer) {
@@ -183,10 +210,12 @@ int get_sjb_info(char *artist, size_t artist_size, char *title, size_t title_siz
         return(-1);
     }
 
-    char buf[256] = {0};
-    if (fgets(buf, sizeof(buf), fp) == NULL) {
+    char *buf = NULL;
+    size_t capacity = 0;
+    if (getline(&buf, &capacity, fp) < 0) {
         snprintf(artist, artist_size, "OwO");
         title[0] = '\0';
+        free(buf);
         pclose(fp);
         return(-1);
     }
@@ -196,13 +225,21 @@ int get_sjb_info(char *artist, size_t artist_size, char *title, size_t title_siz
 
     char *sep = strstr(buf, "||");
     if (!sep) {
-        snprintf(artist, artist_size, "%s", buf);
+        char *text = displayText(buf);
+        snprintf(artist, artist_size, "%s", text);
+        g_free(text);
+        free(buf);
         title[0] = '\0';
         return(0);
     }
 
     *sep = '\0';
-    snprintf(artist, artist_size, "%s", buf);
-    snprintf(title, title_size, "%s", sep + 2);
+    char *artist_text = displayText(buf);
+    char *title_text = displayText(sep + 2);
+    snprintf(artist, artist_size, "%s", artist_text);
+    snprintf(title, title_size, "%s", title_text);
+    g_free(artist_text);
+    g_free(title_text);
+    free(buf);
     return(0);
 }
