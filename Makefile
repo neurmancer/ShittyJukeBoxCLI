@@ -15,10 +15,10 @@ MPRIS_LIBS = $(shell pkg-config --libs gio-2.0)
 TARGET = sjb
 DB ?= jukebox.db
 SOURCES = ShittyJukeBox.c src/audio_handler.c src/lyrics_handler.c src/offline.c \
-          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c src/shuffle.c src/playlists.c src/config.c src/mpris.c
+          src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c src/shuffle.c src/playlists.c src/config.c src/mpris.c src/session.c
 HEADERS = $(wildcard src/*.h)
 
-.PHONY: all run clean test test-audio test-mpris test-offline test-seek test-stream-cache add-song add-songs
+.PHONY: all run clean test test-audio test-mpris test-offline test-seek test-stream-cache test-session add-song add-songs
 
 all: $(TARGET) jukebox-add
 
@@ -45,6 +45,9 @@ test-offline:
 
 test-seek:
 	python3 tests/seek_check.py
+
+test-session:
+	python3 tests/session_check.py
 
 test-stream-cache:
 	python3 tests/stream_cache_check.py

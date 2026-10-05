@@ -45,6 +45,7 @@ AudioPlayer *audio_create(char *error, size_t size);
 void audio_destroy(AudioPlayer *player);
 
 int audio_play(AudioPlayer *player, int64_t song_id, const char *uri);
+int audio_play_at(AudioPlayer *player, int64_t song_id, const char *uri, int64_t position_ms, bool paused);
 
 void audio_pause(AudioPlayer *player, bool paused);
 void audio_stop(AudioPlayer *player);

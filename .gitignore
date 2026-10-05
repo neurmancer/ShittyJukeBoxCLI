@@ -12,6 +12,10 @@ songdata.h
 /playlists.db-wal
 /playlists.db-shm
 /tests
+!/tests/
+/tests/*
+!tests/session_check.py
+*.db.session
 /jukebox-add
 /legacy-backup/
 tools/*

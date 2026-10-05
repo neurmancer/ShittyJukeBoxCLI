@@ -456,13 +456,23 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     pthread_mutex_lock(&player->mutex);
     if (!cancelled(&play)) {
         player->status.seekable = duration >= 0 && (!format->pb || (format->pb->seekable & AVIO_SEEKABLE_NORMAL));
+        if (!player->status.seekable) {
+            atomic_store(&player->seek_pending, false);
+            player->status.position_ms = 0;
+        }
     }
     pthread_mutex_unlock(&player->mutex);
     stage = "Decoding stream";
 decode:
     if (atomic_load(&player->seek_pending)) {
         pthread_mutex_lock(&player->mutex);
+        if (cancelled(&play)) {
+            pthread_mutex_unlock(&player->mutex);
+            result = AVERROR_EXIT;
+            goto done;
+        }
         int64_t target = player->seek_ms;
+        if (duration >= 0 && target > duration) { target = duration; }
         atomic_store(&player->seek_pending, false);
         player->seek_in_progress = true;
         pthread_mutex_unlock(&player->mutex);
@@ -646,7 +656,12 @@ failed:
 
 int audio_play(AudioPlayer *player, int64_t song_id, const char *uri)
 {
-    if (!uri || !*uri) { return(-1); }
+    return(audio_play_at(player, song_id, uri, 0, false));
+}
+
+int audio_play_at(AudioPlayer *player, int64_t song_id, const char *uri, int64_t position_ms, bool paused)
+{
+    if (!uri || !*uri || position_ms < 0) { return(-1); }
     
     char *copy = strdup(uri);
     
@@ -660,15 +675,16 @@ int audio_play(AudioPlayer *player, int64_t song_id, const char *uri)
     
     uint64_t generation = atomic_fetch_add(&player->generation, 1) + 1;
     
-    atomic_store(&player->paused, false);
-    atomic_store(&player->seek_pending, false);
+    atomic_store(&player->paused, paused);
+    player->seek_ms = position_ms;
+    atomic_store(&player->seek_pending, position_ms > 0);
     player->seek_in_progress = false;
     
     if (player->device) { SDL_PauseAudioDevice(player->device, 1); SDL_ClearQueuedAudio(player->device); }
     
     player->sample_total = 0;
     player->status = (AudioStatus){.generation = generation, .song_id = song_id,
-                                   .duration_ms = -1, .state = AUDIO_LOADING};
+                                   .duration_ms = -1, .state = AUDIO_LOADING, .position_ms = position_ms};
     pthread_cond_signal(&player->wake);
     pthread_mutex_unlock(&player->mutex);
     

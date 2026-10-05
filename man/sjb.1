@@ -28,6 +28,9 @@ A build installed with
 uses the catalog and configuration under
 .IR ~/.sjb .
 A development build uses paths relative to the current working directory.
+.PP
+The last session is restored automatically with playback paused.
+Press Play to continue from the saved position.
 .SH OPTIONS
 .TP
 .BI \-\-db " file"
@@ -61,6 +64,7 @@ load a local PNG for the preview screen.
 .TP
 .B \-\-preview
 Open the player layout with sample display data.
+Does not restore or save a session.
 .TP
 .BI \-\-import\-lrc " song_id file"
 Import UTF-8 LRC lyrics into the selected library, replacing the song's
@@ -200,6 +204,29 @@ Toggle shuffle or track repeat while browsing an open playlist.
 .TP
 .B "[, ]"
 Play the previous or next track while browsing an open playlist.
+.SH SESSIONS
+On normal exit or a handled termination signal, the player saves the queue,
+current track and position, volume, shuffle order, and track/queue repeat mode.
+The next launch restores that library's session and opens the player paused.
+Online tracks still buffer before they are ready to resume.
+.PP
+Each catalog or local library has its own session file next to its database,
+named by appending
+.B .session
+to the database filename.
+Writes replace the file atomically.
+Preview mode and lyrics imports leave saved sessions unchanged.
+.PP
+Songs removed from the catalog are skipped. If the current song is unavailable,
+the first remaining song in playback order is selected at the beginning.
+Completed tracks restore at the beginning; saved positions beyond a track's
+duration are clamped to its end. If seeking fails, playback remains paused
+at the beginning.
+Malformed session files are ignored with a notice.
+.PP
+Sessions are saved on exit, not continuously; forced termination with SIGKILL
+or a system crash retains the previously saved session.
+Delete the session file while the player is closed to start fresh.
 .SH DOWNLOADS
 Downloads are started with
 .B d
@@ -264,6 +291,10 @@ Default catalog for a system-installed build.
 .I ~/.sjb/playlists.db
 Saved playlists for the default installed catalog.
 For a custom catalog, the playlist database is placed beside that catalog.
+.TP
+.I ~/.sjb/jukebox.db.session
+Last session for the default installed catalog. Custom catalogs and local
+libraries use a file with the same suffix beside their own database.
 .TP
 .I ~/.sjb/config/theme.lua
 Default theme for a system-installed build.

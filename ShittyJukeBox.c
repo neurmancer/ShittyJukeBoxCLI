@@ -7,6 +7,7 @@
 #include "src/config.h"
 #include "src/mpris.h"
 #include "src/offline.h"
+#include "src/session.h"
 #include <glib.h>
 #include <errno.h>
 #ifdef SJB_SYSTEM_INSTALL
@@ -71,6 +72,12 @@ typedef struct {
 } PlaybackSelection;
 
 static int start_song(AudioPlayer *audio, TuiState *ui, Library *library, PlaybackSelection *selection, size_t genre, size_t index);
+static int start_song_at(AudioPlayer *audio, TuiState *ui, Library *library, PlaybackSelection *selection,
+                         size_t genre, size_t index, int64_t position_ms, bool paused);
+static void restore_session(Database *db, AudioPlayer *audio, TuiState *ui, Library *library,
+                            PlaybackSelection *selection, bool offline, char *message, size_t size);
+static int save_session(Database *db, AudioPlayer *audio, TuiState *ui, Library *library,
+                         PlaybackSelection *selection, char *message, size_t size);
 static size_t next_song(const SongMenu *section, const PlaybackSelection *selection, bool previous);
 static void shuffle_clear(PlaybackSelection *selection);
 static int import_lrc(Database *db, int64_t id, const char *path);
@@ -392,6 +399,8 @@ int main(int argc, char **argv)
     uint64_t handled_end = 0;
     if (!preview) { player.playback_status = playback_status; }
     bool running = true;
+    char session_status[512] = "";
+    if (!preview) { restore_session(&db, audio, &ui, &library, &selection, offline, session_status, sizeof session_status); }
     RemotePlayer remote = {.audio = audio, .ui = &ui, .library = &library, .selection = &selection, .running = &running, .offline = offline};
     char mpris_error[256] = "";
     Mpris *mpris = mpris_create(remote_read, remote_control, &remote, mpris_error, sizeof mpris_error);
@@ -633,7 +642,7 @@ int main(int argc, char **argv)
                 size_t selected = menus[0].selected;
                 if (selected < sizeof destinations / sizeof destinations[0]) {
                     tui_state_switch(&ui, destinations[selected]);
-                    if (ui.screen == SCREEN_SETTINGS) { ui.status = "Settings last for this session."; }
+                    if (ui.screen == SCREEN_SETTINGS) { ui.status = "Loop playback is saved on exit."; }
                 }
 
                 else { tui_quit_request(&ui); }
@@ -784,6 +793,11 @@ int main(int argc, char **argv)
     }
 
     int signal_number = terminal_signal();
+    char session_error[512] = "";
+    if (!preview) {
+        audio_pause(audio, true);
+        save_session(&db, audio, &ui, &library, &selection, session_error, sizeof session_error);
+    }
     
     offline_download_destroy(download);
     mpris_destroy(mpris);
@@ -795,6 +809,7 @@ int main(int argc, char **argv)
     audio_destroy(audio);
     library_free(&library);
     database_close(&db);
+    if (*session_error) { fprintf(stderr, "%s\n", session_error); }
     
     if (error) { fprintf(stderr, "Terminal input: %s\n", strerror(error)); return(1); }
     
@@ -963,6 +978,12 @@ static size_t next_song(const SongMenu *section, const PlaybackSelection *select
 static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
                       PlaybackSelection *selection, size_t genre, size_t index)
 {
+    return(start_song_at(audio, ui, library, selection, genre, index, 0, false));
+}
+
+static int start_song_at(AudioPlayer *audio, TuiState *ui, Library *library,
+                         PlaybackSelection *selection, size_t genre, size_t index, int64_t position_ms, bool paused)
+{
     SongMenu *section = playback_section(library, genre);
     if (index >= section->count) { return(-1); }
     DbSong *song = &section->songs[index];
@@ -976,7 +997,7 @@ static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
             if (external->song.id == song->id) { song = &external->song; break; }
         }
     }
-    if (audio_play(audio, song->id, song->media_uri) < 0) {
+    if (audio_play_at(audio, song->id, song->media_uri, position_ms, paused) < 0) {
         ui->status = "Cannot allocate playback request.";
         return(-1);
     }
@@ -988,10 +1009,137 @@ static int start_song(AudioPlayer *audio, TuiState *ui, Library *library,
     selection->generation = audio_status(audio).generation;
     select_song(ui, song);
     cover_request(selection->covers, selection->cover_override ? selection->cover_override : song->cover_uri);
-    ui->player->paused = false;
+    ui->player->paused = paused;
+    ui->player->position_ms = position_ms;
+    ui->player->elapsed = (unsigned long long)position_ms / 1000;
     ui->status = "";
     queue_bind(ui, library, selection);
     return(0);
+}
+
+static DbSong *session_song(Library *library, const SessionTrack *track, bool offline)
+{
+    SongMenu *all = &library->sections[0];
+    for (size_t i = 0; i < all->count; ++i) {
+        if (all->songs[i].id == track->id && !strcmp(all->songs[i].media_uri, track->uri)) { return(&all->songs[i]); }
+    }
+    if (track->id >= 0 || (offline && track->uri[0] != '/' && !g_str_has_prefix(track->uri, "file:///"))) { return(NULL); }
+    for (ExternalSong *entry = library->external; entry; entry = entry->next) {
+        if (!strcmp(entry->song.media_uri, track->uri)) { return(&entry->song); }
+    }
+    ExternalSong *entry = calloc(1, sizeof *entry);
+    if (!entry) { return(NULL); }
+    entry->song = database_song_init();
+    entry->song.id = library->external ? library->external->song.id - 1 : -1;
+    const char *title = strrchr(track->uri, '/');
+    entry->song.title = g_strdup(title && title[1] ? title + 1 : track->uri);
+    entry->song.media_uri = g_strdup(track->uri);
+    entry->song.artist = g_strdup("");
+    entry->song.album = g_strdup("");
+    entry->song.cover_uri = g_strdup("");
+    entry->song.lyrics = g_strdup("");
+    entry->song.lyrics_format = g_strdup("plain");
+    entry->song.lyrics_uri = g_strdup("");
+    entry->next = library->external;
+    library->external = entry;
+    return(&entry->song);
+}
+
+static void restore_session(Database *db, AudioPlayer *audio, TuiState *ui, Library *library,
+                            PlaybackSelection *selection, bool offline, char *message, size_t size)
+{
+    Session session = {0};
+    int loaded = session_load(db, &session, message, size);
+    if (loaded <= 0) { if (loaded < 0) { ui->status = message; } return; }
+    ui->player->volume_percent = session.volume;
+    audio_set_volume(audio, session.volume);
+    ui->player->shuffle = session.shuffle;
+    ui->player->repeat = session.loop == 1;
+    ui->player->repeat_playlist = session.loop == 2;
+    ui->menus[SCREEN_SETTINGS]->items[1].value = session.loop != 0;
+    if (!session.count) { session_free(&session); return; }
+    SongMenu snapshot = {0};
+    snapshot.songs = calloc(session.count, sizeof *snapshot.songs);
+    snapshot.menu.items = calloc(session.count, sizeof *snapshot.menu.items);
+    size_t *mapping = malloc(session.count * sizeof *mapping);
+    size_t *order = malloc(session.count * sizeof *order);
+    TuiItem *items = calloc(session.count, sizeof *items);
+    if (!snapshot.songs || !snapshot.menu.items || !mapping || !order || !items) {
+        free(snapshot.songs); free(snapshot.menu.items); free(mapping); free(order); free(items);
+        session_free(&session);
+        ui->status = "Cannot allocate restored queue.";
+        return;
+    }
+    for (size_t i = 0; i < session.count; ++i) {
+        DbSong *song = session_song(library, &session.tracks[i], offline);
+        mapping[i] = SIZE_MAX;
+        if (!song) { continue; }
+        mapping[i] = snapshot.count;
+        snapshot.songs[snapshot.count] = *song;
+        snapshot.menu.items[snapshot.count++] = (TuiItem){song->title, TUI_BUTTON, true, false};
+    }
+    size_t at = 0;
+    for (size_t i = 0; i < session.count; ++i) {
+        size_t index = mapping[session.order[i]];
+        if (index != SIZE_MAX) { order[at] = index; items[at++] = snapshot.menu.items[index]; }
+    }
+    bool missing = snapshot.count != session.count;
+    size_t current = session.current >= 0 ? mapping[session.current] : SIZE_MAX;
+    int64_t position = session.position_ms;
+    if (current == SIZE_MAX && snapshot.count && session.current >= 0) {
+        current = session.shuffle ? order[0] : 0;
+        position = 0;
+    }
+    free(mapping);
+    snapshot.menu.count = snapshot.count;
+    library->custom = snapshot;
+    selection->genre = library->count;
+    if (session.shuffle) {
+        selection->order = order;
+        selection->queue_items = items;
+        selection->order_count = snapshot.count;
+    }
+    else { free(order); free(items); }
+    queue_bind(ui, library, selection);
+    if (current != SIZE_MAX) {
+        if (start_song_at(audio, ui, library, selection, library->count, current, position, true) < 0) {
+            session_free(&session);
+            return;
+        }
+        tui_state_switch(ui, SCREEN_PLAYER);
+    }
+    snprintf(message, size, "%s", missing ? "Session restored; unavailable songs were skipped. Playback is paused." :
+             "Session restored. Playback is paused.");
+    ui->status = message;
+    session_free(&session);
+}
+
+static int save_session(Database *db, AudioPlayer *audio, TuiState *ui, Library *library,
+                         PlaybackSelection *selection, char *message, size_t size)
+{
+    SongMenu *section = selection->song ? playback_section(library, selection->genre) : &library->custom;
+    AudioStatus status = audio_status(audio);
+    Session session = {.count = section->count, .current = selection->song ? (int64_t)selection->index : -1,
+        .position_ms = selection->song && status.generation == selection->generation && status.state != AUDIO_FINISHED ? status.position_ms : 0,
+        .volume = status.volume_percent, .shuffle = ui->player->shuffle,
+        .loop = ui->player->repeat ? 1 : ui->player->repeat_playlist ? 2 : 0};
+    if (session.count) {
+        session.tracks = calloc(session.count, sizeof *session.tracks);
+        session.order = malloc(session.count * sizeof *session.order);
+        if (!session.tracks || !session.order) {
+            free(session.tracks); free(session.order);
+            snprintf(message, size, "Cannot allocate session snapshot.");
+            return(-1);
+        }
+        for (size_t i = 0; i < session.count; ++i) {
+            session.tracks[i] = (SessionTrack){section->songs[i].id, section->songs[i].media_uri};
+            session.order[i] = selection->order ? selection->order[i] : i;
+        }
+    }
+    int result = session_save(db, &session, message, size);
+    free(session.tracks);
+    free(session.order);
+    return(result);
 }
 
 static int playlist_play(AudioPlayer *audio, TuiState *ui, Library *library,
