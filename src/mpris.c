@@ -98,7 +98,7 @@ static char *uri_value(const char *value)
     return(uri ? uri : g_strdup(""));
 }
 
-static GVariant *current_lyrics(const MprisState *state, const Lyrics *lyrics, int64_t duration)
+static GVariant *current_lyrics(const MprisState *state, const Lyrics *lyrics, int64_t duration, bool word)
 {
     GString *text = g_string_new(NULL);
     if (lyrics && (state->audio.state == AUDIO_PLAYING || state->audio.state == AUDIO_PAUSED) &&
@@ -107,8 +107,11 @@ static GVariant *current_lyrics(const MprisState *state, const Lyrics *lyrics, i
         for (size_t i = active; i < lyrics->count &&
              lyrics->cues[i].time_ms == lyrics->cues[active].time_ms; ++i) {
             if (!lyrics_cue_active(lyrics, i, state->audio.position_ms, duration)) { continue; }
+            LyricsSpan span = word ? lyrics_karaoke_span(lyrics, i, state->audio.position_ms, duration) :
+                                    (LyricsSpan){0, strlen(lyrics->cues[i].text)};
+            if (span.end <= span.start) { continue; }
             if (text->len) { g_string_append_c(text, ' '); }
-            g_string_append(text, lyrics->cues[i].text);
+            g_string_append_len(text, lyrics->cues[i].text + span.start, span.end - span.start);
         }
     }
     GVariant *result = string_value(text->str);
@@ -131,8 +134,10 @@ static GVariant *metadata(const MprisState *state)
         g_variant_builder_add(&map, "{sv}", "mpris:trackid", g_variant_new_object_path(path));
     
         int64_t duration = state->audio.duration_ms >= 0 ? state->audio.duration_ms : song->duration_ms;
-        g_variant_builder_add(&map, "{sv}", "sjb:lyric", current_lyrics(state, state->lyrics, duration));
-        g_variant_builder_add(&map, "{sv}", "sjb:backingLyric", current_lyrics(state, state->backing_lyrics, duration));
+        g_variant_builder_add(&map, "{sv}", "sjb:lyric", current_lyrics(state, state->lyrics, duration, false));
+        g_variant_builder_add(&map, "{sv}", "sjb:backingLyric", current_lyrics(state, state->backing_lyrics, duration, false));
+        g_variant_builder_add(&map, "{sv}", "sjb:lyricWord", current_lyrics(state, state->lyrics, duration, true));
+        g_variant_builder_add(&map, "{sv}", "sjb:backingWord", current_lyrics(state, state->backing_lyrics, duration, true));
     
         if (duration >= 0 && duration <= INT64_MAX / 1000) {
             g_variant_builder_add(&map, "{sv}", "mpris:length", g_variant_new_int64(duration * 1000));

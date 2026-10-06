@@ -216,28 +216,14 @@ static void metadata_rows(GVariant *metadata, char *first, size_t first_size,
                           char *second, size_t second_size)
 {
     const char *lead = "", *backing = "", *title = "";
-    g_variant_lookup(metadata, "sjb:lyric", "&s", &lead);
-    g_variant_lookup(metadata, "sjb:backingLyric", "&s", &backing);
+    g_variant_lookup(metadata, "sjb:lyricWord", "&s", &lead);
+    g_variant_lookup(metadata, "sjb:backingWord", "&s", &backing);
     char *lead_text = displayText(lead), *backing_text = displayText(backing);
     g_strstrip(lead_text);
     g_strstrip(backing_text);
-    if (*lead_text && *backing_text) {
-        snprintf(first, first_size, "%s", lead_text);
-        snprintf(second, second_size, "%s", backing_text);
-    }
-    else if (*lead_text || *backing_text) {
-        char *text = *lead_text ? lead_text : backing_text;
-        size_t length = strlen(text), split = length;
-        if (length > 20) {
-            size_t target = length <= 40 ? 20 : length / 2;
-            split = target;
-            while (split && text[split] != ' ') { --split; }
-            if (!split) { split = target; }
-        }
-        snprintf(first, first_size, "%.*s", (int)split, text);
-        text += split;
-        while (*text == ' ') { ++text; }
-        snprintf(second, second_size, "%s", text);
+    if (*lead_text || *backing_text) {
+        snprintf(first, first_size, "%s", *lead_text ? lead_text : backing_text);
+        snprintf(second, second_size, "%s", *lead_text ? backing_text : "");
     }
     else {
         char **artists = NULL;
