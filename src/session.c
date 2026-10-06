@@ -26,35 +26,48 @@ void session_free(Session *session)
 static int64_t number(GKeyFile *file, const char *group, const char *key, bool *valid)
 {
     GError *error = NULL;
+    
     int64_t value = g_key_file_get_int64(file, group, key, &error);
+    
     if (error) { *valid = false; g_error_free(error); }
+    
     return(value);
 }
 
 int session_load(Database *db, Session *session, char *error, size_t size)
 {
     char *path = session_path(db);
+    
     if (!path) { return(0); }
     GStatBuf info;
+    
     int exists = g_stat(path, &info);
+    
     if (exists < 0 && errno == ENOENT) { g_free(path); return(0); }
     GKeyFile *file = g_key_file_new();
     GError *cause = NULL;
     Session loaded = {.current = -1, .volume = 100};
+    
     bool valid = true;
     int result = -1;
+    
     if (exists < 0 || !S_ISREG(info.st_mode) || info.st_size > SESSION_MAX_BYTES ||
         !g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, &cause)) { goto done; }
-    int64_t version = number(file, "session", "version", &valid);
+    
+        int64_t version = number(file, "session", "version", &valid);
     int64_t count = number(file, "session", "count", &valid);
+    
     loaded.current = number(file, "session", "current", &valid);
     loaded.position_ms = number(file, "session", "position_ms", &valid);
+    
     int64_t volume = number(file, "session", "volume", &valid);
     int64_t loop = number(file, "session", "loop", &valid);
     int64_t shuffle = number(file, "session", "shuffle", &valid);
+    
     if (!valid || version != 1 || count < 0 || count > SESSION_MAX_TRACKS ||
         loaded.current < -1 || loaded.current >= count || loaded.position_ms < 0 ||
         volume < 0 || volume > 100 || loop < 0 || loop > 2 || shuffle < 0 || shuffle > 1) { goto done; }
+
     loaded.volume = (int)volume;
     loaded.loop = (int)loop;
     loaded.shuffle = shuffle;

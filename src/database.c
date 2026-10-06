@@ -8,7 +8,7 @@
 #include <string.h>
 
 #define DB_APPLICATION_ID 1397375576
-#define DB_VERSION 4
+#define DB_VERSION 5
 
 static int fail(Database *db, const char *message)
 {
@@ -151,7 +151,12 @@ int database_open(Database *db, const char *path)
             "PRAGMA user_version=2;") < 0) { goto rollback; }
     }
     /* Legacy playlist tables are moved atomically by playlists_init(). */
-    if (execute(db, "PRAGMA user_version=4") < 0) { goto rollback; }
+    if (version < 5) {
+        if (execute(db,
+            "ALTER TABLE songs ADD COLUMN backing_lyrics TEXT NOT NULL DEFAULT '';"
+            "ALTER TABLE songs ADD COLUMN backing_lyrics_uri TEXT NOT NULL DEFAULT '';"
+            "PRAGMA user_version=5;") < 0) { goto rollback; }
+    }
     if (database_commit(db) < 0) { goto rollback; }
     return(0);
 
@@ -191,13 +196,15 @@ int database_song_save(Database *db, const DbSong *song, int64_t *id)
 
     const char *insert =
         "INSERT INTO songs(title,artist,album,media_uri,cover_uri,lyrics,lyrics_format,lyrics_uri,"
-        "duration_ms,duration_source,lyrics_start_ms,lyrics_end_ms,solo_start_ms,solo_end_ms)"
-        "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14)";
+        "duration_ms,duration_source,lyrics_start_ms,lyrics_end_ms,solo_start_ms,solo_end_ms,"
+        "backing_lyrics,backing_lyrics_uri)"
+        "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16)";
 
     const char *update =
         "UPDATE songs SET title=?1,artist=?2,album=?3,media_uri=?4,cover_uri=?5,lyrics=?6,"
         "lyrics_format=?7,lyrics_uri=?8,duration_ms=?9,duration_source=?10,lyrics_start_ms=?11,"
-        "lyrics_end_ms=?12,solo_start_ms=?13,solo_end_ms=?14 WHERE id=?15";
+        "lyrics_end_ms=?12,solo_start_ms=?13,solo_end_ms=?14,"
+        "backing_lyrics=?15,backing_lyrics_uri=?16 WHERE id=?17";
 
     sqlite3_stmt *statement = NULL;
     
@@ -217,7 +224,9 @@ int database_song_save(Database *db, const DbSong *song, int64_t *id)
     
     for (int i = 0; i < 4 && result == SQLITE_OK; ++i) { result = bind_time(statement, i + 11, times[i]); }
     
-    if (result == SQLITE_OK && song->id) { result = sqlite3_bind_int64(statement, 15, song->id); }
+    if (result == SQLITE_OK) { result = bind_text(statement, 15, song->backing_lyrics); }
+    if (result == SQLITE_OK) { result = bind_text(statement, 16, song->backing_lyrics_uri); }
+    if (result == SQLITE_OK && song->id) { result = sqlite3_bind_int64(statement, 17, song->id); }
     if (result == SQLITE_OK) { result = sqlite3_step(statement); }
     
     if (finish(db, statement, result) < 0) { return(-1); }
@@ -254,14 +263,29 @@ int database_lyrics_replace(Database *db, int64_t id, const char *lyrics, const 
     return(0);
 }
 
+int database_backing_lyrics_replace(Database *db, int64_t id, const char *lyrics, const char *source_uri)
+{
+    sqlite3_stmt *statement = NULL;
+    if (prepare(db, &statement, "UPDATE songs SET backing_lyrics=?1,backing_lyrics_uri=?2 WHERE id=?3") < 0) { return(-1); }
+    int result = bind_text(statement, 1, lyrics);
+    if (result == SQLITE_OK) { result = bind_text(statement, 2, source_uri); }
+    if (result == SQLITE_OK) { result = sqlite3_bind_int64(statement, 3, id); }
+    if (result == SQLITE_OK) { result = sqlite3_step(statement); }
+    if (finish(db, statement, result) < 0) { return(-1); }
+    if (!sqlite3_changes(db->handle)) { return(fail(db, "Song does not exist")); }
+    return(0);
+}
+
 static const char song_columns[] =
     "s.id,s.title,s.artist,s.album,s.media_uri,s.cover_uri,s.lyrics,s.lyrics_format,s.lyrics_uri,"
-    "s.duration_ms,s.duration_source,s.lyrics_start_ms,s.lyrics_end_ms,s.solo_start_ms,s.solo_end_ms";
+    "s.duration_ms,s.duration_source,s.lyrics_start_ms,s.lyrics_end_ms,s.solo_start_ms,s.solo_end_ms,"
+    "s.backing_lyrics,s.backing_lyrics_uri";
 
 void database_song_free(DbSong *song)
 {
     free(song->title); free(song->artist); free(song->album); free(song->media_uri);
     free(song->cover_uri); free(song->lyrics); free(song->lyrics_format); free(song->lyrics_uri);
+    free(song->backing_lyrics); free(song->backing_lyrics_uri);
 
     *song = database_song_init();
 }
@@ -301,6 +325,14 @@ static int read_song(Database *db, sqlite3_stmt *statement, DbSong *song)
     song->lyrics_end_ms = column_time(statement, 12);
     song->solo_start_ms = column_time(statement, 13);
     song->solo_end_ms = column_time(statement, 14);
+    const unsigned char *backing = sqlite3_column_text(statement, 15);
+    const unsigned char *backing_uri = sqlite3_column_text(statement, 16);
+    song->backing_lyrics = backing ? strdup((const char *)backing) : NULL;
+    song->backing_lyrics_uri = backing_uri ? strdup((const char *)backing_uri) : NULL;
+    if (!song->backing_lyrics || !song->backing_lyrics_uri) {
+        database_song_free(song);
+        return(fail(db, "Cannot allocate backing lyrics"));
+    }
     
     
     return(0);

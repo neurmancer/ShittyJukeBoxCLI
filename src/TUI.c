@@ -745,6 +745,32 @@ TuiResult tui_state_handle(TuiState *state, TerminalAction action)
     return(result);
 }
 
+static void timed_lyric_row(const TuiState *state, const Lyrics *lyrics, size_t i,
+                            size_t row, size_t width, bool active, bool selected)
+{
+    const TuiPlayer *player = state->player;
+    const LyricsCue *cue = &lyrics->cues[i];
+    size_t column = lyrics_column(width, cue->text, strlen(cue->text));
+
+    text_span(row, column, width - column + 1, selected ? PURPLE_INVERSE : DIM "\033[38;2;255;255;255m",
+              *cue->text ? cue->text : selected ? "[instrumental]" : "", *cue->text ? strlen(cue->text) : selected ? 14 : 0);
+    if (active && !selected) {
+        LyricsSpan span = state->karaoke ? lyrics_karaoke_span(lyrics, i, player->position_ms, player->duration_ms) :
+                          (LyricsSpan){0, lyrics_visible_bytes(lyrics, i, player->position_ms, player->duration_ms)};
+        size_t highlight_column = column + text_span_cells(cue->text, span.start);
+        size_t color = state->typewriter_color % (sizeof typewriter_colors / sizeof typewriter_colors[0]);
+        char style[80];
+        snprintf(style, sizeof style, "%s%s%s", RESET,
+                 state->typewriter_mode == TYPEWRITER_RGB ? "" : BOLDY,
+                 state->typewriter_mode == TYPEWRITER_BOLD ? typewriter_colors[color].style :
+                 "\033[38;2;255;255;255m");
+        if (span.end > span.start && highlight_column <= width) {
+            text_span_effect(row, highlight_column, width - highlight_column + 1, style,
+                             cue->text + span.start, span.end - span.start, state->typewriter_mode == TYPEWRITER_RGB);
+        }
+    }
+}
+
 static void pending_screen(const TuiState *state)
 {
     
@@ -764,10 +790,27 @@ static void pending_screen(const TuiState *state)
     if (centered) { cabinet_center(2, 1, width, PURPLE_BOLD, "Lyrics"); }
 
     else { line(2, width, PURPLE_BOLD, "Audio visualizer"); }
+    bool backing = centered && state->player && state->player->lyrics_visible &&
+                   ((state->player->backing_lyrics && state->player->backing_lyrics->count) ||
+                    state->player->backing_lyrics_error);
+    if (backing && rows < 10) {
+        line(6, width, DIM, "Backing vocals need 32x10");
+        return;
+    }
+    size_t backing_rows = backing ? (rows - 7) / 3 : 0;
+    if (backing_rows > 4) { backing_rows = 4; }
+    size_t lead_end = rows - 1 - (backing ? backing_rows + 1 : 0);
+    size_t lead_rows = lead_end - 6;
+    size_t top = state->lyrics_top;
+    if (!state->lyrics_browsing && state->player && state->player->timed_lyrics &&
+        state->player->lyric_active < state->player->timed_lyrics->count &&
+        state->player->lyric_active >= top + lead_rows) {
+        top = state->player->lyric_active - lead_rows + 1;
+    }
     size_t visible = lyrics_count(state->player);
-    visible = visible > state->lyrics_top ? visible - state->lyrics_top : 0;
-    if (visible > rows - 7) { visible = rows - 7; }
-    size_t first_row = 6 + (rows - 7 - (visible ? visible : 1)) / 2;
+    visible = visible > top ? visible - top : 0;
+    if (visible > lead_rows) { visible = lead_rows; }
+    size_t first_row = 6 + (lead_rows - (visible ? visible : 1)) / 2;
     
     if (state->player) {
         char track[512];
@@ -781,30 +824,11 @@ static void pending_screen(const TuiState *state)
         state->player->timed_lyrics && state->player->timed_lyrics->count) {
         const TuiPlayer *player = state->player;
         const Lyrics *lyrics = player->timed_lyrics;
-        for (size_t row = first_row, i = state->lyrics_top; i < lyrics->count && row < rows - 1; ++row, ++i) {
-            const LyricsCue *cue = &lyrics->cues[i];
+        for (size_t row = first_row, i = top; i < lyrics->count && row < lead_end; ++row, ++i) {
             bool active = player->lyric_active < lyrics->count &&
-                          cue->time_ms == lyrics->cues[player->lyric_active].time_ms;
-            size_t column = lyrics_column(width, cue->text, strlen(cue->text));
-            
-            bool selected = state->lyrics_browsing && i == state->lyrics_top;
-            text_span(row, column, width - column + 1, selected ? PURPLE_INVERSE : DIM "\033[38;2;255;255;255m",
-                      *cue->text ? cue->text : selected ? "[instrumental]" : "", *cue->text ? strlen(cue->text) : selected ? 14 : 0);
-            if (active && !selected) {
-                LyricsSpan span = state->karaoke ? lyrics_karaoke_span(lyrics, i, player->position_ms, player->duration_ms) :
-                                  (LyricsSpan){0, lyrics_visible_bytes(lyrics, i, player->position_ms, player->duration_ms)};
-                size_t highlight_column = column + text_span_cells(cue->text, span.start);
-                size_t color = state->typewriter_color % (sizeof typewriter_colors / sizeof typewriter_colors[0]);
-                char style[80];
-                snprintf(style, sizeof style, "%s%s%s", RESET,
-                         state->typewriter_mode == TYPEWRITER_RGB ? "" : BOLDY,
-                         state->typewriter_mode == TYPEWRITER_BOLD ? typewriter_colors[color].style :
-                         "\033[38;2;255;255;255m");
-                if (span.end > span.start && highlight_column <= width) {
-                    text_span_effect(row, highlight_column, width - highlight_column + 1, style,
-                                     cue->text + span.start, span.end - span.start, state->typewriter_mode == TYPEWRITER_RGB);
-                }
-            }
+                          lyrics->cues[i].time_ms == lyrics->cues[player->lyric_active].time_ms;
+            timed_lyric_row(state, lyrics, i, row, width, active,
+                            state->lyrics_browsing && i == state->lyrics_top);
         }
     }
 
@@ -817,7 +841,7 @@ static void pending_screen(const TuiState *state)
             if (*cursor++ == '\n') { ++index; }
         }
     
-        for (size_t row = first_row; *cursor && row < rows - 1; ++row) {
+        for (size_t row = first_row; *cursor && row < lead_end; ++row) {
             const char *end = strchr(cursor, '\n');
             size_t length = end ? (size_t)(end - cursor) : strlen(cursor);
             size_t column = lyrics_column(width, cursor, length);
@@ -837,6 +861,23 @@ static void pending_screen(const TuiState *state)
         else { line(6, width, DIM, "Waiting for divine intervention."); }
     }
     
+    if (backing) {
+        cabinet_center(lead_end, 1, width, PURPLE_BOLD, "Backing vocals");
+        const TuiPlayer *player = state->player;
+        if (player->backing_lyrics_error) {
+            line(lead_end + 1, width, DIM, player->backing_lyrics_error);
+        }
+        else {
+            const Lyrics *lyrics = player->backing_lyrics;
+            size_t active = lyrics_active(lyrics, player->position_ms);
+            for (size_t i = active, row = lead_end + 1;
+                 i < lyrics->count && row < rows - 1 &&
+                 lyrics->cues[i].time_ms == lyrics->cues[active].time_ms; ++i, ++row) {
+                timed_lyric_row(state, lyrics, i, row, width, true, false);
+            }
+        }
+    }
+
     line(rows - 1, width, FANCY, state->status);
     line(rows, width, DIM, "Up/Down:line Enter:jump f:follow ,/.:seek 1:player 3:FFT q:quit");
 }

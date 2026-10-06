@@ -54,6 +54,8 @@ typedef struct {
     const char *playback_status;
     
     Lyrics *timed_lyrics;
+    Lyrics *backing_lyrics;
+    const char *backing_lyrics_error;
     size_t lyric_active;
     int64_t position_ms;
     int64_t duration_ms;

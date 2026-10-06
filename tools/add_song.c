@@ -77,10 +77,10 @@ static int fetch_lyrics(DbSong *song, int required)
     }
 }
 
-static int file_lyrics(DbSong *song, int timed)
+static int file_lyrics(DbSong *song, int timed, int backing)
 {
     for (;;) {
-        char *path = ask(timed ? "LRC file path: " : "Plain lyrics file path: ", 1);
+        char *path = ask(backing ? "Backing vocals LRC file path: " : timed ? "LRC file path: " : "Plain lyrics file path: ", 1);
         if (!path) { return(-1); }
         char *raw = NULL, error[256] = "Cannot read lyrics file (maximum 1 MiB, no embedded NULs).";
         Lyrics timeline = {0};
@@ -118,12 +118,19 @@ static int file_lyrics(DbSong *song, int timed)
             puts("Try another file, or Ctrl-D to cancel.");
             continue;
         }
-        free(song->lyrics); free(song->lyrics_uri); free(song->lyrics_format);
-        song->lyrics = raw;
-        song->lyrics_uri = path;
-        song->lyrics_format = strdup(timed ? "lrc" : "plain");
-        song->lyrics_start_ms = song->lyrics_end_ms = DB_TIME_UNKNOWN;
-        if (!song->lyrics_format) { return(-1); }
+        if (backing) {
+            free(song->backing_lyrics); free(song->backing_lyrics_uri);
+            song->backing_lyrics = raw;
+            song->backing_lyrics_uri = path;
+        }
+        else {
+            free(song->lyrics); free(song->lyrics_uri); free(song->lyrics_format);
+            song->lyrics = raw;
+            song->lyrics_uri = path;
+            song->lyrics_format = strdup(timed ? "lrc" : "plain");
+            song->lyrics_start_ms = song->lyrics_end_ms = DB_TIME_UNKNOWN;
+            if (!song->lyrics_format) { return(-1); }
+        }
         printf("Loaded %zu bytes; original file is unchanged.\n", strlen(raw));
         return(0);
     }
@@ -151,9 +158,34 @@ static int choose_lyrics(DbSong *song, int updating)
             song->lyrics_start_ms = song->lyrics_end_ms = DB_TIME_UNKNOWN;
             return(song->lyrics && song->lyrics_uri && song->lyrics_format ? 0 : -1);
         }
-        if (key == 'l' || key == 'p') { return(file_lyrics(song, key == 'l')); }
+        if (key == 'l' || key == 'p') { return(file_lyrics(song, key == 'l', 0)); }
         if (key == 'g') { return(fetch_lyrics(song, 1)); }
         puts("Choose l, p, g, or n.");
+    }
+}
+
+static int choose_backing_lyrics(DbSong *song, int updating)
+{
+    puts("Stamp backing vocals separately against the same audio, from the song's start.");
+    puts("Use a blank timed line to end a backing vocal before the next one begins.");
+    for (;;) {
+        char *choice = ask(updating ?
+            "Backing vocals: [l] LRC file, [n] clear, Enter keep: " :
+            "Backing vocals: [l] LRC file, Enter none: ", 0);
+        if (!choice) { return(-1); }
+        char key = (char)tolower((unsigned char)choice[0]);
+        int valid = !choice[0] || !choice[1];
+        free(choice);
+        if (!valid) { puts("Choose l or n."); continue; }
+        if (!key) { return(0); }
+        if (key == 'l') { return(file_lyrics(song, 1, 1)); }
+        if (key == 'n') {
+            free(song->backing_lyrics); free(song->backing_lyrics_uri);
+            song->backing_lyrics = NULL;
+            song->backing_lyrics_uri = NULL;
+            return(0);
+        }
+        puts("Choose l or n.");
     }
 }
 
@@ -207,6 +239,10 @@ static void preview_song(const DbSong *song, const char *genre)
     if (genre) { printf("Genre: %s\n", genre); }
     printf("Lyrics: %s (%zu bytes)\nLyrics source: %s\n", song->lyrics_format,
            strlen(song->lyrics), *song->lyrics_uri ? song->lyrics_uri : "none");
+    printf("Backing vocals: %s (%zu bytes)\nBacking vocals source: %s\n",
+           song->backing_lyrics && *song->backing_lyrics ? "lrc" : "none",
+           song->backing_lyrics ? strlen(song->backing_lyrics) : 0,
+           song->backing_lyrics_uri && *song->backing_lyrics_uri ? song->backing_lyrics_uri : "none");
     preview_time("Duration", song->duration_ms);
     preview_time("Lyrics start", song->lyrics_start_ms);
     preview_time("Lyrics end", song->lyrics_end_ms);
@@ -311,18 +347,19 @@ static int edit_song(Database *db, DbSong *song, char **genre)
     int changed = edit_time("Duration", &song->duration_ms);
     if (changed < 0) { return(-1); }
     if (changed) { song->duration_source = song->duration_ms == DB_TIME_UNKNOWN ? DB_DURATION_UNKNOWN : DB_DURATION_MANUAL; }
-    if (choose_lyrics(song, 2) < 0 || edit_markers(song) < 0) { return(-1); }
+    if (choose_lyrics(song, 2) < 0 || choose_backing_lyrics(song, 1) < 0 || edit_markers(song) < 0) { return(-1); }
     return(0);
 }
 
 static void usage(const char *program)
 {
-    printf("Usage: %s [--db PATH] [--list | --edit SONG_ID | --lyrics SONG_ID | --migrate]\n"
+    printf("Usage: %s [--db PATH] [--list | --edit SONG_ID | --lyrics SONG_ID | --backing-lyrics SONG_ID | --migrate]\n"
            "No action: interactively add a song. Ctrl-C or Ctrl-D cancels without saving.\n"
            "--list: show song IDs. --lyrics: preview and replace lyrics.\n"
+           "--backing-lyrics: import, replace, or clear a separate backing vocals LRC.\n"
            "--edit: edit a saved song; Enter keeps fields, - clears optional fields.\n"
            "Fields: title, artist, album, audio URL/path, cover URL/path, genre, duration,\n"
-           "LRC/plain/Genius lyrics, and optional lyrics/solo timing markers.\n"
+           "LRC/plain/Genius lyrics, optional backing vocals LRC, and lyrics/solo timing markers.\n"
            "Duration is optional seconds; playback discovers it when omitted.\n"
            "A missing database is created automatically.\n", program);
 }
@@ -335,7 +372,7 @@ int main(int argc, char **argv)
     /* No SA_RESTART: interrupt getline as well as network requests. */
     if (sigaction(SIGINT, &action_sigint, NULL) < 0) { perror("sigaction"); return(1); }
     const char *path = DATABASE_PATH;
-    enum { ADD, LIST, LYRICS, MIGRATE, EDIT } action = ADD;
+    enum { ADD, LIST, LYRICS, BACKING, MIGRATE, EDIT } action = ADD;
     int64_t selected = 0;
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "--help")) { usage(argv[0]); return(0); }
@@ -345,13 +382,14 @@ int main(int argc, char **argv)
 
         else if (!strcmp(argv[i], "--migrate") && action == ADD) { action = MIGRATE; }
 
-        else if ((!strcmp(argv[i], "--lyrics") || !strcmp(argv[i], "--edit")) && i + 1 < argc && action == ADD) {
+        else if ((!strcmp(argv[i], "--lyrics") || !strcmp(argv[i], "--backing-lyrics") || !strcmp(argv[i], "--edit")) && i + 1 < argc && action == ADD) {
             int editing = !strcmp(argv[i], "--edit");
+            int backing = !strcmp(argv[i], "--backing-lyrics");
             char *end;
             errno = 0;
             selected = strtoll(argv[++i], &end, 10);
             if (errno || *end || selected <= 0) { usage(argv[0]); return(1); }
-            action = editing ? EDIT : LYRICS;
+            action = editing ? EDIT : backing ? BACKING : LYRICS;
         }
 
         else { usage(argv[0]); return(1); }
@@ -371,8 +409,9 @@ int main(int argc, char **argv)
         size_t count = 0;
         if (database_songs(&db, 0, &songs, &count) < 0) { goto failed; }
         for (size_t i = 0; i < count; ++i) {
-            printf("%" PRId64 "  %s - %s%s\n", songs[i].id, songs[i].artist, songs[i].title,
-                !strcmp(songs[i].lyrics_format, "lrc") ? " [LRC lyrics]" : *songs[i].lyrics ? " [plain lyrics]" : "");
+            printf("%" PRId64 "  %s - %s%s%s\n", songs[i].id, songs[i].artist, songs[i].title,
+                !strcmp(songs[i].lyrics_format, "lrc") ? " [LRC lyrics]" : *songs[i].lyrics ? " [plain lyrics]" : "",
+                *songs[i].backing_lyrics ? " [backing vocals]" : "");
         }
         database_songs_free(songs, count);
         result = 0;
@@ -383,6 +422,12 @@ int main(int argc, char **argv)
         int edited = edit_song(&db, &song, &genre);
         if (edited == -2) { goto failed; }
         if (edited < 0) { goto cancelled; }
+    }
+
+    else if (action == BACKING) {
+        if (database_song_get(&db, selected, &song) < 0) { goto failed; }
+        printf("Updating backing vocals: %s - %s\n", song.artist, song.title);
+        if (choose_backing_lyrics(&song, 1) < 0) { goto cancelled; }
     }
 
     else if (action == LYRICS) {
@@ -414,7 +459,7 @@ int main(int argc, char **argv)
         if (ask_time("Duration in seconds (Enter to detect during playback): ", 0, 0,
                      DB_TIME_UNKNOWN, &song.duration_ms) < 0) { goto cancelled; }
         if (song.duration_ms != DB_TIME_UNKNOWN) { song.duration_source = DB_DURATION_MANUAL; }
-        if (choose_lyrics(&song, 0) < 0 || timing_markers(&song) < 0) { goto cancelled; }
+        if (choose_lyrics(&song, 0) < 0 || choose_backing_lyrics(&song, 0) < 0 || timing_markers(&song) < 0) { goto cancelled; }
     }
     if (action == EDIT) {
         printf("\nUpdated song %" PRId64 " (same ID)\n", song.id);
@@ -424,7 +469,8 @@ int main(int argc, char **argv)
     if (!confirm() || interrupted) { goto cancelled; }
     if (database_begin(&db) < 0) { goto failed; }
     int64_t id = song.id, genre_id;
-    int saved = action == LYRICS ? database_lyrics_replace(&db, id, song.lyrics, song.lyrics_format, song.lyrics_uri) :
+    int saved = action == BACKING ? database_backing_lyrics_replace(&db, id, song.backing_lyrics, song.backing_lyrics_uri) :
+                action == LYRICS ? database_lyrics_replace(&db, id, song.lyrics, song.lyrics_format, song.lyrics_uri) :
                                   database_song_save(&db, &song, &id);
     if (saved >= 0 && genre) {
         genre_id = 0;

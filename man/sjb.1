@@ -170,6 +170,28 @@ Without a selection, Enter seeks to the current line, or the first line
 if playback has not reached a lyric yet.
 Press f to resume following playback without seeking.
 Plain lyrics without timestamps cannot be used as seek targets.
+.SS Backing vocals
+Stamp the lead vocals and backing vocals in separate LRC files, using the same
+audio and timestamps measured from the start of the song for both files.
+Use jukebox-add when adding or editing a song to import the optional backing
+vocals file, or update just that track with:
+.PP
+.nf
+./jukebox-add --db jukebox.db --backing-lyrics SONG_ID
+.fi
+.PP
+Choose l to import or replace the backing LRC, n to clear it, or Enter to keep
+it. The helper validates and stores the file contents in the database;
+the original files are not needed during playback. Lead lyrics can still be
+updated independently with --lyrics SONG_ID.
+.PP
+The lyrics view displays backing vocals below the lead lyrics. Each track
+has independent timing, including inline word timestamps, while both follow
+the same playback clock when pausing or seeking. A blank timestamped line
+ends a vocal cue before the next one begins; without it, the cue stays active
+until the next timestamp in its own track. Lyric browsing and line jumps
+operate on the lead track. The backing area follows playback automatically.
+Displaying both tracks requires a terminal of at least 32 columns and 10 rows.
 .SS Online buffering
 HTTP(S) tracks are downloaded completely into a temporary disk cache before
 playback starts.

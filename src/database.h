@@ -29,6 +29,8 @@ typedef struct {
     char *lyrics;
     char *lyrics_format; /* plain or lrc */
     char *lyrics_uri; /* Source page or imported file path; empty when absent. */
+    char *backing_lyrics;
+    char *backing_lyrics_uri;
     
     int64_t duration_ms;
     
@@ -71,6 +73,7 @@ DbSong database_song_init(void);
 int database_song_save(Database *db, const DbSong *song, int64_t *id);
 int database_lyrics_replace(Database *db, int64_t id, const char *lyrics, const char *format, const char *source_uri);
 int database_lyrics_set(Database *db, int64_t id, const char *lyrics, const char *source_uri);
+int database_backing_lyrics_replace(Database *db, int64_t id, const char *lyrics, const char *source_uri);
 int database_song_get(Database *db, int64_t id, DbSong *song);
 
 /* find returns 0 when found, 1 when absent, -1 on error. */

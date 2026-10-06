@@ -361,9 +361,9 @@ int main(int argc, char **argv)
     if (preview && cover_path && terminal_cover_load(cover_path) < 0) {
         snprintf(cover_status, sizeof cover_status, "Cover: %s", strerror(errno));
     }
-    Lyrics timed_lyrics = {0};
+    Lyrics timed_lyrics = {0}, backing_lyrics = {0};
     TuiPlayer player = {
-        .volume_percent = 100, .timed_lyrics = &timed_lyrics, .lyric_active = SIZE_MAX,
+        .volume_percent = 100, .timed_lyrics = &timed_lyrics, .backing_lyrics = &backing_lyrics, .lyric_active = SIZE_MAX,
         .artist = preview ? "Lady Gaga" : "", .title = preview ? "Judas" : "No song selected",
         .album = preview ? "Born This Way" : "Choose a song from Genres",
         .cover_status = cover_status, .elapsed = preview ? 1 : 0, .duration = preview ? 247 : 0,
@@ -409,7 +409,7 @@ int main(int argc, char **argv)
     tui_state_draw(&ui);
 
     while (running) {
-        bool timed_view = ui.screen == SCREEN_LYRICS && timed_lyrics.count && player.lyrics_visible && !player.paused;
+        bool timed_view = ui.screen == SCREEN_LYRICS && (timed_lyrics.count || backing_lyrics.count) && player.lyrics_visible && !player.paused;
         int refresh_ms = timed_view ? 10 : ui.screen == SCREEN_VISUALIZER ? 33 : 100;
         terminal_text_mode(!ui.quit_requested && ((ui.screen == SCREEN_SONGS && ui.search_editing && ui.overlay == OVERLAY_NONE) ||
                            (ui.overlay == OVERLAY_PLAYLISTS && (playlists.mode == PLAYLIST_CREATE || playlists.mode == PLAYLIST_RENAME || playlists.mode == PLAYLIST_COVER))));
@@ -739,7 +739,7 @@ int main(int argc, char **argv)
                 if (!ui.lyrics_browsing) { ui.lyrics_top = active == SIZE_MAX ? 0 : active > 2 ? active - 2 : 0; }
                 player.lyric_active = active;
             }
-            if (timed_lyrics.count && player.lyrics_visible && ui.screen == SCREEN_LYRICS &&
+            if ((timed_lyrics.count || backing_lyrics.count) && player.lyrics_visible && ui.screen == SCREEN_LYRICS &&
                 status.position_ms != player.position_ms) { result = TUI_CHANGED; }
             player.position_ms = status.position_ms;
             player.duration_ms = selection.song->duration_ms;
@@ -820,6 +820,7 @@ int main(int argc, char **argv)
     shuffle_clear(&selection);
     terminal_restore();
     lyrics_free(&timed_lyrics);
+    lyrics_free(&backing_lyrics);
     audio_destroy(audio);
     library_free(&library);
     database_close(&db);
@@ -1266,6 +1267,8 @@ static void select_song(TuiState *ui, const DbSong *song)
     player->album = *song->album ? song->album : "Album unknown";
     player->lyrics = song->lyrics;
     lyrics_free(player->timed_lyrics);
+    lyrics_free(player->backing_lyrics);
+    player->backing_lyrics_error = NULL;
     player->lyric_active = SIZE_MAX;
     player->position_ms = 0;
     player->duration_ms = song->duration_ms;
@@ -1273,6 +1276,12 @@ static void select_song(TuiState *ui, const DbSong *song)
         char error[160];
         if (lyrics_parse(song->lyrics, player->timed_lyrics, error, sizeof error) < 0) {
             player->lyrics = "Cannot parse timed lyrics; re-import a valid LRC file.";
+        }
+    }
+    if (song->backing_lyrics && *song->backing_lyrics) {
+        char error[160];
+        if (lyrics_parse(song->backing_lyrics, player->backing_lyrics, error, sizeof error) < 0) {
+            player->backing_lyrics_error = "Cannot parse backing vocals; re-import a valid LRC file.";
         }
     }
     player->duration_known = song->duration_ms != DB_TIME_UNKNOWN;
