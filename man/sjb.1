@@ -125,6 +125,11 @@ Clear the text being edited.
 .TP
 .B t
 Open or close the typewriter style panel, except in the visualizer.
+Below Mode (and Color in Bold mode), Karaoke toggles whole-word highlighting.
+Use Up/Down to select it and Enter or Left/Right to toggle.
+Karaoke keeps the selected color style and highlights only the current word
+when its timing begins; previous and upcoming words stay dim. Inline LRC timestamps supply word cues; line-only LRC
+uses estimated timing within the line. Untimed lyrics remain static.
 .SS Playback and queue
 .TP
 .B "Comma (,), period (.)"
@@ -179,6 +184,29 @@ Skipping, stopping, or quitting cancels buffering; the temporary file is
 closed and removed when the track closes.
 This buffering mode is intended for finite media files, not endless live streams.
 Use d for a permanent offline copy in ~/.sjb/songs.
+.PP
+While a track is playing or paused, the next HTTP(S) track is buffered in the
+background using the current queue, shuffle order, and repeat mode.
+Only one upcoming track is preloaded. Queue changes replace an obsolete preload.
+Playback reuses the completed cache or waits for an existing transfer to finish.
+A failed preload is retried normally when that track is played.
+Preloading reduces network waits but does not provide gapless audio playback.
+.SS Editing the queue
+Press Q to open the queue and select an upcoming song with Up/Down or j/k.
+The current song and earlier entries cannot be moved or removed.
+.TP
+.B "K, J"
+Move the selected upcoming entry up or down without crossing the current song.
+.TP
+.B x
+Remove the selected upcoming entry from the queue.
+.TP
+.B n
+Move the selected upcoming entry to play next. In the song browser, n adds
+an entry to play next instead.
+.PP
+Queue edits leave the library and saved playlists unchanged, preserve current
+playback, and are included in the session saved on exit.
 .SS Playlists
 .TP
 .B p

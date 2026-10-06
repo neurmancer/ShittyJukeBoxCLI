@@ -1,5 +1,6 @@
 #include "lyrics_handler.h"
 #include <errno.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -397,4 +398,22 @@ size_t lyrics_visible_bytes(const Lyrics *lyrics, size_t cue, int64_t position_m
         while (bytes < length && ((unsigned char)text[bytes] & 0xc0) == 0x80) { ++bytes; }
     }
     return(bytes);
+}
+
+LyricsSpan lyrics_karaoke_span(const Lyrics *lyrics, size_t cue, int64_t position_ms, int64_t duration_ms)
+{
+    size_t bytes = lyrics_visible_bytes(lyrics, cue, position_ms, duration_ms);
+    if (!bytes) { return((LyricsSpan){0}); }
+    const LyricsCue *line = &lyrics->cues[cue];
+    size_t first = 0, limit = strlen(line->text);
+    for (size_t i = 0; i < line->word_count; ++i) {
+        if (line->words[i].time_ms > position_ms) { limit = line->words[i].byte_offset; break; }
+        first = line->words[i].byte_offset;
+    }
+    while (bytes > first && isspace((unsigned char)line->text[bytes - 1])) { --bytes; }
+    if (bytes <= first) { return((LyricsSpan){0}); }
+    size_t start = bytes;
+    while (start > first && !isspace((unsigned char)line->text[start - 1])) { --start; }
+    while (bytes < limit && !isspace((unsigned char)line->text[bytes])) { ++bytes; }
+    return((LyricsSpan){start, bytes});
 }

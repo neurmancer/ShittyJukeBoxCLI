@@ -110,6 +110,7 @@ typedef struct {
     TypewriterMode typewriter_mode;
     size_t typewriter_color;
     size_t typewriter_selected;
+    bool karaoke;
     const char *status;
     const char *search_query;
     bool search_active;

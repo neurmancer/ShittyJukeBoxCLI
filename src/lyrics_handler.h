@@ -36,6 +36,11 @@ size_t lyrics_active(const Lyrics *lyrics, int64_t position_ms);
 size_t lyrics_visible_bytes(const Lyrics *lyrics, size_t cue, int64_t position_ms,
                             int64_t duration_ms);
 
+typedef struct { size_t start, end; } LyricsSpan;
+
+LyricsSpan lyrics_karaoke_span(const Lyrics *lyrics, size_t cue, int64_t position_ms,
+                               int64_t duration_ms);
+
 int parsed_lyrics(char *lyrics);
 
 #endif

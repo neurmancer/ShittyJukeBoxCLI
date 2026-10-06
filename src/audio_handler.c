@@ -22,6 +22,12 @@
 
 struct AudioPlayer {
     pthread_t thread;
+    pthread_t preload_thread;
+    atomic_uint_fast64_t preload_generation;
+    char *preload_uri;
+    bool preload_done;
+    FILE *preload_cache;
+    AVIOContext *preload_io;
     pthread_mutex_t mutex;
     pthread_cond_t wake;
     atomic_bool quitting;
@@ -45,6 +51,7 @@ typedef struct {
     uint64_t generation;
     
     int64_t deadline;
+    bool preload;
     
     SDL_AudioDeviceID device;
     
@@ -57,7 +64,7 @@ typedef struct {
 
 static int cancelled(Playback *play)
 {
-    return(atomic_load(&play->player->quitting) || atomic_load(&play->player->generation) != play->generation);
+    return(atomic_load(&play->player->quitting) || atomic_load(play->preload ? &play->player->preload_generation : &play->player->generation) != play->generation);
 }
 
 static int interrupt_io(void *opaque)
@@ -70,6 +77,7 @@ static int interrupt_io(void *opaque)
 static void publish(Playback *play, AudioState state, const char *error)
 {
     AudioPlayer *player = play->player;
+    if (play->preload) { return; }
     
     pthread_mutex_lock(&player->mutex);
     
@@ -333,6 +341,90 @@ done:
     return(result);
 }
 
+static void cache_free(FILE *cache, AVIOContext *io)
+{
+    if (io) { av_freep(&io->buffer); avio_context_free(&io); }
+    if (cache) { fclose(cache); }
+}
+
+void audio_preload(AudioPlayer *player, const char *uri)
+{
+    if (uri && strncmp(uri, "http://", 7) && strncmp(uri, "https://", 8)) { uri = NULL; }
+    pthread_mutex_lock(&player->mutex);
+    if ((!uri && !player->preload_uri) ||
+        (uri && player->preload_uri && !strcmp(uri, player->preload_uri))) {
+        pthread_mutex_unlock(&player->mutex);
+        return;
+    }
+    char *copy = uri ? strdup(uri) : NULL;
+    if (uri && !copy) { pthread_mutex_unlock(&player->mutex); return; }
+    atomic_fetch_add(&player->preload_generation, 1);
+    free(player->preload_uri);
+    player->preload_uri = copy;
+    player->preload_done = false;
+    cache_free(player->preload_cache, player->preload_io);
+    player->preload_cache = NULL;
+    player->preload_io = NULL;
+    pthread_cond_broadcast(&player->wake);
+    pthread_mutex_unlock(&player->mutex);
+}
+
+static void *preload_worker(void *opaque)
+{
+    AudioPlayer *player = opaque;
+    uint64_t previous = 0;
+    for (;;) {
+        pthread_mutex_lock(&player->mutex);
+        while (!atomic_load(&player->quitting) &&
+               (!player->preload_uri || previous == atomic_load(&player->preload_generation))) {
+            pthread_cond_wait(&player->wake, &player->mutex);
+        }
+        if (atomic_load(&player->quitting)) { pthread_mutex_unlock(&player->mutex); break; }
+        previous = atomic_load(&player->preload_generation);
+        char *url = media_url(player->preload_uri);
+        pthread_mutex_unlock(&player->mutex);
+        Playback play = {.player = player, .generation = previous, .preload = true};
+        FILE *cache = NULL;
+        AVIOContext *io = NULL;
+        int result = url ? cache_stream(&play, url, &cache, &io) : AVERROR(ENOMEM);
+        free(url);
+        pthread_mutex_lock(&player->mutex);
+        if (!cancelled(&play)) {
+            player->preload_done = true;
+            if (result >= 0) {
+                player->preload_cache = cache;
+                player->preload_io = io;
+                cache = NULL;
+                io = NULL;
+            }
+        }
+        pthread_cond_broadcast(&player->wake);
+        pthread_mutex_unlock(&player->mutex);
+        cache_free(cache, io);
+    }
+    return(NULL);
+}
+
+static bool take_preload(Playback *play, const char *uri, FILE **cache, AVIOContext **io)
+{
+    AudioPlayer *player = play->player;
+    pthread_mutex_lock(&player->mutex);
+    while (!cancelled(play) && player->preload_uri && !strcmp(uri, player->preload_uri)) {
+        if (player->preload_done) {
+            *cache = player->preload_cache;
+            *io = player->preload_io;
+            player->preload_cache = NULL;
+            player->preload_io = NULL;
+            free(player->preload_uri);
+            player->preload_uri = NULL;
+            break;
+        }
+        pthread_cond_wait(&player->wake, &player->mutex);
+    }
+    pthread_mutex_unlock(&player->mutex);
+    return(*io != NULL);
+}
+
 static void play_track(AudioPlayer *player, uint64_t generation, const char *uri)
 {
     
@@ -358,7 +450,8 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     format->interrupt_callback = (AVIOInterruptCB){interrupt_io, &play};
     if (!strncmp(url, "http://", 7) || !strncmp(url, "https://", 8)) {
         stage = "Buffering stream";
-        result = cache_stream(&play, url, &cache, &cached);
+        result = take_preload(&play, uri, &cache, &cached) ? 0 :
+                 cancelled(&play) ? AVERROR_EXIT : cache_stream(&play, url, &cache, &cached);
         if (result < 0 || cancelled(&play)) { goto done; }
         format->pb = cached;
         format->flags |= AVFMT_FLAG_CUSTOM_IO;
@@ -624,6 +717,7 @@ AudioPlayer *audio_create(char *error, size_t size)
     atomic_init(&player->paused, false);
     atomic_init(&player->seek_pending, false);
     atomic_init(&player->generation, 0);
+    atomic_init(&player->preload_generation, 0);
     
     player->status.duration_ms = -1;
     player->volume_percent = 100;
@@ -646,6 +740,18 @@ AudioPlayer *audio_create(char *error, size_t size)
         goto failed;
     }
     
+    result = pthread_create(&player->preload_thread, NULL, preload_worker, player);
+    if (result) {
+        snprintf(error, size, "%s", strerror(result));
+        atomic_store(&player->quitting, true);
+        pthread_mutex_lock(&player->mutex);
+        pthread_cond_broadcast(&player->wake);
+        pthread_mutex_unlock(&player->mutex);
+        pthread_join(player->thread, NULL);
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+        avformat_network_deinit();
+        goto failed;
+    }
     return(player);
 failed:
     pthread_cond_destroy(&player->wake);
@@ -669,6 +775,14 @@ int audio_play_at(AudioPlayer *player, int64_t song_id, const char *uri, int64_t
     
     pthread_mutex_lock(&player->mutex);
     
+    if (player->preload_uri && strcmp(uri, player->preload_uri)) {
+        atomic_fetch_add(&player->preload_generation, 1);
+        free(player->preload_uri);
+        player->preload_uri = NULL;
+        cache_free(player->preload_cache, player->preload_io);
+        player->preload_cache = NULL;
+        player->preload_io = NULL;
+    }
     free(player->pending_uri);
     
     player->pending_uri = copy;
@@ -685,7 +799,7 @@ int audio_play_at(AudioPlayer *player, int64_t song_id, const char *uri, int64_t
     player->sample_total = 0;
     player->status = (AudioStatus){.generation = generation, .song_id = song_id,
                                    .duration_ms = -1, .state = AUDIO_LOADING, .position_ms = position_ms};
-    pthread_cond_signal(&player->wake);
+    pthread_cond_broadcast(&player->wake);
     pthread_mutex_unlock(&player->mutex);
     
 
@@ -709,6 +823,7 @@ void audio_pause(AudioPlayer *player, bool paused)
 
 void audio_stop(AudioPlayer *player)
 {
+    audio_preload(player, NULL);
     
     pthread_mutex_lock(&player->mutex);
     atomic_fetch_add(&player->generation, 1);
@@ -724,6 +839,7 @@ void audio_stop(AudioPlayer *player)
     
     player->sample_total = 0;
     player->status = (AudioStatus){.generation = atomic_load(&player->generation), .duration_ms = -1};
+    pthread_cond_broadcast(&player->wake);
     
     pthread_mutex_unlock(&player->mutex);
 }
@@ -814,9 +930,10 @@ void audio_destroy(AudioPlayer *player)
     audio_stop(player);
     
     pthread_mutex_lock(&player->mutex);
-    pthread_cond_signal(&player->wake);
+    pthread_cond_broadcast(&player->wake);
     pthread_mutex_unlock(&player->mutex);
     pthread_join(player->thread, NULL);
+    pthread_join(player->preload_thread, NULL);
     pthread_cond_destroy(&player->wake);
     pthread_mutex_destroy(&player->mutex);
     

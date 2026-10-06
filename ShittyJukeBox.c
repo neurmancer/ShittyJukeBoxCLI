@@ -84,6 +84,7 @@ static int import_lrc(Database *db, int64_t id, const char *path);
 static SongMenu *playback_section(Library *library, size_t genre);
 static void queue_bind(TuiState *ui, Library *library, PlaybackSelection *selection);
 static int queue_next(TuiState *ui, Library *library, PlaybackSelection *selection, const DbSong *song);
+static void queue_edit(TuiState *ui, Library *library, PlaybackSelection *selection, TerminalAction action);
 static void search_update(Library *library);
 static void search_input(Library *library, TerminalAction action);
 static int playlist_play(AudioPlayer *audio, TuiState *ui, Library *library, PlaybackSelection *selection, const Playlists *panel);
@@ -597,7 +598,12 @@ int main(int argc, char **argv)
                 ui.search_editing = false;
             }
         }
-        if (action == TERM_QUEUE_NEXT) {
+        if (ui.overlay == OVERLAY_QUEUE &&
+            (action == TERM_MOVE_UP || action == TERM_MOVE_DOWN || action == TERM_REMOVE || action == TERM_QUEUE_NEXT)) {
+            queue_edit(&ui, &library, &selection, action);
+            handled = true;
+        }
+        else if (action == TERM_QUEUE_NEXT) {
             const DbSong *song = NULL;
             if (ui.overlay == OVERLAY_QUEUE && queue.selected < queue.count) {
                 size_t index = selection.order ? selection.order[queue.selected] : queue.selected;
@@ -773,6 +779,14 @@ int main(int argc, char **argv)
             result = TUI_CHANGED;
         }
         if (mpris_poll(mpris)) { result = TUI_CHANGED; }
+        AudioStatus preload_status = audio_status(audio);
+        if (selection.song && (preload_status.state == AUDIO_PLAYING || preload_status.state == AUDIO_PAUSED)) {
+            SongMenu *section = playback_section(&library, selection.genre);
+            bool advance = player.repeat || player.repeat_playlist || queue_position(&selection) + 1 < section->count;
+            size_t index = player.repeat ? selection.index : next_song(section, &selection, false);
+            audio_preload(audio, advance ? section->songs[index].media_uri : NULL);
+        }
+        else if (preload_status.state != AUDIO_LOADING) { audio_preload(audio, NULL); }
         last_audio = status;
         if (playlists_poll(&playlists)) { result = TUI_CHANGED; }
         if (ui.screen == SCREEN_VISUALIZER) {
@@ -957,8 +971,63 @@ static int queue_next(TuiState *ui, Library *library, PlaybackSelection *selecti
     selection->order_count = order ? count + 1 : 0;
     selection->genre = library->count;
     if (!selection->song) { selection->index = 0; }
+    else { selection->song = &songs[selection->index]; }
     queue_bind(ui, library, selection);
     return(0);
+}
+
+static void queue_edit(TuiState *ui, Library *library, PlaybackSelection *selection, TerminalAction action)
+{
+    size_t from = ui->queue->selected;
+    SongMenu *source = playback_section(library, selection->genre);
+    size_t count = source->count;
+    if (from >= count) { return; }
+    size_t current = queue_position(selection);
+    size_t first = selection->song ? current + 1 : 0;
+    if (from < first) { ui->status = "Select an upcoming song to edit."; return; }
+    size_t to = from;
+    if (action == TERM_MOVE_UP && from > first) { to = from - 1; }
+    if (action == TERM_MOVE_DOWN && from + 1 < count) { to = from + 1; }
+    if (action == TERM_QUEUE_NEXT) { to = first; }
+    if (action != TERM_REMOVE && to == from) { return; }
+    DbSong *songs = malloc(count * sizeof *songs);
+    TuiItem *items = malloc(count * sizeof *items);
+    size_t *order = ui->player->shuffle ? malloc(count * sizeof *order) : NULL;
+    TuiItem *shuffled = ui->player->shuffle ? malloc(count * sizeof *shuffled) : NULL;
+    if (!songs || !items || (ui->player->shuffle && (!order || !shuffled))) {
+        free(songs); free(items); free(order); free(shuffled);
+        ui->status = "Cannot allocate queue edit.";
+        return;
+    }
+    for (size_t i = 0; i < count; ++i) { songs[i] = source->songs[selection->order ? selection->order[i] : i]; }
+    DbSong moved = songs[from];
+    if (action == TERM_REMOVE) {
+        memmove(songs + from, songs + from + 1, (count - from - 1) * sizeof *songs);
+        --count;
+        to = from < count ? from : count ? count - 1 : SIZE_MAX;
+    }
+    else {
+        if (to < from) { memmove(songs + to + 1, songs + to, (from - to) * sizeof *songs); }
+        else { memmove(songs + from, songs + from + 1, (to - from) * sizeof *songs); }
+        songs[to] = moved;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        items[i] = (TuiItem){songs[i].title, TUI_BUTTON, true, false};
+        if (order) { order[i] = i; shuffled[i] = items[i]; }
+    }
+    free(library->custom.songs);
+    free(library->custom.menu.items);
+    library->custom = (SongMenu){.songs = songs, .count = count, .menu = {.items = items, .count = count}};
+    shuffle_clear(selection);
+    selection->order = order;
+    selection->queue_items = shuffled;
+    selection->order_count = order ? count : 0;
+    selection->genre = library->count;
+    selection->index = current;
+    if (selection->song) { selection->song = &songs[current]; }
+    queue_bind(ui, library, selection);
+    ui->queue->selected = to;
+    ui->status = action == TERM_REMOVE ? "Removed from queue." : "Queue reordered.";
 }
 
 static size_t next_song(const SongMenu *section, const PlaybackSelection *selection, bool previous)

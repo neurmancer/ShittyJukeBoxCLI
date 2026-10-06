@@ -49,6 +49,7 @@ int audio_play_at(AudioPlayer *player, int64_t song_id, const char *uri, int64_t
 
 void audio_pause(AudioPlayer *player, bool paused);
 void audio_stop(AudioPlayer *player);
+void audio_preload(AudioPlayer *player, const char *uri);
 
 bool audio_seek(AudioPlayer *player, int64_t position_ms);
 bool audio_seek_relative(AudioPlayer *player, int64_t offset_ms);

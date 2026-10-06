@@ -560,6 +560,7 @@ void tui_state_init(TuiState *state, TuiScreen initial)
     state->typewriter_mode = TYPEWRITER_NORMAL;
     state->typewriter_color = 0;
     state->typewriter_selected = 0;
+    state->karaoke = false;
 }
 
 void tui_state_switch(TuiState *state, TuiScreen screen)
@@ -608,23 +609,25 @@ static size_t lyrics_count(const TuiPlayer *player)
 static TuiResult typewriter_handle(TuiState *state, TerminalAction action)
 {
     if (action == TERM_BACK) { state->overlay = OVERLAY_NONE; return(TUI_CHANGED); }
-    if (state->typewriter_mode != TYPEWRITER_BOLD) { state->typewriter_selected = 0; }
+    size_t options = state->typewriter_mode == TYPEWRITER_BOLD ? 3 : 2;
+    if (state->typewriter_selected >= options) { state->typewriter_selected = options - 1; }
     if (action == TERM_UP || action == TERM_DOWN) {
-        if (state->typewriter_mode != TYPEWRITER_BOLD) { return(TUI_UNCHANGED); }
-        state->typewriter_selected = !state->typewriter_selected;
+        state->typewriter_selected = (state->typewriter_selected + (action == TERM_UP ? options - 1 : 1)) % options;
         return(TUI_CHANGED);
     }
     if (action == TERM_FIRST || action == TERM_LAST) {
-        state->typewriter_selected = action == TERM_LAST && state->typewriter_mode == TYPEWRITER_BOLD;
+        state->typewriter_selected = action == TERM_LAST ? options - 1 : 0;
         return(TUI_CHANGED);
     }
     if (action != TERM_LEFT && action != TERM_RIGHT && action != TERM_ACTIVATE) { return(TUI_UNCHANGED); }
-    size_t count = state->typewriter_selected ? sizeof typewriter_colors / sizeof typewriter_colors[0] : TYPEWRITER_MODE_COUNT;
-    size_t value = state->typewriter_selected ? state->typewriter_color : (size_t)state->typewriter_mode;
-    value = (value + (action == TERM_LEFT ? count - 1 : 1)) % count;
-    if (state->typewriter_selected) { state->typewriter_color = value; }
-
-    else { state->typewriter_mode = (TypewriterMode)value; }
+    if (state->typewriter_selected == options - 1) { state->karaoke = !state->karaoke; }
+    else {
+        size_t count = state->typewriter_selected ? sizeof typewriter_colors / sizeof typewriter_colors[0] : TYPEWRITER_MODE_COUNT;
+        size_t value = state->typewriter_selected ? state->typewriter_color : (size_t)state->typewriter_mode;
+        value = (value + (action == TERM_LEFT ? count - 1 : 1)) % count;
+        if (state->typewriter_selected) { state->typewriter_color = value; }
+        else { state->typewriter_mode = (TypewriterMode)value; }
+    }
     return(TUI_CHANGED);
 }
 
@@ -788,14 +791,19 @@ static void pending_screen(const TuiState *state)
             text_span(row, column, width - column + 1, selected ? PURPLE_INVERSE : DIM "\033[38;2;255;255;255m",
                       *cue->text ? cue->text : selected ? "[instrumental]" : "", *cue->text ? strlen(cue->text) : selected ? 14 : 0);
             if (active && !selected) {
-                size_t length = lyrics_visible_bytes(lyrics, i, player->position_ms, player->duration_ms);
+                LyricsSpan span = state->karaoke ? lyrics_karaoke_span(lyrics, i, player->position_ms, player->duration_ms) :
+                                  (LyricsSpan){0, lyrics_visible_bytes(lyrics, i, player->position_ms, player->duration_ms)};
+                size_t highlight_column = column + text_span_cells(cue->text, span.start);
                 size_t color = state->typewriter_color % (sizeof typewriter_colors / sizeof typewriter_colors[0]);
                 char style[80];
                 snprintf(style, sizeof style, "%s%s%s", RESET,
                          state->typewriter_mode == TYPEWRITER_RGB ? "" : BOLDY,
                          state->typewriter_mode == TYPEWRITER_BOLD ? typewriter_colors[color].style :
                          "\033[38;2;255;255;255m");
-                text_span_effect(row, column, width - column + 1, style, cue->text, length, state->typewriter_mode == TYPEWRITER_RGB);
+                if (span.end > span.start && highlight_column <= width) {
+                    text_span_effect(row, highlight_column, width - highlight_column + 1, style,
+                                     cue->text + span.start, span.end - span.start, state->typewriter_mode == TYPEWRITER_RGB);
+                }
             }
         }
     }
@@ -991,12 +999,13 @@ static void typewriter_overlay(const TuiState *state)
     size_t color = state->typewriter_color % (sizeof typewriter_colors / sizeof typewriter_colors[0]);
     size_t mode = (size_t)state->typewriter_mode % TYPEWRITER_MODE_COUNT;
     
-    char labels[2][64];
+    char labels[3][64];
     
     snprintf(labels[0], sizeof labels[0], "Mode: < %s >", typewriter_modes[mode]);
     snprintf(labels[1], sizeof labels[1], "Color: < %s >", typewriter_colors[color].name);
     
-    size_t options = mode == TYPEWRITER_BOLD ? 2 : 1;
+    size_t options = mode == TYPEWRITER_BOLD ? 3 : 2;
+    snprintf(labels[options - 1], sizeof labels[0], "Karaoke: < %s >", state->karaoke ? "On" : "Off");
     
     for (size_t i = 0; i < options; ++i) {
         text_at(4 + i, x + 2, width - 3,
@@ -1007,7 +1016,7 @@ static void typewriter_overlay(const TuiState *state)
     
         text_at(7, x + 2, width - 3, DIM, "Normal: bold white over dim lyrics");
         text_at(8, x + 2, width - 3, DIM, "RGB: rainbow  Bold: selected color");
-        text_at(9, x + 2, width - 3, DIM, "Timed LRC lyrics; session settings");
+        text_at(9, x + 2, width - 3, DIM, "Karaoke: highlight current word");
     }
     
     text_at(rows - 2, x + 2, width - 3, DIM, "Up/Down: pick  Left/Right: change");
@@ -1051,7 +1060,8 @@ static void queue_overlay(TuiState *state)
         }
     }
 
-    text_at(rows - 2, x + 2, width - 3, DIM, "d:download n:next Q/Esc:close");
+    text_at(rows - 2, x + 2, width - 3, DIM, "K/J:move x:remove n:next");
+    text_at(rows - 1, x + 2, width - 3, DIM, "Enter:play d:download Q/Esc:close");
 }
 
 static void playlist_art(const Playlists *panel, size_t row, size_t column, size_t width, size_t height)
