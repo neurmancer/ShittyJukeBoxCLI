@@ -118,6 +118,8 @@ static MprisState remote_read(void *opaque)
     bool wrap = remote->ui->player->repeat_playlist || remote->ui->player->repeat;
     return((MprisState){
         .audio = audio_status(remote->audio), .song = selection->song,
+        .lyrics = remote->ui->player->timed_lyrics,
+        .backing_lyrics = remote->ui->player->backing_lyrics,
         .art_uri = selection->cover_override ? selection->cover_override : selection->song ? selection->song->cover_uri : "",
         .track = selection->generation, .shuffle = remote->ui->player->shuffle,
         .loop = remote->ui->player->repeat ? 1 : remote->ui->player->repeat_playlist ? 2 : 0,

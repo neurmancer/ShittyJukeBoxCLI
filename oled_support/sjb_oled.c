@@ -9,7 +9,7 @@
 #include <string.h>
 #include <hidapi/hidapi.h>
 #include <unistd.h>
-#include <glib.h>
+#include <gio/gio.h>
 #include <limits.h>
 
 #define VENDOR_ID     0x1038
@@ -50,12 +50,12 @@ void drawString(unsigned char *framebuffer, int x, int y, const char *str);
 void drawChar(unsigned char *framebuffer, int x, int y, char c);
 void setPixel(unsigned char *framebuffer, int x, int y, int state);
 
-int get_sjb_info(char *artist, size_t artist_size, char *title, size_t title_size);
+int get_sjb_info(GDBusConnection *bus, char *first, size_t first_size, char *second, size_t second_size);
 int sendFBuffer(hid_device *handle, unsigned char *framebuffer);
 int stringWidth(const char *str);
 
 
-int main() {
+int main(void) {
     if (hid_init() < 0) {
         fprintf(stderr, "hid_init failed\n");
         return(1);
@@ -67,7 +67,7 @@ int main() {
     for (struct hid_device_info *cur = devs; cur; cur = cur->next) {
         if (cur->interface_number == 1) {
             handle = hid_open_path(cur->path);
-            if (handle) break;
+            if (handle) { break; }
         }
     }
     hid_free_enumeration(devs);
@@ -80,53 +80,64 @@ int main() {
 
     printf("OLED opened successfully\n");
 
+    GError *error = NULL;
+    GDBusConnection *bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+    if (!bus) {
+        fprintf(stderr, "Session bus: %s\n", error->message);
+        g_error_free(error);
+        hid_close(handle);
+        hid_exit();
+        return(1);
+    }
+
     unsigned char framebuffer[FB_SIZE];
-    char artist[128] = {0};
-    char title[128]  = {0};
-    char last_artist[128] = {0};
-    char last_title[128]  = {0};
+    char first[512] = {0};
+    char second[512]  = {0};
+    char last_first[512] = {0};
+    char last_second[512]  = {0};
 
     int scroll_a = 0;
     int scroll_t = 0;
 
     while (1) {
-        get_sjb_info(artist, sizeof(artist), title, sizeof(title));
+        get_sjb_info(bus, first, sizeof(first), second, sizeof(second));
 
-        if (strcmp(artist, last_artist) != 0 || strcmp(title, last_title) != 0) {
-            strcpy(last_artist, artist);
-            strcpy(last_title, title);
+        if (strcmp(first, last_first)) {
+            strcpy(last_first, first);
             scroll_a = 0;
+        }
+        if (strcmp(second, last_second)) {
+            strcpy(last_second, second);
             scroll_t = 0;
         }
 
         clearFrameBuffer(framebuffer);
 
-        // Artist
-        int aw = stringWidth(artist);
+        int aw = stringWidth(first);
         if (aw <= SCREEN_WIDTH - 4) {
-            drawString(framebuffer, (SCREEN_WIDTH - aw) / 2, 5, artist);
+            drawString(framebuffer, (SCREEN_WIDTH - aw) / 2, 5, first);
         } else {
-            drawString(framebuffer, 2 - scroll_a, 5, artist);
-            drawString(framebuffer, 2 - scroll_a + aw + 24, 5, artist);
+            drawString(framebuffer, 2 - scroll_a, 5, first);
+            drawString(framebuffer, 2 - scroll_a + aw + 24, 5, first);
             scroll_a++;
-            if (scroll_a > aw + 24) scroll_a = 0;
+            if (scroll_a > aw + 24) { scroll_a = 0; }
         }
 
-        // Title
-        int tw = stringWidth(title);
+        int tw = stringWidth(second);
         if (tw <= SCREEN_WIDTH - 4) {
-            drawString(framebuffer, (SCREEN_WIDTH - tw) / 2, 22, title);
+            drawString(framebuffer, (SCREEN_WIDTH - tw) / 2, 22, second);
         } else {
-            drawString(framebuffer, 2 - scroll_t, 22, title);
-            drawString(framebuffer, 2 - scroll_t + tw + 24, 22, title);
+            drawString(framebuffer, 2 - scroll_t, 22, second);
+            drawString(framebuffer, 2 - scroll_t + tw + 24, 22, second);
             scroll_t++;
-            if (scroll_t > tw + 24) scroll_t = 0;
+            if (scroll_t > tw + 24) { scroll_t = 0; }
         }
 
         sendFBuffer(handle, framebuffer);
         usleep(50000); // 50ms
     }
 
+    g_object_unref(bus);
     hid_close(handle);
     hid_exit();
     return(0);
@@ -201,45 +212,72 @@ int sendFBuffer(hid_device *handle, unsigned char *framebuffer) {
     return(hid_send_feature_report(handle, report, 642));
 }
 
-int get_sjb_info(char *artist, size_t artist_size, char *title, size_t title_size) {
-    FILE *fp = popen(
-        "playerctl -p ShittyJukeBox metadata --format \"{{artist}}||{{title}}\" 2>/dev/null", "r");
-    if (!fp) {
-        snprintf(artist, artist_size, "No SJB :/");
-        title[0] = '\0';
+static void metadata_rows(GVariant *metadata, char *first, size_t first_size,
+                          char *second, size_t second_size)
+{
+    const char *lead = "", *backing = "", *title = "";
+    g_variant_lookup(metadata, "sjb:lyric", "&s", &lead);
+    g_variant_lookup(metadata, "sjb:backingLyric", "&s", &backing);
+    char *lead_text = displayText(lead), *backing_text = displayText(backing);
+    g_strstrip(lead_text);
+    g_strstrip(backing_text);
+    if (*lead_text && *backing_text) {
+        snprintf(first, first_size, "%s", lead_text);
+        snprintf(second, second_size, "%s", backing_text);
+    }
+    else if (*lead_text || *backing_text) {
+        char *text = *lead_text ? lead_text : backing_text;
+        size_t length = strlen(text), split = length;
+        if (length > 20) {
+            size_t target = length <= 40 ? 20 : length / 2;
+            split = target;
+            while (split && text[split] != ' ') { --split; }
+            if (!split) { split = target; }
+        }
+        snprintf(first, first_size, "%.*s", (int)split, text);
+        text += split;
+        while (*text == ' ') { ++text; }
+        snprintf(second, second_size, "%s", text);
+    }
+    else {
+        char **artists = NULL;
+        g_variant_lookup(metadata, "xesam:artist", "^as", &artists);
+        g_variant_lookup(metadata, "xesam:title", "&s", &title);
+        char *joined = artists ? g_strjoinv(", ", artists) : g_strdup("");
+        char *artist_text = displayText(joined), *title_text = displayText(title);
+        snprintf(first, first_size, "%s", *artist_text || *title_text ? artist_text : "OwO");
+        snprintf(second, second_size, "%s", title_text);
+        g_free(artist_text);
+        g_free(title_text);
+        g_free(joined);
+        g_strfreev(artists);
+    }
+    g_free(lead_text);
+    g_free(backing_text);
+}
+
+int get_sjb_info(GDBusConnection *bus, char *first, size_t first_size, char *second, size_t second_size)
+{
+    GVariant *reply = g_dbus_connection_call_sync(bus, "org.mpris.MediaPlayer2.ShittyJukeBox",
+        "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Properties", "Get",
+        g_variant_new("(ss)", "org.mpris.MediaPlayer2.Player", "Metadata"),
+        G_VARIANT_TYPE("(v)"), G_DBUS_CALL_FLAGS_NO_AUTO_START, 500, NULL, NULL);
+    if (!reply) {
+        snprintf(first, first_size, "No SJB :/");
+        if (second_size) { second[0] = '\0'; }
         return(-1);
     }
-
-    char *buf = NULL;
-    size_t capacity = 0;
-    if (getline(&buf, &capacity, fp) < 0) {
-        snprintf(artist, artist_size, "OwO");
-        title[0] = '\0';
-        free(buf);
-        pclose(fp);
+    GVariant *metadata = NULL;
+    g_variant_get(reply, "(v)", &metadata);
+    if (!g_variant_is_of_type(metadata, G_VARIANT_TYPE_VARDICT)) {
+        g_variant_unref(metadata);
+        g_variant_unref(reply);
+        snprintf(first, first_size, "No SJB :/");
+        if (second_size) { second[0] = '\0'; }
         return(-1);
     }
-    pclose(fp);
-
-    buf[strcspn(buf, "\n")] = 0;
-
-    char *sep = strstr(buf, "||");
-    if (!sep) {
-        char *text = displayText(buf);
-        snprintf(artist, artist_size, "%s", text);
-        g_free(text);
-        free(buf);
-        title[0] = '\0';
-        return(0);
-    }
-
-    *sep = '\0';
-    char *artist_text = displayText(buf);
-    char *title_text = displayText(sep + 2);
-    snprintf(artist, artist_size, "%s", artist_text);
-    snprintf(title, title_size, "%s", title_text);
-    g_free(artist_text);
-    g_free(title_text);
-    free(buf);
+    metadata_rows(metadata, first, first_size, second, second_size);
+    g_variant_unref(metadata);
+    g_variant_unref(reply);
     return(0);
 }

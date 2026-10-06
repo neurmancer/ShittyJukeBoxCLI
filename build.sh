@@ -5,10 +5,12 @@ set -euo pipefail
 cd -- "$(dirname -- "$0")"
 
 usage() {
-    printf 'Usage: %s [--system | --help]\n' "$0"
+    printf 'Usage: %s [--system | --system-clean | --help]\n' "$0"
     printf '  No option: build and run the jukebox.\n'
     printf '  --system: install /usr/local/bin/sjb and seed databases/config in $HOME/.sjb.\n'
     printf '            Install the manual in /usr/local/share/man/man1.\n'
+    printf '  --system-clean: remove the installed player, manual, and ALL user data in $HOME/.sjb.\n'
+    printf '                  Includes downloaded songs, catalogs, playlists, sessions, and config.\n'
 }
 
 if (( $# == 0 )); then
@@ -20,7 +22,7 @@ if (( $# != 1 )); then
 fi
 case "$1" in
     --help|-h) usage; exit 0 ;;
-    --system) ;;
+    --system|--system-clean) ;;
     *) usage >&2; exit 2 ;;
 esac
 
@@ -30,10 +32,38 @@ as_root() {
     elif command -v sudo >/dev/null 2>&1; then
         sudo -- "$@"
     else
-        printf 'Root privileges are required for this step; install sudo or run --system as root.\n' >&2
+        printf 'Root privileges are required for this step; install sudo or run this action as root.\n' >&2
         exit 1
     fi
 }
+
+# Sudo gets the system files; the human who invoked it gets their own shit.
+sjb_home=${HOME:?HOME must identify the user receiving the installation}
+sjb_uid=$(id -u)
+sjb_gid=$(id -g)
+if (( EUID == 0 )) && [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != root ]]; then
+    sjb_account=$(getent passwd -- "$SUDO_USER")
+    IFS=: read -r _ _ sjb_uid sjb_gid _ sjb_home _ <<< "$sjb_account"
+fi
+if [[ "$sjb_home" != /* ]]; then
+    printf 'Cannot manage user data: home directory must be absolute.\n' >&2
+    exit 1
+fi
+sjb_home=$(cd -- "$sjb_home" && pwd -P)
+if [[ "$sjb_home" == / ]]; then
+    printf 'Refusing to use the filesystem root as a user home.\n' >&2
+    exit 1
+fi
+sjb_data="$sjb_home/.sjb"
+
+if [[ "$1" == --system-clean ]]; then
+    printf 'Removing /usr/local/bin/sjb and /usr/local/share/man/man1/sjb.1\n'
+    printf 'Removing ALL jukebox data in %s (including downloaded songs).\n' "$sjb_data"
+    as_root rm -f -- /usr/local/bin/sjb /usr/local/share/man/man1/sjb.1
+    rm -rf -- "$sjb_data"
+    printf 'System installation and user data removed. Project files and shared dependencies kept.\n'
+    exit 0
+fi
 
 # These are the dependencies of the player target, not the optional song importer.
 modules=(sqlite3 libavformat libavcodec libavutil libswresample libswscale sdl2 lua5.4 gio-2.0)
@@ -112,20 +142,6 @@ if (( ${#missing[@]} )); then
     fi
 fi
 
-# When invoked through sudo, keep the data in the invoking user's home and owned
-# by that user. Root gets the executable and the manual.
-sjb_home=${HOME:?HOME must identify the user receiving the installation}
-sjb_uid=$(id -u)
-sjb_gid=$(id -g)
-if (( EUID == 0 )) && [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != root ]]; then
-    sjb_account=$(getent passwd -- "$SUDO_USER")
-    IFS=: read -r _ _ sjb_uid sjb_gid _ sjb_home _ <<< "$sjb_account"
-fi
-if [[ "$sjb_home" != /* ]]; then
-    printf 'Cannot install user data: home directory must be absolute.\n' >&2
-    exit 1
-fi
-sjb_data="$sjb_home/.sjb"
 project_dir=$PWD
 build_dir=$(mktemp -d)
 trap 'rm -rf -- "$build_dir"' EXIT

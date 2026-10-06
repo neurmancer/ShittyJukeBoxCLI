@@ -21,6 +21,7 @@
 - [Bragging](#bragging)
 - [LOOK AT THE FUCKING SONGS](SONGS.md)
 - [Niche Shit](oled_support/README.md)
+- [Usage Shit](USAGE.md)
 - [In Dev](#in-dev)
 - [Q&A](#qa)
 - [Compile&Shit](#how-to-run)
@@ -72,6 +73,8 @@
 - I mean...**YOU FUCKING GOTTA TRY IT TO UNDERSTAND MY HYPE BRO** go fucking [compile](#how-to-run)
 
 - playerCTL full-ish support
+
+- Session persistance(allegedly) 
 
 ---
 

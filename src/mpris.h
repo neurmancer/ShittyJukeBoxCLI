@@ -3,11 +3,14 @@
 
 #include "audio_handler.h"
 #include "database.h"
+#include "lyrics_handler.h"
 
 typedef struct Mpris Mpris;
 typedef struct {
     AudioStatus audio;
     const DbSong *song;
+    const Lyrics *lyrics;
+    const Lyrics *backing_lyrics;
     const char *art_uri;
     uint64_t track;
     bool shuffle, can_play, can_next, can_previous;

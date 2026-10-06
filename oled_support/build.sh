@@ -28,25 +28,24 @@ if [[ ! -f "$SRC" ]]; then
 fi
 ok "Found $SRC"
 
-if ! pkg-config --exists glib-2.0; then
-    err "GLib development files and pkg-config are required for UTF-8 text support"
+if ! pkg-config --exists gio-2.0; then
+    err "GLib/GIO development files and pkg-config are required for UTF-8 text support"
     exit 1
 fi
 
 # ---------- 2. Check playerctl ----------
 if ! command -v playerctl &>/dev/null; then
-    err "playerctl not installed"
-    exit 1
-fi
-ok "playerctl present"
-
-echo "--- playerctl test ---"
-if playerctl -p "$PLAYER" metadata --format "{{artist}}||{{title}}" 2>/dev/null; then
-    ok "Metadata readable from $PLAYER"
+    warn "playerctl not installed; skipping the optional metadata diagnostic"
 else
-    warn "Could not read metadata from $PLAYER (is it playing?)"
+    ok "playerctl present"
+    echo "--- playerctl test ---"
+    if playerctl -p "$PLAYER" metadata --format "{{artist}}||{{title}}" 2>/dev/null; then
+        ok "Metadata readable from $PLAYER"
+    else
+        warn "Could not read metadata from $PLAYER (is it playing?)"
+    fi
+    echo
 fi
-echo
 
 # ---------- 3. Check device present ----------
 if lsusb | grep -qi "${VENDOR}:${PRODUCT}"; then
@@ -96,9 +95,9 @@ ok "udev rules reloaded"
 echo
 echo "=== Compiling ==="
 if pkg-config --exists hidapi-libusb 2>/dev/null; then
-    cc "$SRC" -o "$BIN" $(pkg-config --cflags --libs hidapi-libusb glib-2.0)
+    cc "$SRC" -o "$BIN" $(pkg-config --cflags --libs hidapi-libusb gio-2.0)
 else
-    cc "$SRC" -o "$BIN" -lhidapi-libusb $(pkg-config --cflags --libs glib-2.0)
+    cc "$SRC" -o "$BIN" -lhidapi-libusb $(pkg-config --cflags --libs gio-2.0)
 fi
 ok "Built ./$BIN"
 
