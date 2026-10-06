@@ -313,6 +313,24 @@ size_t lyrics_active(const Lyrics *lyrics, int64_t position_ms)
     return(low);
 }
 
+int lyrics_cue_active(const Lyrics *lyrics, size_t index, int64_t position_ms, int64_t duration_ms)
+{
+    if (!lyrics || index >= lyrics->count) { return(0); }
+    const LyricsCue *cue = &lyrics->cues[index];
+    if (position_ms < cue->time_ms || (duration_ms >= 0 && position_ms >= duration_ms)) { return(0); }
+    size_t length = strlen(cue->text);
+    while (length && isspace((unsigned char)cue->text[length - 1])) { --length; }
+    if (!length) { return(0); }
+    size_t next = index + 1;
+    while (next < lyrics->count && lyrics->cues[next].time_ms == cue->time_ms) { ++next; }
+    if (next < lyrics->count && position_ms >= lyrics->cues[next].time_ms) { return(0); }
+    if (cue->word_count) {
+        const LyricsWord *last = &cue->words[cue->word_count - 1];
+        if (last->byte_offset >= length && position_ms >= last->time_ms) { return(0); }
+    }
+    return(1);
+}
+
 static size_t stamped_visible_bytes(const Lyrics *lyrics, size_t index, int64_t position_ms, int64_t duration_ms)
 {
     const LyricsCue *cue = &lyrics->cues[index];

@@ -362,8 +362,19 @@ int main(int argc, char **argv)
         snprintf(cover_status, sizeof cover_status, "Cover: %s", strerror(errno));
     }
     Lyrics timed_lyrics = {0}, backing_lyrics = {0};
+    LyricsWorker *backing_worker = lyrics_worker_create(audio);
+    if (!backing_worker) {
+        terminal_restore();
+        playlists_free(&playlists);
+        audio_destroy(audio);
+        library_free(&library);
+        database_close(&db);
+        fprintf(stderr, "Cannot start backing vocals worker.\n");
+        return(1);
+    }
     TuiPlayer player = {
         .volume_percent = 100, .timed_lyrics = &timed_lyrics, .backing_lyrics = &backing_lyrics, .lyric_active = SIZE_MAX,
+        .backing_worker = backing_worker, .backing_frame = {.active = SIZE_MAX},
         .artist = preview ? "Lady Gaga" : "", .title = preview ? "Judas" : "No song selected",
         .album = preview ? "Born This Way" : "Choose a song from Genres",
         .cover_status = cover_status, .elapsed = preview ? 1 : 0, .duration = preview ? 247 : 0,
@@ -803,6 +814,12 @@ int main(int argc, char **argv)
             result = TUI_CHANGED;
         }
 
+        int backing_changed = lyrics_worker_snapshot(backing_worker, &player.backing_frame);
+        if (backing_changed < 0) {
+            lyrics_frame_free(&player.backing_frame);
+            player.backing_lyrics_error = "Cannot allocate backing vocals frame.";
+        }
+        if (backing_changed && ui.screen == SCREEN_LYRICS && player.lyrics_visible) { result = TUI_CHANGED; }
         if (running && result != TUI_UNCHANGED) { tui_state_draw(&ui); }
     }
 
@@ -821,6 +838,8 @@ int main(int argc, char **argv)
     terminal_restore();
     lyrics_free(&timed_lyrics);
     lyrics_free(&backing_lyrics);
+    lyrics_worker_destroy(backing_worker);
+    lyrics_frame_free(&player.backing_frame);
     audio_destroy(audio);
     library_free(&library);
     database_close(&db);
@@ -1078,6 +1097,11 @@ static int start_song_at(AudioPlayer *audio, TuiState *ui, Library *library,
     selection->index = index;
     selection->generation = audio_status(audio).generation;
     select_song(ui, song);
+    if (ui->player->backing_worker &&
+        lyrics_worker_set(ui->player->backing_worker, song->backing_lyrics,
+                          selection->generation, song->duration_ms) < 0) {
+        ui->player->backing_lyrics_error = "Cannot load backing vocals into the animation worker.";
+    }
     cover_request(selection->covers, selection->cover_override ? selection->cover_override : song->cover_uri);
     ui->player->paused = paused;
     ui->player->position_ms = position_ms;
@@ -1268,6 +1292,7 @@ static void select_song(TuiState *ui, const DbSong *song)
     player->lyrics = song->lyrics;
     lyrics_free(player->timed_lyrics);
     lyrics_free(player->backing_lyrics);
+    lyrics_frame_free(&player->backing_frame);
     player->backing_lyrics_error = NULL;
     player->lyric_active = SIZE_MAX;
     player->position_ms = 0;

@@ -14,7 +14,7 @@ MPRIS_LIBS = $(shell pkg-config --libs gio-2.0)
 
 TARGET = sjb
 DB ?= jukebox.db
-SOURCES = ShittyJukeBox.c src/audio_handler.c src/lyrics_handler.c src/offline.c \
+SOURCES = ShittyJukeBox.c src/audio_handler.c src/lyrics_handler.c src/lyrics_worker.c src/offline.c \
           src/terminal_handler.c src/TUI.c src/database.c src/cover_handler.c src/fft.c src/visualizer.c src/shuffle.c src/playlists.c src/config.c src/mpris.c src/session.c
 HEADERS = $(wildcard src/*.h)
 

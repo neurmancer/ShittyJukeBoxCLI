@@ -12,10 +12,10 @@
 
 ## My Therapy Songs
 
-> 1. Evanescence - Bring Me to Life (synced lyrics)
-> 2. Evanescence - My Immortal (synced lyrics)
-> 3. Evanescence - Lithium (Synced lyrics)
-> 4. Green Day - Boulevard of Broken Dreams (Synced lyrics)
+> 1. Evanescence - Bring Me to Life
+> 2. Evanescence - My Immortal
+> 3. Evanescence - Lithium
+> 4. Green Day - Boulevard of Broken Dreams
 > 5. HIM - (Don't Fear) The Reaper
 > 6. My Chemical Romance - I Never Told You What I Do for a Living
 > 7. Metallica - Fade to Black
@@ -28,14 +28,14 @@
 > 14. Papa Roach - Last Resort
 > 15. Paramore - Misery Business
 > 16. Scorpions - Still Loving You
-> 17. Three Days Grace - I Hate Everything About You (synced lyrics)
+> 17. Three Days Grace - I Hate Everything About You
 > 18. Three Days Grace - Pain
 
 ---
 
 ## ADHDCore
 
-> 1. Ain't My Fault (Synced Lyrics)
+> 1. Ain't My Fault
 > 2. All I Ever Wanted
 > 3. American Idiot
 > 4. Angel of Darkness
@@ -57,11 +57,11 @@
 
 ## NWOBHM
 
-> 1. Diamond Head - Am I Evil? (synced lyrics)
-> 2. Diamond Head - In The Heat Of The Night (synced lyrics)
+> 1. Diamond Head - Am I Evil?
+> 2. Diamond Head - In The Heat Of The Night
 > 3. Iron Maiden - The Trooper
 > 4. Judas Priest - Prisoner of Your Eyes
-> 5. Motörhead - Ace of Spades (line synced lyrics)
+> 5. Motörhead - Ace of Spades
 > 6. Motörhead - Overkill
 > 7. Motörhead - Too Late Too Late
 > 8. Saxon - Denim&Leather

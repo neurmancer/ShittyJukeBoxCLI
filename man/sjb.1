@@ -185,13 +185,17 @@ it. The helper validates and stores the file contents in the database;
 the original files are not needed during playback. Lead lyrics can still be
 updated independently with --lyrics SONG_ID.
 .PP
-The lyrics view displays backing vocals below the lead lyrics. Each track
+The lyrics view inserts active backing vocals directly beneath the current
+lead line in the same scrolling lyrics area. Each track
 has independent timing, including inline word timestamps, while both follow
-the same playback clock when pausing or seeking. A blank timestamped line
-ends a vocal cue before the next one begins; without it, the cue stays active
-until the next timestamp in its own track. Lyric browsing and line jumps
-operate on the lead track. The backing area follows playback automatically.
-Displaying both tracks requires a terminal of at least 32 columns and 10 rows.
+the same playback clock when pausing or seeking. A trailing inline timestamp
+or a blank timestamped line ends a vocal cue before the next one begins.
+Finished backing cues disappear, and finished lead cues remain dim as context.
+Without an explicit end, a cue stays active until the next line timestamp
+in its own track or the known song end. Lyric browsing and line jumps operate
+on the lead track; backing cues follow the playback position and appear with
+the current lead line when it is in view.
+Displaying overlapping vocals requires at least 32 columns and 9 rows.
 .SS Online buffering
 HTTP(S) tracks are downloaded completely into a temporary disk cache before
 playback starts.

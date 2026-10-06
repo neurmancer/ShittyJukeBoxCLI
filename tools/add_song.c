@@ -167,7 +167,7 @@ static int choose_lyrics(DbSong *song, int updating)
 static int choose_backing_lyrics(DbSong *song, int updating)
 {
     puts("Stamp backing vocals separately against the same audio, from the song's start.");
-    puts("Use a blank timed line to end a backing vocal before the next one begins.");
+    puts("End a backing vocal with a trailing inline timestamp or a blank timed line.");
     for (;;) {
         char *choice = ask(updating ?
             "Backing vocals: [l] LRC file, [n] clear, Enter keep: " :
