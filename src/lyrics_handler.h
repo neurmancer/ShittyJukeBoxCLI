@@ -17,7 +17,11 @@ typedef struct {
     size_t word_count;
 } LyricsCue;
 
+typedef struct { int64_t start_ms, end_ms; } LyricsSolo;
+
 typedef struct {
+    LyricsSolo *solos;
+    size_t solo_count;
     LyricsCue *cues;
     size_t count;
     size_t skipped_lines;
@@ -27,6 +31,7 @@ typedef struct {
 int lyrics_parse(const char *source, Lyrics *lyrics, char *error, size_t size);
 int lyrics_read(const char *path, char **source, Lyrics *lyrics, char *error, size_t size);
 void lyrics_free(Lyrics *lyrics);
+size_t lyrics_solo_active(const Lyrics *lyrics, int64_t position_ms);
 /* SIZE_MAX before the first cue. Stateless lookup also supports backward seeks. */
 size_t lyrics_active(const Lyrics *lyrics, int64_t position_ms);
 int lyrics_cue_active(const Lyrics *lyrics, size_t cue, int64_t position_ms, int64_t duration_ms);

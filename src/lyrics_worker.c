@@ -106,7 +106,7 @@ int lyrics_worker_set(LyricsWorker *worker, const char *source, uint64_t generat
     int result = 0;
     if (source && *source) {
         result = lyrics_parse(source, &parsed, NULL, 0);
-        if (!result) {
+        if (!result && parsed.count) {
             cues = calloc(parsed.count, sizeof *cues);
             if (!cues) { lyrics_free(&parsed); result = -1; }
         }

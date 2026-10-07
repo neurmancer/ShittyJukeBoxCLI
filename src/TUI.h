@@ -61,6 +61,7 @@ typedef struct {
     LyricsFrame backing_frame;
     const char *backing_lyrics_error;
     size_t lyric_active;
+    size_t solo_number, solo_count;
     int64_t position_ms;
     int64_t duration_ms;
     int volume_percent;

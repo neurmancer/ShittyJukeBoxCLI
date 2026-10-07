@@ -12,11 +12,11 @@
 
 ## My Therapy Songs
 
-> 1. Evanescence - Bring Me to Life
-> 2. Evanescence - My Immortal
-> 3. Evanescence - Lithium
-> 4. Green Day - Boulevard of Broken Dreams
-> 5. HIM - (Don't Fear) The Reaper
+> 1. Evanescence - Bring Me to Life (Synced Lyrics)
+> 2. Evanescence - My Immortal (Synced Lyrics)
+> 3. Evanescence - Lithium (Synced Lyrics)
+> 4. Green Day - Boulevard of Broken Dreams (Synced Lyrics)
+> 5. HIM - (Don't Fear) The Reaper (Synced Lyrics)
 > 6. My Chemical Romance - I Never Told You What I Do for a Living
 > 7. Metallica - Fade to Black
 > 8. Metallica - The Unforgiven

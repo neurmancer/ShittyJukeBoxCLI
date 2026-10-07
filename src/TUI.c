@@ -165,8 +165,15 @@ static void text_at(size_t row, size_t column, size_t width, const char *style, 
 
 static void track_label(char *buffer, size_t size, const TuiPlayer *player)
 {
-    snprintf(buffer, size, "%s%s%s", player->artist && *player->artist ? player->artist : "",
-             player->artist && *player->artist ? " - " : "", player->title);
+    size_t used = 0;
+    if (player->solo_number) {
+        snprintf(buffer, size, "[SOLO %zu/%zu] ", player->solo_number, player->solo_count);
+        used = strlen(buffer);
+    }
+    if (used < size) {
+        snprintf(buffer + used, size - used, "%s%s%s", player->artist && *player->artist ? player->artist : "",
+                 player->artist && *player->artist ? " - " : "", player->title);
+    }
 }
 
 static void line(size_t row, size_t width, const char *style, const char *text)

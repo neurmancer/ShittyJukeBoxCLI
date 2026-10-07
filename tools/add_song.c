@@ -248,6 +248,13 @@ static void preview_song(const DbSong *song, const char *genre)
     preview_time("Lyrics end", song->lyrics_end_ms);
     preview_time("Solo start", song->solo_start_ms);
     preview_time("Solo end", song->solo_end_ms);
+    if (!strcmp(song->lyrics_format, "lrc")) {
+        Lyrics parsed = {0};
+        if (lyrics_parse(song->lyrics, &parsed, NULL, 0) == 0 && parsed.solo_count) {
+            printf("LRC solo sections: %zu (override the manual solo markers)\n", parsed.solo_count);
+        }
+        lyrics_free(&parsed);
+    }
 }
 
 static int edit_text(const char *label, char **value, int required)
@@ -360,6 +367,7 @@ static void usage(const char *program)
            "--edit: edit a saved song; Enter keeps fields, - clears optional fields.\n"
            "Fields: title, artist, album, audio URL/path, cover URL/path, genre, duration,\n"
            "LRC/plain/Genius lyrics, optional backing vocals LRC, and lyrics/solo timing markers.\n"
+           "Lead LRC supports multiple solos: [solo:01:20.000-01:35.000], one range per line.\n"
            "Duration is optional seconds; playback discovers it when omitted.\n"
            "A missing database is created automatically.\n", program);
 }

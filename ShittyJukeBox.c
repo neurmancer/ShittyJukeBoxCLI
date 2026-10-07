@@ -424,7 +424,8 @@ int main(int argc, char **argv)
     tui_state_draw(&ui);
 
     while (running) {
-        bool timed_view = ui.screen == SCREEN_LYRICS && (timed_lyrics.count || backing_lyrics.count) && player.lyrics_visible && !player.paused;
+        bool timed_view = !player.paused && (timed_lyrics.solo_count ||
+            (ui.screen == SCREEN_LYRICS && (timed_lyrics.count || backing_lyrics.count) && player.lyrics_visible));
         int refresh_ms = timed_view ? 10 : ui.screen == SCREEN_VISUALIZER ? 33 : 100;
         terminal_text_mode(!ui.quit_requested && ((ui.screen == SCREEN_SONGS && ui.search_editing && ui.overlay == OVERLAY_NONE) ||
                            (ui.overlay == OVERLAY_PLAYLISTS && (playlists.mode == PLAYLIST_CREATE || playlists.mode == PLAYLIST_RENAME || playlists.mode == PLAYLIST_COVER))));
@@ -750,6 +751,10 @@ int main(int argc, char **argv)
             }
             player.duration_known = selection.song->duration_ms >= 0;
             player.duration = player.duration_known ? (unsigned long long)selection.song->duration_ms / 1000 : 0;
+            size_t solo = (status.state == AUDIO_PLAYING || status.state == AUDIO_PAUSED) ?
+                lyrics_solo_active(&timed_lyrics, status.position_ms) : SIZE_MAX;
+            size_t solo_number = solo == SIZE_MAX ? 0 : solo + 1;
+            if (player.solo_number != solo_number) { player.solo_number = solo_number; result = TUI_CHANGED; }
             size_t active = lyrics_active(&timed_lyrics, status.position_ms);
             if (active != player.lyric_active) {
                 if (!ui.lyrics_browsing) { ui.lyrics_top = active == SIZE_MAX ? 0 : active > 2 ? active - 2 : 0; }
@@ -781,6 +786,7 @@ int main(int argc, char **argv)
             }
         }
         if (status.state == AUDIO_IDLE && selection.song) {
+            player.solo_number = 0;
             player.paused = true;
             player.loading = false;
             player.position_ms = 0;
@@ -887,6 +893,7 @@ static int import_lrc(Database *db, int64_t id, const char *path)
     printf("Imported %zu timed lines (%zu untimed/invalid lines ignored for playback).\n"
            "Original LRC bytes retained in the database; source file unchanged.\n",
            timeline.count, timeline.skipped_lines);
+    if (timeline.solo_count) { printf("Imported %zu solo sections.\n", timeline.solo_count); }
     result = 0;
     goto done;
 rollback:
@@ -1330,6 +1337,15 @@ static void select_song(TuiState *ui, const DbSong *song)
             player->backing_lyrics_error = "Cannot parse backing vocals; re-import a valid LRC file.";
         }
     }
+    if (!player->timed_lyrics->solo_count && song->solo_start_ms >= 0 && song->solo_end_ms > song->solo_start_ms) {
+        player->timed_lyrics->solos = malloc(sizeof *player->timed_lyrics->solos);
+        if (player->timed_lyrics->solos) {
+            player->timed_lyrics->solos[0] = (LyricsSolo){song->solo_start_ms, song->solo_end_ms};
+            player->timed_lyrics->solo_count = 1;
+        }
+    }
+    player->solo_number = 0;
+    player->solo_count = player->timed_lyrics->solo_count;
     player->duration_known = song->duration_ms != DB_TIME_UNKNOWN;
     player->duration = player->duration_known ? (unsigned long long)(song->duration_ms / 1000) : 0;
     player->elapsed = 0;

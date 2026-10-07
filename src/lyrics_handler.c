@@ -87,7 +87,25 @@ void lyrics_free(Lyrics *lyrics)
         free(lyrics->cues[i].words);
     }
     free(lyrics->cues);
+    free(lyrics->solos);
     *lyrics = (Lyrics){0};
+}
+
+size_t lyrics_solo_active(const Lyrics *lyrics, int64_t position_ms)
+{
+    size_t low = 0, high = lyrics->solo_count;
+    while (low < high) {
+        size_t mid = low + (high - low) / 2;
+        if (lyrics->solos[mid].start_ms <= position_ms) { low = mid + 1; }
+        else { high = mid; }
+    }
+    return(low && position_ms < lyrics->solos[low - 1].end_ms ? low - 1 : SIZE_MAX);
+}
+
+static int compare_solos(const void *left, const void *right)
+{
+    const LyricsSolo *a = left, *b = right;
+    return((a->start_ms > b->start_ms) - (a->start_ms < b->start_ms));
 }
 
 static int compare_cues(const void *left, const void *right)
@@ -176,7 +194,20 @@ int lyrics_parse(const char *source, Lyrics *lyrics, char *error, size_t size)
         if (*next == '\r') { ++next; }
         if (*next == '\n') { ++next; }
     
-        if (end - p >= 9 && !strncmp(p, "[offset:", 8)) {
+        if (end - p >= 6 && !strncmp(p, "[solo:", 6)) {
+            LyricsSolo solo;
+            const char *after = timestamp(p + 5, end, &solo.start_ms, ':', '-');
+            if (after) { after = timestamp(after - 1, end, &solo.end_ms, '-', ']'); }
+            if (!after || after != end || solo.end_ms <= solo.start_ms || parsed.solo_count == LRC_MAX_CUES) {
+                lyrics_free(&parsed);
+                return(failure(error, size, "Invalid solo: use [solo:mm:ss.xxx-mm:ss.xxx] with end after start"));
+            }
+            LyricsSolo *grown = realloc(parsed.solos, (parsed.solo_count + 1) * sizeof *grown);
+            if (!grown) { goto memory; }
+            parsed.solos = grown;
+            parsed.solos[parsed.solo_count++] = solo;
+        }
+        else if (end - p >= 9 && !strncmp(p, "[offset:", 8)) {
             char *tail;
     
             errno = 0;
@@ -232,7 +263,7 @@ int lyrics_parse(const char *source, Lyrics *lyrics, char *error, size_t size)
         }
         p = next;
     }
-    if (!parsed.count) {
+    if (!parsed.count && !parsed.solo_count) {
         
         lyrics_free(&parsed);
         
@@ -246,7 +277,16 @@ int lyrics_parse(const char *source, Lyrics *lyrics, char *error, size_t size)
         }
     }
     
-    qsort(parsed.cues, parsed.count, sizeof *parsed.cues, compare_cues);
+    if (parsed.count) { qsort(parsed.cues, parsed.count, sizeof *parsed.cues, compare_cues); }
+    if (parsed.solo_count) { qsort(parsed.solos, parsed.solo_count, sizeof *parsed.solos, compare_solos); }
+    for (size_t i = 0; i < parsed.solo_count; ++i) {
+        parsed.solos[i].start_ms -= offset;
+        parsed.solos[i].end_ms -= offset;
+        if (i && parsed.solos[i].start_ms < parsed.solos[i - 1].end_ms) {
+            lyrics_free(&parsed);
+            return(failure(error, size, "Solo sections must not overlap"));
+        }
+    }
     
     lyrics_free(lyrics);
     
