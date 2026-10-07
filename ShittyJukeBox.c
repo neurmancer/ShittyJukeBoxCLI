@@ -322,21 +322,22 @@ int main(int argc, char **argv)
     }
     
     TuiItem home_items[] = {
-        {"Genres", TUI_BUTTON, true, false},
-        {"Settings", TUI_BUTTON, true, false},
-        {"Player", TUI_BUTTON, true, false},
-        {"Quit", TUI_BUTTON, true, false}
+        {"Genres", TUI_BUTTON, true, false, NULL},
+        {"Settings", TUI_BUTTON, true, false, NULL},
+        {"Player", TUI_BUTTON, true, false, NULL},
+        {"Quit", TUI_BUTTON, true, false, NULL}
     };
     
     TuiItem settings_items[] = {
-        {"Show lyrics", TUI_TOGGLE, true, true},
-        {"Loop playback", TUI_TOGGLE, true, false}
+        {"Show lyrics", TUI_TOGGLE, true, true, NULL},
+        {"Loop playback", TUI_TOGGLE, true, false, NULL},
+        {"Show cover", TUI_TOGGLE, true, true, NULL}
     };
     
     TuiMenu menus[] = {
         {.title = "ShittyJukeBox", .items = home_items, .count = 4, .wrap = true},
         {.title = "Genres", .items = library.items, .count = library.count, .wrap = true},
-        {.title = "Settings", .items = settings_items, .count = 2}
+        {.title = "Settings", .items = settings_items, .count = 3}
     };
     
     for (size_t i = 0; i < sizeof menus / sizeof menus[0]; ++i) tui_menu_init(&menus[i]);
@@ -419,6 +420,7 @@ int main(int argc, char **argv)
     char mpris_error[256] = "";
     Mpris *mpris = mpris_create(remote_read, remote_control, &remote, mpris_error, sizeof mpris_error);
     if (!mpris) { ui.status = mpris_error; }
+    offline_downloads_refresh();
     tui_state_draw(&ui);
 
     while (running) {
@@ -647,6 +649,7 @@ int main(int argc, char **argv)
 
         else { settings_items[1].value = player.repeat || player.repeat_playlist; }
         player.lyrics_visible = settings_items[0].value;
+        player.hide_cover = !settings_items[2].value;
 
         if (result == TUI_SELECTED) {
             if (ui.overlay == OVERLAY_QUEUE) {
@@ -788,6 +791,7 @@ int main(int argc, char **argv)
         if (download && offline_download_poll(download, download_status, sizeof download_status)) {
             offline_download_destroy(download);
             download = NULL;
+            offline_downloads_refresh();
             ui.status = download_status;
             result = TUI_CHANGED;
         }
@@ -833,6 +837,7 @@ int main(int argc, char **argv)
     }
     
     offline_download_destroy(download);
+    offline_downloads_clear();
     mpris_destroy(mpris);
     cover_destroy(selection.covers);
     playlists_free(&playlists);
@@ -967,7 +972,7 @@ static int queue_next(TuiState *ui, Library *library, PlaybackSelection *selecti
     size_t insert = selection->song ? selection->index + 1 : 0;
     for (size_t i = 0; i < count + 1; ++i) {
         songs[i] = i == insert ? *song : source->songs[i < insert ? i : i - 1];
-        items[i] = (TuiItem){songs[i].title, TUI_BUTTON, true, false};
+        items[i] = (TuiItem){songs[i].title, TUI_BUTTON, true, false, songs[i].media_uri};
     }
     if (order) {
         size_t at = 0;
@@ -1034,7 +1039,7 @@ static void queue_edit(TuiState *ui, Library *library, PlaybackSelection *select
         songs[to] = moved;
     }
     for (size_t i = 0; i < count; ++i) {
-        items[i] = (TuiItem){songs[i].title, TUI_BUTTON, true, false};
+        items[i] = (TuiItem){songs[i].title, TUI_BUTTON, true, false, songs[i].media_uri};
         if (order) { order[i] = i; shuffled[i] = items[i]; }
     }
     free(library->custom.songs);
@@ -1147,6 +1152,16 @@ static void restore_session(Database *db, AudioPlayer *audio, TuiState *ui, Libr
     Session session = {0};
     int loaded = session_load(db, &session, message, size);
     if (loaded <= 0) { if (loaded < 0) { ui->status = message; } return; }
+    if (session.has_preferences) {
+        ui->typewriter_mode = session.typewriter_mode;
+        ui->typewriter_color = (size_t)session.typewriter_color;
+        ui->karaoke = session.karaoke;
+        ui->playback_view = SCREEN_PLAYER + session.playback_view;
+        ui->player->lyrics_visible = !session.hide_lyrics;
+        ui->player->hide_cover = session.hide_cover;
+        ui->menus[SCREEN_SETTINGS]->items[0].value = !session.hide_lyrics;
+        ui->menus[SCREEN_SETTINGS]->items[2].value = !session.hide_cover;
+    }
     ui->player->volume_percent = session.volume;
     audio_set_volume(audio, session.volume);
     ui->player->shuffle = session.shuffle;
@@ -1172,7 +1187,7 @@ static void restore_session(Database *db, AudioPlayer *audio, TuiState *ui, Libr
         if (!song) { continue; }
         mapping[i] = snapshot.count;
         snapshot.songs[snapshot.count] = *song;
-        snapshot.menu.items[snapshot.count++] = (TuiItem){song->title, TUI_BUTTON, true, false};
+        snapshot.menu.items[snapshot.count++] = (TuiItem){song->title, TUI_BUTTON, true, false, song->media_uri};
     }
     size_t at = 0;
     for (size_t i = 0; i < session.count; ++i) {
@@ -1202,7 +1217,7 @@ static void restore_session(Database *db, AudioPlayer *audio, TuiState *ui, Libr
             session_free(&session);
             return;
         }
-        tui_state_switch(ui, SCREEN_PLAYER);
+        tui_state_switch(ui, ui->playback_view);
     }
     snprintf(message, size, "%s", missing ? "Session restored; unavailable songs were skipped. Playback is paused." :
              "Session restored. Playback is paused.");
@@ -1215,7 +1230,11 @@ static int save_session(Database *db, AudioPlayer *audio, TuiState *ui, Library 
 {
     SongMenu *section = selection->song ? playback_section(library, selection->genre) : &library->custom;
     AudioStatus status = audio_status(audio);
-    Session session = {.count = section->count, .current = selection->song ? (int64_t)selection->index : -1,
+    Session session = {.has_preferences = true,
+        .typewriter_mode = ui->typewriter_mode, .typewriter_color = (int)ui->typewriter_color,
+        .karaoke = ui->karaoke, .hide_lyrics = !ui->player->lyrics_visible,
+        .hide_cover = ui->player->hide_cover, .playback_view = ui->playback_view - SCREEN_PLAYER,
+        .count = section->count, .current = selection->song ? (int64_t)selection->index : -1,
         .position_ms = selection->song && status.generation == selection->generation && status.state != AUDIO_FINISHED ? status.position_ms : 0,
         .volume = status.volume_percent, .shuffle = ui->player->shuffle,
         .loop = ui->player->repeat ? 1 : ui->player->repeat_playlist ? 2 : 0};
@@ -1256,7 +1275,7 @@ static int playlist_play(AudioPlayer *audio, TuiState *ui, Library *library,
         for (size_t j = 0; j < library->sections[0].count; ++j) {
             if (library->sections[0].songs[j].id == panel->ids[i]) {
                 snapshot.songs[i] = library->sections[0].songs[j];
-                snapshot.menu.items[i] = (TuiItem){snapshot.songs[i].title, TUI_BUTTON, true, false};
+                snapshot.menu.items[i] = (TuiItem){snapshot.songs[i].title, TUI_BUTTON, true, false, snapshot.songs[i].media_uri};
                 found = true;
                 break;
             }
@@ -1368,7 +1387,7 @@ static void search_update(Library *library)
             if (score == rank) {
                 size_t index = library->search.count++;
                 library->search_indices[index] = i;
-                library->search.items[index] = (TuiItem){library->search_labels[i], TUI_BUTTON, true, false};
+                library->search.items[index] = (TuiItem){library->search_labels[i], TUI_BUTTON, true, false, song->media_uri};
             }
         }
     }
@@ -1411,7 +1430,7 @@ static int library_load(Database *db, Library *library)
     library->sections = calloc(library->count, sizeof *library->sections);
     if (!library->items || !library->sections) { goto no_memory; }
     for (size_t i = 0; i < library->count; ++i) {
-        library->items[i] = (TuiItem){library->genres[i].name, TUI_BUTTON, true, false};
+        library->items[i] = (TuiItem){library->genres[i].name, TUI_BUTTON, true, false, NULL};
         SongMenu *section = &library->sections[i];
         if (database_songs(db, library->genres[i].id, &section->songs, &section->count) < 0) { return(-1); }
         library->genres[i].song_count = section->count;
@@ -1421,7 +1440,7 @@ static int library_load(Database *db, Library *library)
             if (!section->menu.items) { goto no_memory; }
         }
         for (size_t j = 0; j < section->count; ++j) {
-            section->menu.items[j] = (TuiItem){section->songs[j].title, TUI_BUTTON, true, false};
+            section->menu.items[j] = (TuiItem){section->songs[j].title, TUI_BUTTON, true, false, section->songs[j].media_uri};
         }
         tui_menu_init(&section->menu);
     }

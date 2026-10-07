@@ -10,6 +10,13 @@ typedef struct {
 } SessionTrack;
 
 typedef struct {
+    bool has_preferences;
+    int typewriter_mode;
+    int typewriter_color;
+    int playback_view;
+    bool karaoke;
+    bool hide_lyrics;
+    bool hide_cover;
     SessionTrack *tracks;
     size_t *order;
     size_t count;

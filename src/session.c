@@ -34,6 +34,13 @@ static int64_t number(GKeyFile *file, const char *group, const char *key, bool *
     return(value);
 }
 
+static int preference(GKeyFile *file, const char *key, int maximum)
+{
+    bool valid = true;
+    int64_t value = number(file, "preferences", key, &valid);
+    return(valid && value >= 0 && value <= maximum ? (int)value : 0);
+}
+
 int session_load(Database *db, Session *session, char *error, size_t size)
 {
     char *path = session_path(db);
@@ -68,6 +75,13 @@ int session_load(Database *db, Session *session, char *error, size_t size)
         loaded.current < -1 || loaded.current >= count || loaded.position_ms < 0 ||
         volume < 0 || volume > 100 || loop < 0 || loop > 2 || shuffle < 0 || shuffle > 1) { goto done; }
 
+    loaded.has_preferences = g_key_file_has_group(file, "preferences");
+    loaded.typewriter_mode = preference(file, "typewriter_mode", 2);
+    loaded.typewriter_color = preference(file, "typewriter_color", 7);
+    loaded.playback_view = preference(file, "playback_view", 2);
+    loaded.karaoke = preference(file, "karaoke", 1);
+    loaded.hide_lyrics = preference(file, "hide_lyrics", 1);
+    loaded.hide_cover = preference(file, "hide_cover", 1);
     loaded.volume = (int)volume;
     loaded.loop = (int)loop;
     loaded.shuffle = shuffle;
@@ -121,6 +135,14 @@ int session_save(Database *db, const Session *session, char *error, size_t size)
     g_key_file_set_int64(file, "session", "volume", session->volume);
     g_key_file_set_int64(file, "session", "loop", session->loop);
     g_key_file_set_int64(file, "session", "shuffle", session->shuffle);
+    if (session->has_preferences) {
+        g_key_file_set_integer(file, "preferences", "typewriter_mode", session->typewriter_mode);
+        g_key_file_set_integer(file, "preferences", "typewriter_color", session->typewriter_color);
+        g_key_file_set_integer(file, "preferences", "playback_view", session->playback_view);
+        g_key_file_set_integer(file, "preferences", "karaoke", session->karaoke);
+        g_key_file_set_integer(file, "preferences", "hide_lyrics", session->hide_lyrics);
+        g_key_file_set_integer(file, "preferences", "hide_cover", session->hide_cover);
+    }
     for (size_t i = 0; i < session->count; ++i) {
         char group[40];
         snprintf(group, sizeof group, "track%zu", i);

@@ -26,6 +26,63 @@ char *offline_default_root(void)
     return(g_build_filename(g_get_home_dir(), ".sjb", "songs", NULL));
 }
 
+static GHashTable *downloaded_uris;
+
+void offline_downloads_clear(void)
+{
+    if (downloaded_uris) { g_hash_table_destroy(downloaded_uris); downloaded_uris = NULL; }
+}
+
+static void downloaded_scan(const char *directory, unsigned depth)
+{
+    if (depth > 64) { return; }
+    GDir *dir = g_dir_open(directory, 0, NULL);
+    if (!dir) { return; }
+    const char *name;
+    while ((name = g_dir_read_name(dir))) {
+        char *path = g_build_filename(directory, name, NULL);
+        struct stat info;
+        if (lstat(path, &info) == 0) {
+            if (S_ISDIR(info.st_mode)) { downloaded_scan(path, depth + 1); }
+            else if (S_ISREG(info.st_mode) && g_str_has_suffix(name, ".mp3.sjb")) {
+                char *audio = g_strndup(path, strlen(path) - 4);
+                struct stat media;
+                if (stat(audio, &media) == 0 && S_ISREG(media.st_mode) && media.st_size > 0) {
+                    GKeyFile *file = g_key_file_new();
+                    if (g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, NULL)) {
+                        char *uri = g_key_file_get_string(file, "Song", "uri", NULL);
+                        if (uri && *uri) {
+                            g_hash_table_add(downloaded_uris, uri);
+                            g_hash_table_add(downloaded_uris, g_strdup(audio));
+                            char *file_uri = g_filename_to_uri(audio, NULL, NULL);
+                            if (file_uri) { g_hash_table_add(downloaded_uris, file_uri); }
+                        }
+                        else { g_free(uri); }
+                    }
+                    g_key_file_unref(file);
+                }
+                g_free(audio);
+            }
+        }
+        g_free(path);
+    }
+    g_dir_close(dir);
+}
+
+void offline_downloads_refresh(void)
+{
+    offline_downloads_clear();
+    downloaded_uris = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    char *root = offline_default_root();
+    downloaded_scan(root, 0);
+    g_free(root);
+}
+
+int offline_is_downloaded(const char *uri)
+{
+    return(uri && downloaded_uris && g_hash_table_contains(downloaded_uris, uri));
+}
+
 static int sql(Database *db, const char *statement)
 {
     if (sqlite3_exec(db->handle, statement, NULL, NULL, NULL) != SQLITE_OK) {

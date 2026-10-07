@@ -9,6 +9,7 @@
 #define LRC_MAX_BYTES (1024 * 1024)
 #define LRC_MAX_CUES 16384
 #define LRC_MAX_TIME (INT64_MAX / 4)
+#define LYRICS_FINISH_EARLY_MS 7
 
 static int failure(char *error, size_t size, const char *message)
 {
@@ -331,6 +332,12 @@ int lyrics_cue_active(const Lyrics *lyrics, size_t index, int64_t position_ms, i
     return(1);
 }
 
+static uint64_t reveal_window(uint64_t window)
+{
+    /* Let the last letter land before the next cue barges the fuck in. */
+    return(window > LYRICS_FINISH_EARLY_MS ? window - LYRICS_FINISH_EARLY_MS + 1 : 1);
+}
+
 static size_t stamped_visible_bytes(const Lyrics *lyrics, size_t index, int64_t position_ms, int64_t duration_ms)
 {
     const LyricsCue *cue = &lyrics->cues[index];
@@ -363,7 +370,7 @@ static size_t stamped_visible_bytes(const Lyrics *lyrics, size_t index, int64_t 
         if (((unsigned char)cue->text[i] & 0xc0) != 0x80) { ++characters; }
     }
     if (!characters) { return(end_byte); }
-    uint64_t window = known && end > start ? (uint64_t)end - (uint64_t)start : (uint64_t)characters * 100;
+    uint64_t window = known && end > start ? reveal_window((uint64_t)end - (uint64_t)start) : (uint64_t)characters * 100;
     uint64_t elapsed = (uint64_t)position_ms - (uint64_t)start;
     if (window <= 1 || elapsed >= window - 1) { return(end_byte); }
     size_t visible = 1 + (size_t)((long double)elapsed * (characters - 1) / (window - 1));
@@ -401,7 +408,7 @@ size_t lyrics_visible_bytes(const Lyrics *lyrics, size_t cue, int64_t position_m
 
 
     if ((next < lyrics->count || duration_ms >= 0) && end > start) {
-        window = (uint64_t)end - (uint64_t)start;
+        window = reveal_window((uint64_t)end - (uint64_t)start);
     }
     uint64_t elapsed = (uint64_t)position_ms - (uint64_t)start;
     

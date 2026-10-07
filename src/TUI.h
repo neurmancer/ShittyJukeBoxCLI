@@ -16,6 +16,7 @@ typedef struct {
     TuiItemKind kind;
     bool enabled;
     bool value;
+    const char *media_uri;
 } TuiItem;
 
 typedef struct {
@@ -69,6 +70,7 @@ typedef struct {
     
     bool duration_known;
     bool show_cover;
+    bool hide_cover;
     bool loading;
     bool lyrics_visible;
     
@@ -100,6 +102,7 @@ typedef enum { TYPEWRITER_NORMAL, TYPEWRITER_RGB, TYPEWRITER_BOLD, TYPEWRITER_MO
 
 typedef struct {
     TuiScreen screen;
+    TuiScreen playback_view;
     TuiOverlay overlay;
     TuiScreen history[16];
     size_t history_count;

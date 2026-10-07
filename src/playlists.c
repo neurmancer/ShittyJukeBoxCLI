@@ -85,7 +85,7 @@ static int error(Playlists *panel)
 
 static void free_items(TuiItem *items, size_t count, int64_t *ids, char **artists, int64_t *durations)
 {
-    for (size_t i = 0; i < count; ++i) { free((char *)items[i].label); free(artists[i]); }
+    for (size_t i = 0; i < count; ++i) { free((char *)items[i].label); free((char *)items[i].media_uri); free(artists[i]); }
     free(items);
     free(ids);
     free(artists);
@@ -104,9 +104,9 @@ static int refresh(Playlists *panel)
 {
     sqlite3_stmt *stmt = NULL;
     const char *sql = panel->playlist_id ?
-        "SELECT p.song_id,coalesce(s.title,'[Unavailable song]'),coalesce(s.artist,''),s.duration_ms "
+        "SELECT p.song_id,coalesce(s.title,'[Unavailable song]'),coalesce(s.artist,''),s.duration_ms,coalesce(s.media_uri,'') "
         "FROM saved.playlist_songs p LEFT JOIN main.songs s ON s.id=p.song_id WHERE p.playlist_id=?1 ORDER BY p.position,p.song_id" :
-        "SELECT id,name,'',NULL FROM saved.playlists ORDER BY id";
+        "SELECT id,name,'',NULL,'' FROM saved.playlists ORDER BY id";
     if (sqlite3_prepare_v2(panel->db->handle, sql, -1, &stmt, NULL) != SQLITE_OK) { return(error(panel)); }
     if (panel->playlist_id) { sqlite3_bind_int64(stmt, 1, panel->playlist_id); }
     TuiItem *items = NULL;
@@ -129,11 +129,12 @@ static int refresh(Playlists *panel)
         durations = more_durations;
         char *label = strdup((const char *)sqlite3_column_text(stmt, 1));
         char *artist = strdup((const char *)sqlite3_column_text(stmt, 2));
-        if (!label || !artist) { free(label); free(artist); goto no_memory; }
+        char *uri = strdup((const char *)sqlite3_column_text(stmt, 4));
+        if (!label || !artist || !uri) { free(label); free(artist); free(uri); goto no_memory; }
         ids[count] = sqlite3_column_int64(stmt, 0);
         artists[count] = artist;
         durations[count] = sqlite3_column_type(stmt, 3) == SQLITE_NULL ? -1 : sqlite3_column_int64(stmt, 3);
-        items[count++] = (TuiItem){label, TUI_BUTTON, true, false};
+        items[count++] = (TuiItem){label, TUI_BUTTON, true, false, uri};
     }
     if (result != SQLITE_DONE) {
         error(panel);

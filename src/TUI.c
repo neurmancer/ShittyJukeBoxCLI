@@ -1,6 +1,7 @@
 #include "terminal_handler.h"
 #define _XOPEN_SOURCE 700
 #include "TUI.h"
+#include "offline.h"
 #include "playlists.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -195,9 +196,9 @@ void tui_menu_draw(TuiMenu *menu, const char *status)
     for (size_t i = menu->top; i < menu->count && i - menu->top < visible; ++i) {
         TuiItem *item = &menu->items[i];
         char label[512];
-        snprintf(label, sizeof label, "%s %s%s%s%s", i == menu->selected ? ">" : " ",
+        snprintf(label, sizeof label, "%s %s%s%s%s%s", i == menu->selected ? ">" : " ",
                  item->kind == TUI_TOGGLE ? (item->value ? "[on]  " : "[off] ") : "",
-                 item->label, menu->has_active && menu->active == i ? " [playing]" : "",
+                 item->label, offline_is_downloaded(item->media_uri) ? " *" : "", menu->has_active && menu->active == i ? " [playing]" : "",
                  item->enabled ? "" : " (wtf?)");
         line(3 + i - menu->top, width,
              !item->enabled ? DIM : i == menu->selected ? BOLDY INVERSE : RESET, label);
@@ -329,6 +330,7 @@ static void jukebox_menu_draw(TuiMenu *menu, TuiScreen screen, const char *statu
     for (size_t i = 0; i < menu->count; ++i) {
         size_t cells = 2 + text_cells(menu->items[i].label) +
                        (menu->items[i].kind == TUI_TOGGLE ? 6 : 0) +
+                       (offline_is_downloaded(menu->items[i].media_uri) ? 2 : 0) +
                        (menu->has_active && menu->active == i ? 10 : 0) +
                        (menu->items[i].enabled ? 0 : 7);
         if (cells > label_width) { label_width = cells; }
@@ -341,9 +343,9 @@ static void jukebox_menu_draw(TuiMenu *menu, TuiScreen screen, const char *statu
         TuiItem *item = &menu->items[i];
         char label[512];
 
-        snprintf(label, sizeof label, "%s %s%s%s%s", i == menu->selected ? ">" : " ",
+        snprintf(label, sizeof label, "%s %s%s%s%s%s", i == menu->selected ? ">" : " ",
                  item->kind == TUI_TOGGLE ? (item->value ? "[on]  " : "[off] ") : "",
-                 item->label, menu->has_active && menu->active == i ? " [playing]" : "",
+                 item->label, offline_is_downloaded(item->media_uri) ? " *" : "", menu->has_active && menu->active == i ? " [playing]" : "",
                  item->enabled ? "" : " (wtf?)");
 
                  text_at(y + 7 + i - menu->top, x + (width - label_width) / 2, label_width,
@@ -452,7 +454,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
     size_t x = 3;
 
-    if (player->show_cover && columns >= 78 && rows >= 18) {
+    if (player->show_cover && !player->hide_cover && columns >= 78 && rows >= 18) {
         size_t cover_width = columns / 3;
 
         if (cover_width > 34) { cover_width = 34; }
@@ -535,7 +537,7 @@ void tui_player_draw(const TuiPlayer *player, const char *status)
 
     const char *message = status ? status : "";
     
-    if (player->show_cover) {
+    if (player->show_cover && !player->hide_cover) {
         if (*terminal_cover_error()) { message = terminal_cover_error(); }
 
         else if (player->cover_status && !strncmp(player->cover_status, "Cover:", 6)) { message = player->cover_status; }
@@ -554,6 +556,7 @@ void tui_state_init(TuiState *state, TuiScreen initial)
 {
     state->screen = initial >= SCREEN_HOME && initial < SCREEN_COUNT ? initial : SCREEN_HOME;
     state->overlay = OVERLAY_NONE;
+    state->playback_view = SCREEN_PLAYER;
     state->history_count = 0;
     state->status = "";
     state->lyrics_top = 0;
@@ -1125,7 +1128,8 @@ static void queue_overlay(TuiState *state)
         for (size_t i = queue->top; i < queue->count && i - queue->top < visible; ++i) {
             char label[512];
     
-            snprintf(label, sizeof label, "%s%s", queue->items[i].label,
+            snprintf(label, sizeof label, "%s%s%s", queue->items[i].label,
+                     offline_is_downloaded(queue->items[i].media_uri) ? " *" : "",
                      queue->has_active && queue->active == i ? " [current]" : "");
     
             text_at(4 + i - queue->top, x + 2, width - 3,
@@ -1300,7 +1304,10 @@ static void playlist_detail(TuiState *state)
         snprintf(number, sizeof number, "%zu", i + 1);
     
         text_at(row, 3, 4, current ? GREEN_BOLD : DIM, current ? "▶" : number);
-        text_at(row, 8, width - 20, i == menu->selected ? PURPLE_INVERSE_BOLD : BOLDY, menu->items[i].label);
+        char title[512];
+        snprintf(title, sizeof title, "%s%s", menu->items[i].label,
+                 offline_is_downloaded(menu->items[i].media_uri) ? " *" : "");
+        text_at(row, 8, width - 20, i == menu->selected ? PURPLE_INVERSE_BOLD : BOLDY, title);
         text_at(row + 1, 8, width - 20, DIM, *panel->artists[i] ? panel->artists[i] : "Artist unknown");
     
         if (panel->durations[i] < 0) { snprintf(duration, sizeof duration, "--:--"); }
@@ -1409,8 +1416,11 @@ static void playlists_overlay(TuiState *state)
         }
     
         for (size_t i = menu->top; i < menu->count && i - menu->top < visible; ++i) {
+            char title[512];
+            snprintf(title, sizeof title, "%s%s", menu->items[i].label,
+                     offline_is_downloaded(menu->items[i].media_uri) ? " *" : "");
             text_at(4 + i - menu->top, x + 2, width - 4,
-                    i == menu->selected ? PURPLE_INVERSE : RESET, menu->items[i].label);
+                    i == menu->selected ? PURPLE_INVERSE : RESET, title);
         }
     
         if (!menu->count) { text_at(4, x + 2, width - 4, DIM, panel->playlist_id ? "No songs. Use a to add from library." : "No playlists. Press c to create."); }
@@ -1426,10 +1436,13 @@ static void playlists_overlay(TuiState *state)
 
 void tui_state_draw(TuiState *state)
 {
+    if (state->screen >= SCREEN_PLAYER && state->screen <= SCREEN_VISUALIZER) {
+        state->playback_view = state->screen;
+    }
     terminal_frame_begin();
     if (state->quit_requested) {
-        TuiItem items[] = {{"Nah blast the music", TUI_BUTTON, true, false},
-                           {"GET ME OUT OF HERE", TUI_BUTTON, true, false}};
+        TuiItem items[] = {{"Nah blast the music", TUI_BUTTON, true, false, NULL},
+                           {"GET ME OUT OF HERE", TUI_BUTTON, true, false, NULL}};
         TuiMenu menu = {.title = "Leaving already UnU?", .items = items, .count = 2, .selected = state->quit_selected};
         tui_menu_draw(&menu, "Quit stops playback and cancels downloads. Esc / q: cancel");
         terminal_frame_end();

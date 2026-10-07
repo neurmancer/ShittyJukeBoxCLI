@@ -12,4 +12,8 @@ char *offline_default_root(void);
 int offline_open(Database *db, const char *root);
 int offline_download(Database *db, const char *root, int64_t song_id);
 
+void offline_downloads_refresh(void);
+void offline_downloads_clear(void);
+int offline_is_downloaded(const char *uri);
+
 #endif

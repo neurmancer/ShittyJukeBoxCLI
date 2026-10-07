@@ -13,12 +13,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define SEEK_REQUEST (-0x534a42)
 #define OUTPUT_RATE AUDIO_SAMPLE_RATE
-#define SAMPLE_HISTORY 65536
+#define SAMPLE_HISTORY 262144
+#define STARTUP_FRAMES (OUTPUT_RATE * 3)
 #define FRAME_BYTES 4
 #define QUEUE_LIMIT (OUTPUT_RATE * FRAME_BYTES / 4)
+
+typedef struct StreamCache StreamCache;
 
 struct AudioPlayer {
     pthread_t thread;
@@ -26,8 +30,7 @@ struct AudioPlayer {
     atomic_uint_fast64_t preload_generation;
     char *preload_uri;
     bool preload_done;
-    FILE *preload_cache;
-    AVIOContext *preload_io;
+    StreamCache *preload_cache;
     pthread_mutex_t mutex;
     pthread_cond_t wake;
     atomic_bool quitting;
@@ -35,6 +38,7 @@ struct AudioPlayer {
     atomic_bool seek_pending;
     int64_t seek_ms;
     bool seek_in_progress;
+    bool priming;
     atomic_uint_fast64_t generation;
     char *pending_uri;
     
@@ -52,6 +56,7 @@ typedef struct {
     
     int64_t deadline;
     bool preload;
+    bool buffering;
     
     SDL_AudioDeviceID device;
     
@@ -100,6 +105,7 @@ static int wait_output(Playback *play, bool drain)
     while (!cancelled(play)) {
 
         if (atomic_load(&play->player->seek_pending)) { return(SEEK_REQUEST); }
+        if (play->buffering) { return(0); }
         bool paused = atomic_load(&play->player->paused);
 
         publish(play, paused ? AUDIO_PAUSED : AUDIO_PLAYING, NULL);
@@ -174,7 +180,24 @@ static int output_frame(Playback *play, SwrContext *resampler, AVFrame *frame)
             samples = AVERROR_EXTERNAL;
         }
 
-        else { play->samples += (unsigned)samples; }
+        else {
+            play->samples += (unsigned)samples;
+            if (play->buffering) {
+                char progress[96];
+                snprintf(progress, sizeof progress, "Buffering audio: %.1f / 3.0 s", (double)play->samples / OUTPUT_RATE);
+                publish(play, AUDIO_LOADING, progress);
+                if (play->samples >= STARTUP_FRAMES) {
+                    play->buffering = false;
+                    pthread_mutex_lock(&play->player->mutex);
+                    if (!cancelled(play)) {
+                        play->player->priming = false;
+                        SDL_PauseAudioDevice(play->device, atomic_load(&play->player->paused));
+                    }
+                    pthread_mutex_unlock(&play->player->mutex);
+                    publish(play, atomic_load(&play->player->paused) ? AUDIO_PAUSED : AUDIO_PLAYING, "");
+                }
+            }
+        }
     }
     
     av_freep(&pcm);
@@ -224,127 +247,173 @@ static char *media_url(const char *uri)
     return(strdup(uri));
 }
 
-static int cached_read(void *opaque, uint8_t *buffer, int size)
+struct StreamCache {
+    AudioPlayer *player;
+    FILE *file;
+    char *url;
+    pthread_t thread;
+    pthread_mutex_t mutex;
+    pthread_cond_t ready;
+    atomic_bool cancel;
+    int64_t available;
+    int64_t expected;
+    bool finished;
+    int error;
+};
+
+typedef struct {
+    StreamCache *cache;
+    Playback *play;
+    int64_t position;
+    bool interrupt_seek;
+} CacheReader;
+
+static int cache_interrupted(void *opaque)
 {
-    FILE *cache = opaque;
-    
-    size_t bytes = fread(buffer, 1, (size_t)size, cache);
-    
-    if (bytes) { return((int)bytes); }
-    
-    return(ferror(cache) ? AVERROR(EIO) : AVERROR_EOF);
+    StreamCache *cache = opaque;
+    return(atomic_load(&cache->cancel) || atomic_load(&cache->player->quitting));
 }
 
-static int64_t cached_seek(void *opaque, int64_t offset, int whence)
+static void *cache_download(void *opaque)
 {
-    FILE *cache = opaque;
-    
-    whence &= ~AVSEEK_FORCE;
-    if (whence == AVSEEK_SIZE) {
-    
-        off_t position = ftello(cache);
-    
-        if (position < 0 || fseeko(cache, 0, SEEK_END) < 0) { return(AVERROR(errno)); }
-    
-        off_t size = ftello(cache);
-    
-        if (fseeko(cache, position, SEEK_SET) < 0) { return(AVERROR(errno)); }
-    
-        return(size < 0 ? AVERROR(EIO) : size);
-    }
-    
-    if (whence != SEEK_SET && whence != SEEK_CUR && whence != SEEK_END) { return(AVERROR(EINVAL)); }
-    if (fseeko(cache, (off_t)offset, whence) < 0) { return(AVERROR(errno)); }
-    
-    off_t position = ftello(cache);
-    
-    return(position < 0 ? AVERROR(errno) : position);
-}
-
-static int cache_stream(Playback *play, const char *url, FILE **cache, AVIOContext **cached)
-{
+    StreamCache *cache = opaque;
     const int64_t limit = INT64_C(512) * 1024 * 1024;
-    
     AVIOContext *input = NULL;
     AVDictionary *options = NULL;
-    
-    *cache = tmpfile();
-    
-    if (!*cache) { return(AVERROR(errno)); }
-    
     av_dict_set(&options, "rw_timeout", "15000000", 0);
     av_dict_set(&options, "tls_verify", "1", 0);
     av_dict_set(&options, "seekable", "0", 0);
     av_dict_set(&options, "multiple_requests", "1", 0);
     av_dict_set(&options, "protocol_whitelist", "http,https,tcp,tls", 0);
-    
-    AVIOInterruptCB interrupt = {interrupt_io, play};
-    
-    play->deadline = av_gettime_relative() + INT64_C(300000000);
-    
-    publish(play, AUDIO_LOADING, "Buffering stream...");
-    
-    int result = avio_open2(&input, url, AVIO_FLAG_READ, &interrupt, &options);
-
-
+    AVIOInterruptCB interrupt = {cache_interrupted, cache};
+    int result = avio_open2(&input, cache->url, AVIO_FLAG_READ, &interrupt, &options);
     av_dict_free(&options);
-
-    if (result < 0) { avio_closep(&input); return(result); }
-
-    int64_t expected = avio_seek(input, 0, AVSEEK_SIZE), total = 0;
-
+    if (result < 0) { goto done; }
+    int64_t expected = avio_size(input);
     if (expected > limit) { result = AVERROR(EFBIG); goto done; }
-
-    unsigned char buffer[65536];
-
-    while (!interrupt_io(play)) {
-        result = avio_read(input, buffer, sizeof buffer);
-
-        if (result == AVERROR_EOF || !result) { break; }
-        if (result < 0) { goto done; }
-        if (total > limit - result) { result = AVERROR(EFBIG); goto done; }
-        if (fwrite(buffer, 1, (size_t)result, *cache) != (size_t)result) { result = AVERROR(EIO); goto done; }
-
-        total += result;
-
-        char progress[128];
-
-
-        if (expected > 0) {
-            snprintf(progress, sizeof progress, "Buffering stream: %lld%%", (long long)(total * 100 / expected));
+    pthread_mutex_lock(&cache->mutex);
+    cache->expected = expected;
+    pthread_cond_broadcast(&cache->ready);
+    pthread_mutex_unlock(&cache->mutex);
+    unsigned char buffer[16384];
+    int64_t total = 0;
+    while (!cache_interrupted(cache)) {
+        result = avio_read_partial(input, buffer, sizeof buffer);
+        if (result == AVERROR_EOF || !result) {
+            result = !total || (expected >= 0 && total != expected) ? AVERROR(EIO) : 0;
+            break;
         }
-    
-        else { snprintf(progress, sizeof progress, "Buffering stream: %lld KiB", (long long)(total / 1024)); }
-    
-        publish(play, AUDIO_LOADING, progress);
+        if (result < 0) { break; }
+        if (total > limit - result) { result = AVERROR(EFBIG); break; }
+        int written = 0;
+        while (written < result) {
+            ssize_t bytes = pwrite(fileno(cache->file), buffer + written, (size_t)(result - written), total + written);
+            if (bytes < 0 && errno == EINTR) { continue; }
+            if (bytes <= 0) { result = AVERROR(bytes < 0 ? errno : EIO); goto done; }
+            written += (int)bytes;
+        }
+        total += written;
+        pthread_mutex_lock(&cache->mutex);
+        cache->available = total;
+        pthread_cond_broadcast(&cache->ready);
+        pthread_mutex_unlock(&cache->mutex);
     }
-    
-    if (interrupt_io(play)) { result = AVERROR_EXIT; goto done; }
-    if (!total || (expected > 0 && total != expected)) { result = AVERROR(EIO); goto done; }
-    if (fflush(*cache) != 0 || fseeko(*cache, 0, SEEK_SET) < 0) { result = AVERROR(errno); goto done; }
-    
-    uint8_t *io_buffer = av_malloc(32768);
-    
-    if (!io_buffer) { result = AVERROR(ENOMEM); goto done; }
-    /* Cache the whole fucking track so seeking never pokes the HTTP connection. */
-    *cached = avio_alloc_context(io_buffer, 32768, 0, *cache, cached_read, NULL, cached_seek);
-    
-    if (!*cached) { av_free(io_buffer); result = AVERROR(ENOMEM); goto done; }
-    
-    (*cached)->seekable = AVIO_SEEKABLE_NORMAL;
-    
-    publish(play, AUDIO_LOADING, "");
-    
-    result = 0;
 done:
     avio_closep(&input);
-    return(result);
+    pthread_mutex_lock(&cache->mutex);
+    cache->error = cache_interrupted(cache) ? AVERROR_EXIT : result;
+    cache->finished = true;
+    pthread_cond_broadcast(&cache->ready);
+    pthread_mutex_unlock(&cache->mutex);
+    return(NULL);
 }
 
-static void cache_free(FILE *cache, AVIOContext *io)
+static StreamCache *cache_start(AudioPlayer *player, const char *url)
 {
-    if (io) { av_freep(&io->buffer); avio_context_free(&io); }
-    if (cache) { fclose(cache); }
+    StreamCache *cache = calloc(1, sizeof *cache);
+    if (!cache) { return(NULL); }
+    cache->player = player;
+    cache->expected = -1;
+    atomic_init(&cache->cancel, false);
+    cache->file = tmpfile();
+    cache->url = strdup(url);
+    if (!cache->file || !cache->url) { goto failed; }
+    if (pthread_mutex_init(&cache->mutex, NULL)) { goto failed; }
+    if (pthread_cond_init(&cache->ready, NULL)) { pthread_mutex_destroy(&cache->mutex); goto failed; }
+    if (pthread_create(&cache->thread, NULL, cache_download, cache)) {
+        pthread_cond_destroy(&cache->ready);
+        pthread_mutex_destroy(&cache->mutex);
+        goto failed;
+    }
+    return(cache);
+failed:
+    if (cache->file) { fclose(cache->file); }
+    free(cache->url);
+    free(cache);
+    return(NULL);
+}
+
+static void cache_free(StreamCache *cache)
+{
+    if (!cache) { return; }
+    atomic_store(&cache->cancel, true);
+    pthread_join(cache->thread, NULL);
+    pthread_cond_destroy(&cache->ready);
+    pthread_mutex_destroy(&cache->mutex);
+    fclose(cache->file);
+    free(cache->url);
+    free(cache);
+}
+
+static int cached_read(void *opaque, uint8_t *buffer, int size)
+{
+    CacheReader *reader = opaque;
+    StreamCache *cache = reader->cache;
+    Playback *play = reader->play;
+    pthread_mutex_lock(&cache->mutex);
+    while (reader->position >= cache->available && !cache->finished && !interrupt_io(play)) {
+        if (reader->interrupt_seek && atomic_load(&play->player->seek_pending)) { break; }
+        struct timespec until;
+        clock_gettime(CLOCK_REALTIME, &until);
+        until.tv_nsec += 50000000;
+        if (until.tv_nsec >= 1000000000) { ++until.tv_sec; until.tv_nsec -= 1000000000; }
+        pthread_cond_timedwait(&cache->ready, &cache->mutex, &until);
+        pthread_mutex_unlock(&cache->mutex);
+        if (play->device && !play->buffering) {
+            bool paused = atomic_load(&play->player->paused);
+            bool empty = SDL_GetQueuedAudioSize(play->device) == 0;
+            publish(play, paused ? AUDIO_PAUSED : empty ? AUDIO_LOADING : AUDIO_PLAYING,
+                    !paused && empty ? "Buffering stream..." : "");
+        }
+        pthread_mutex_lock(&cache->mutex);
+    }
+    int64_t available = cache->available - reader->position;
+    int error = cache->error;
+    pthread_mutex_unlock(&cache->mutex);
+    if (interrupt_io(play)) { return(AVERROR_EXIT); }
+    if (reader->interrupt_seek && atomic_load(&play->player->seek_pending)) { return(SEEK_REQUEST); }
+    if (available <= 0) { return(error < 0 ? error : AVERROR_EOF); }
+    if (available < size) { size = (int)available; }
+    ssize_t bytes;
+    do { bytes = pread(fileno(cache->file), buffer, (size_t)size, reader->position); } while (bytes < 0 && errno == EINTR);
+    if (bytes <= 0) { return(AVERROR(bytes < 0 ? errno : EIO)); }
+    reader->position += bytes;
+    return((int)bytes);
+}
+
+static int64_t cached_seek(void *opaque, int64_t offset, int whence)
+{
+    CacheReader *reader = opaque;
+    StreamCache *cache = reader->cache;
+    pthread_mutex_lock(&cache->mutex);
+    int64_t length = cache->expected >= 0 ? cache->expected : cache->finished ? cache->available : -1;
+    pthread_mutex_unlock(&cache->mutex);
+    whence &= ~AVSEEK_FORCE;
+    if (whence == AVSEEK_SIZE) { return(length >= 0 ? length : AVERROR(ENOSYS)); }
+    int64_t base = whence == SEEK_SET ? 0 : whence == SEEK_CUR ? reader->position : whence == SEEK_END ? length : -1;
+    if (base < 0 || offset < -base || (offset > 0 && base > INT64_MAX - offset)) { return(AVERROR(EINVAL)); }
+    reader->position = base + offset;
+    return(reader->position);
 }
 
 void audio_preload(AudioPlayer *player, const char *uri)
@@ -362,9 +431,8 @@ void audio_preload(AudioPlayer *player, const char *uri)
     free(player->preload_uri);
     player->preload_uri = copy;
     player->preload_done = false;
-    cache_free(player->preload_cache, player->preload_io);
+    cache_free(player->preload_cache);
     player->preload_cache = NULL;
-    player->preload_io = NULL;
     pthread_cond_broadcast(&player->wake);
     pthread_mutex_unlock(&player->mutex);
 }
@@ -384,37 +452,29 @@ static void *preload_worker(void *opaque)
         char *url = media_url(player->preload_uri);
         pthread_mutex_unlock(&player->mutex);
         Playback play = {.player = player, .generation = previous, .preload = true};
-        FILE *cache = NULL;
-        AVIOContext *io = NULL;
-        int result = url ? cache_stream(&play, url, &cache, &io) : AVERROR(ENOMEM);
+        StreamCache *cache = url ? cache_start(player, url) : NULL;
         free(url);
         pthread_mutex_lock(&player->mutex);
         if (!cancelled(&play)) {
             player->preload_done = true;
-            if (result >= 0) {
-                player->preload_cache = cache;
-                player->preload_io = io;
-                cache = NULL;
-                io = NULL;
-            }
+            player->preload_cache = cache;
+            cache = NULL;
         }
         pthread_cond_broadcast(&player->wake);
         pthread_mutex_unlock(&player->mutex);
-        cache_free(cache, io);
+        cache_free(cache);
     }
     return(NULL);
 }
 
-static bool take_preload(Playback *play, const char *uri, FILE **cache, AVIOContext **io)
+static bool take_preload(Playback *play, const char *uri, StreamCache **cache)
 {
     AudioPlayer *player = play->player;
     pthread_mutex_lock(&player->mutex);
     while (!cancelled(play) && player->preload_uri && !strcmp(uri, player->preload_uri)) {
         if (player->preload_done) {
             *cache = player->preload_cache;
-            *io = player->preload_io;
             player->preload_cache = NULL;
-            player->preload_io = NULL;
             free(player->preload_uri);
             player->preload_uri = NULL;
             break;
@@ -422,7 +482,7 @@ static bool take_preload(Playback *play, const char *uri, FILE **cache, AVIOCont
         pthread_cond_wait(&player->wake, &player->mutex);
     }
     pthread_mutex_unlock(&player->mutex);
-    return(*io != NULL);
+    return(*cache != NULL);
 }
 
 static void play_track(AudioPlayer *player, uint64_t generation, const char *uri)
@@ -432,7 +492,8 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     AVFormatContext *format = avformat_alloc_context();
     
     AVCodecContext *decoder = NULL;
-    FILE *cache = NULL;
+    StreamCache *cache = NULL;
+    CacheReader reader = {.play = &play};
     AVIOContext *cached = NULL;
     SwrContext *resampler = NULL;
     AVPacket *packet = NULL;
@@ -450,9 +511,18 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     format->interrupt_callback = (AVIOInterruptCB){interrupt_io, &play};
     if (!strncmp(url, "http://", 7) || !strncmp(url, "https://", 8)) {
         stage = "Buffering stream";
-        result = take_preload(&play, uri, &cache, &cached) ? 0 :
-                 cancelled(&play) ? AVERROR_EXIT : cache_stream(&play, url, &cache, &cached);
-        if (result < 0 || cancelled(&play)) { goto done; }
+        if (!take_preload(&play, uri, &cache) && !cancelled(&play)) { cache = cache_start(player, url); }
+        if (!cache || cancelled(&play)) { goto done; }
+        reader.cache = cache;
+        uint8_t *io_buffer = av_malloc(32768);
+        if (!io_buffer) { goto done; }
+        cached = avio_alloc_context(io_buffer, 32768, 0, &reader, cached_read, NULL, cached_seek);
+        if (!cached) { av_free(io_buffer); goto done; }
+        /* Don't send the demuxer hunting for the fucking tail before playback. */
+        cached->seekable = 0;
+        play.buffering = true;
+        format->probesize = 32768;
+        format->max_analyze_duration = AV_TIME_BASE / 2;
         format->pb = cached;
         format->flags |= AVFMT_FLAG_CUSTOM_IO;
         av_dict_set(&options, "protocol_whitelist", "file", 0);
@@ -475,6 +545,8 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     
     if (result < 0 || cancelled(&play)) { goto done; }
     
+    if (cached) { cached->seekable = AVIO_SEEKABLE_NORMAL; }
+    reader.interrupt_seek = true;
     const AVCodec *codec = NULL;
     result = av_find_best_stream(format, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
     
@@ -536,7 +608,8 @@ static void play_track(AudioPlayer *player, uint64_t generation, const char *uri
     
     if (!cancelled(&play)) {
         player->device = play.device;
-        SDL_PauseAudioDevice(play.device, atomic_load(&player->paused));
+        player->priming = play.buffering;
+        SDL_PauseAudioDevice(play.device, play.buffering || atomic_load(&player->paused));
     }
     
     pthread_mutex_unlock(&player->mutex);
@@ -572,6 +645,7 @@ decode:
         play.deadline = av_gettime_relative() + 15000000;
         int64_t timestamp = av_rescale_q(target, (AVRational){1, 1000}, play.time_base) + play.stream_start;
         result = avformat_seek_file(format, stream, INT64_MIN, timestamp, timestamp, 0);
+        if (result < 0 && atomic_load(&player->seek_pending) && !cancelled(&play)) { goto decode; }
         if (result >= 0) {
             avcodec_flush_buffers(decoder);
             swr_close(resampler);
@@ -604,7 +678,15 @@ decode:
         if (result < 0) { goto done; }
         play.deadline = av_gettime_relative() + 15000000;
         result = av_read_frame(format, packet);
-        if (result == AVERROR_EOF) { break; }
+        if (result == AVERROR_EOF) {
+            if (cache) {
+                pthread_mutex_lock(&cache->mutex);
+                int download_error = cache->error;
+                pthread_mutex_unlock(&cache->mutex);
+                if (download_error < 0) { result = download_error; goto done; }
+            }
+            break;
+        }
         if (result < 0) { goto done; }
         if (packet->stream_index == stream) {
             result = avcodec_send_packet(decoder, packet);
@@ -629,6 +711,16 @@ decode:
     
     if (result < 0) { goto done; }
     
+    if (play.buffering) {
+        play.buffering = false;
+        pthread_mutex_lock(&player->mutex);
+        if (!cancelled(&play)) {
+            player->priming = false;
+            SDL_PauseAudioDevice(play.device, atomic_load(&player->paused));
+        }
+        pthread_mutex_unlock(&player->mutex);
+        publish(&play, atomic_load(&player->paused) ? AUDIO_PAUSED : AUDIO_PLAYING, "");
+    }
     result = wait_output(&play, true);
     
     if (result >= 0) { publish(&play, AUDIO_FINISHED, NULL); }
@@ -661,7 +753,7 @@ done:
     avcodec_free_context(&decoder);
     avformat_close_input(&format);
     if (cached) { av_freep(&cached->buffer); avio_context_free(&cached); }
-    if (cache) { fclose(cache); }
+    cache_free(cache);
     av_dict_free(&options);
     
     free(url);
@@ -779,9 +871,8 @@ int audio_play_at(AudioPlayer *player, int64_t song_id, const char *uri, int64_t
         atomic_fetch_add(&player->preload_generation, 1);
         free(player->preload_uri);
         player->preload_uri = NULL;
-        cache_free(player->preload_cache, player->preload_io);
+        cache_free(player->preload_cache);
         player->preload_cache = NULL;
-        player->preload_io = NULL;
     }
     free(player->pending_uri);
     
@@ -813,7 +904,7 @@ void audio_pause(AudioPlayer *player, bool paused)
     
     atomic_store(&player->paused, paused);
     
-    if (player->device) { SDL_PauseAudioDevice(player->device, paused); }
+    if (player->device && (paused || !player->priming)) { SDL_PauseAudioDevice(player->device, paused); }
     if (player->status.state == AUDIO_PLAYING || player->status.state == AUDIO_PAUSED) {
         player->status.state = paused ? AUDIO_PAUSED : AUDIO_PLAYING;
     }
@@ -848,7 +939,7 @@ bool audio_seek(AudioPlayer *player, int64_t position_ms)
 {
     pthread_mutex_lock(&player->mutex);
     bool allowed = player->status.seekable && position_ms >= 0 &&
-                   (player->status.state == AUDIO_PLAYING || player->status.state == AUDIO_PAUSED) &&
+                   (player->status.state == AUDIO_PLAYING || player->status.state == AUDIO_PAUSED || player->status.state == AUDIO_LOADING) &&
                    (player->status.duration_ms < 0 || position_ms <= player->status.duration_ms);
     if (allowed) {
         player->seek_ms = position_ms;
@@ -862,7 +953,7 @@ bool audio_seek_relative(AudioPlayer *player, int64_t offset_ms)
 {
     pthread_mutex_lock(&player->mutex);
     bool allowed = player->status.seekable &&
-                   (player->status.state == AUDIO_PLAYING || player->status.state == AUDIO_PAUSED);
+                   (player->status.state == AUDIO_PLAYING || player->status.state == AUDIO_PAUSED || player->status.state == AUDIO_LOADING);
     if (allowed) {
         int64_t base = atomic_load(&player->seek_pending) || player->seek_in_progress ? player->seek_ms : player->status.position_ms;
         int64_t limit = player->status.duration_ms >= 0 ? player->status.duration_ms : INT64_MAX;
