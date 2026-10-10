@@ -1,10 +1,9 @@
 # SHITTY JUKEBOX Ω² NOW OFFICAL BABYYYYYYYYYYY
 
 
-> _I'll add shit here once I am happy with everything else_
 > You remember the original Shitty Jukebox right? **THIS IS EVEN CRAZIEEEEEEEEEEEEEER** AND yup my english is still as bad as before 
 
-> **WHY Ω²?** 'Cuz squared the resistance against DMCA, squared the entropy, squared the song amount, squared the overengineering and squared the sleep-deprivation 
+> **WHY Ω²?** 'Cuz squared the resistance against DMCA, squared the entropy (ehm acktually due to the natural log it's doubled), squared the song amount, squared the overengineering and squared the sleep-deprivation 
 
 > to get the jokes you gotta seee [legacy jukebox](https://github.com/neurmancer/ShittyJukeBoxCLI/tree/legacy_jukebox)
 
@@ -32,7 +31,7 @@
 
 ## Bragging
 
-**BEHOLD** This is the bad-assest Shitty Jukebox ever existed (well it lowkey just works rn but there is a fucking long way to go)
+**BEHOLD** This is the bad-assest Shitty Jukebox ever existed
 
 - using termios and native hjkl terminal movement for selections and enter but also supports arrow keys for non-terminal-goblins
 

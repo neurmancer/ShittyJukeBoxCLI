@@ -17,9 +17,9 @@
 > 3. Evanescence - Lithium (Synced Lyrics)
 > 4. Green Day - Boulevard of Broken Dreams (Synced Lyrics)
 > 5. HIM - (Don't Fear) The Reaper (Synced Lyrics)
-> 6. My Chemical Romance - I Never Told You What I Do for a Living
-> 7. Metallica - Fade to Black
-> 8. Metallica - The Unforgiven
+> 6. My Chemical Romance - I Never Told You What I Do for a Living (Synced Lyrics)
+> 7. Metallica - Fade to Black (Synced Lyrics)
+> 8. Metallica - The Unforgiven (Synced Lyrics)
 > 9. Misfits - Helena
 > 10. My Chemical Romance - Helena
 > 11. My Chemical Romance - I Don't Love You
