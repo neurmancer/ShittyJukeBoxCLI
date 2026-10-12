@@ -1,22 +1,22 @@
-.TH SJB 1 "2026-10-02" "sjb" "User Commands"
+.TH RP 1 "2026-10-02" "rp" "User Commands"
 .SH NAME
-sjb \- terminal music player with streaming and offline libraries
+rp \- terminal music player with streaming and offline libraries
 .SH SYNOPSIS
-.B sjb
+.B rp
 .RI [ options ]
 .br
-.B sjb \-\-offline
+.B rp \-\-offline
 .RI [ options ]
 .br
-.B sjb \-\-path
+.B rp \-\-path
 .I directory
 .RI [ options ]
 .br
-.B sjb \-\-import\-lrc
+.B rp \-\-import\-lrc
 .I song_id file
 .RI [ options ]
 .SH DESCRIPTION
-.B sjb
+.B rp
 plays music from a SQLite catalog or a directory of local MP3 files.
 It provides a terminal interface with genre browsing, search, a playback
 queue, shuffle, playlists, lyrics, album artwork, and an audio visualizer.
@@ -26,7 +26,7 @@ Run without arguments to open the catalog.
 A build installed with
 .B "./build.sh \-\-system"
 uses the catalog and configuration under
-.IR ~/.sjb .
+.IR ~/.rp .
 A development build uses paths relative to the current working directory.
 .PP
 The last session is restored automatically with playback paused.
@@ -46,7 +46,7 @@ A missing default theme is allowed; an explicitly selected theme must be readabl
 .TP
 .B \-\-offline
 Scan and play downloaded MP3 files in
-.IR ~/.sjb/songs .
+.IR ~/.rp/songs .
 The directory must already exist.
 .TP
 .BI \-\-path " directory"
@@ -209,7 +209,7 @@ Failed or incomplete transfers produce a playback error.
 Skipping, stopping, or quitting cancels buffering; the temporary file is
 closed and removed when the track closes.
 This buffering mode is intended for finite media files, not endless live streams.
-Use d for a permanent offline copy in ~/.sjb/songs.
+Use d for a permanent offline copy in ~/.rp/songs.
 .PP
 While a track is playing or paused, the next HTTP(S) track is buffered in the
 background using the current queue, shuffle order, and repeat mode.
@@ -293,7 +293,7 @@ Completion and failure messages appear in the interface.
 Quitting cancels the active download.
 .PP
 Songs are saved under
-.IR ~/.sjb/songs ,
+.IR ~/.rp/songs ,
 inside a subdirectory named for the first catalog genre, if one exists.
 Songs without a genre are saved directly in the root.
 Only validated MP3 responses are accepted.
@@ -309,7 +309,7 @@ to distinguish the download without overwriting it.
 An existing valid download from the same source is reused.
 .PP
 A companion
-.B .mp3.sjb
+.B .mp3.rp
 file records the catalog title, artist, album, and source URI.
 Keep this file beside the MP3 to preserve catalog names in offline mode
 even when the embedded tags differ.
@@ -335,22 +335,22 @@ The library is rescanned at startup.
 Tracks that remain at the same path retain their IDs; missing tracks are
 removed from the index.
 Each library root has its own database and playlists under
-.IR ~/.sjb/libraries .
+.IR ~/.rp/libraries .
 Scanning a local directory does not modify the online catalog.
 .SH FILES
 .TP
-.I ~/.sjb/jukebox.db
+.I ~/.rp/jukebox.db
 Default catalog for a system-installed build.
 .TP
-.I ~/.sjb/playlists.db
+.I ~/.rp/playlists.db
 Saved playlists for the default installed catalog.
 For a custom catalog, the playlist database is placed beside that catalog.
 .TP
-.I ~/.sjb/jukebox.db.session
+.I ~/.rp/jukebox.db.session
 Last session for the default installed catalog. Custom catalogs and local
 libraries use a file with the same suffix beside their own database.
 .TP
-.I ~/.sjb/config/theme.lua
+.I ~/.rp/config/theme.lua
 Default theme for a system-installed build.
 Returns a Lua table containing a
 .B colors
@@ -367,13 +367,13 @@ notation.
 Default catalog and theme paths for a development build, relative to the
 current working directory.
 .TP
-.I ~/.sjb/songs/
+.I ~/.rp/songs/
 Downloaded MP3 files and companion metadata.
 .TP
-.I ~/.sjb/libraries/<root-hash>/jukebox.db
+.I ~/.rp/libraries/<root-hash>/jukebox.db
 Index for the canonical path of a local library root.
 .TP
-.I ~/.sjb/libraries/<root-hash>/playlists.db
+.I ~/.rp/libraries/<root-hash>/playlists.db
 Playlists belonging to that local library.
 .SH ENVIRONMENT
 .TP
@@ -392,7 +392,7 @@ Open the installed catalog:
 .PP
 .nf
 .RS
-sjb
+rp
 .RE
 .fi
 .PP
@@ -400,7 +400,7 @@ Play downloaded songs:
 .PP
 .nf
 .RS
-sjb \-\-offline
+rp \-\-offline
 .RE
 .fi
 .PP
@@ -408,7 +408,7 @@ Use a local music directory:
 .PP
 .nf
 .RS
-sjb \-\-path "$HOME/Music"
+rp \-\-path "$HOME/Music"
 .RE
 .fi
 .PP
@@ -431,7 +431,7 @@ Import timed lyrics into a catalog:
 .PP
 .nf
 .RS
-sjb \-\-db ./jukebox.db \-\-import\-lrc 2 ./song.lrc
+rp \-\-db ./jukebox.db \-\-import\-lrc 2 ./song.lrc
 .RE
 .fi
 .SH EXIT STATUS

@@ -7,9 +7,9 @@ cd -- "$(dirname -- "$0")"
 usage() {
     printf 'Usage: %s [--system | --system-clean | --help]\n' "$0"
     printf '  No option: build and run the jukebox.\n'
-    printf '  --system: install /usr/local/bin/sjb and seed databases/config in $HOME/.sjb.\n'
+    printf '  --system: install /usr/local/bin/rp and seed databases/config in $HOME/.rp.\n'
     printf '            Install the manual in /usr/local/share/man/man1.\n'
-    printf '  --system-clean: remove the installed player, manual, and ALL user data in $HOME/.sjb.\n'
+    printf '  --system-clean: remove the installed player, manual, and ALL user data in $HOME/.rp.\n'
     printf '                  Includes downloaded songs, catalogs, playlists, sessions, and config.\n'
 }
 
@@ -38,29 +38,29 @@ as_root() {
 }
 
 # Sudo gets the system files; the human who invoked it gets their own shit.
-sjb_home=${HOME:?HOME must identify the user receiving the installation}
-sjb_uid=$(id -u)
-sjb_gid=$(id -g)
+rp_home=${HOME:?HOME must identify the user receiving the installation}
+rp_uid=$(id -u)
+rp_gid=$(id -g)
 if (( EUID == 0 )) && [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != root ]]; then
-    sjb_account=$(getent passwd -- "$SUDO_USER")
-    IFS=: read -r _ _ sjb_uid sjb_gid _ sjb_home _ <<< "$sjb_account"
+    rp_account=$(getent passwd -- "$SUDO_USER")
+    IFS=: read -r _ _ rp_uid rp_gid _ rp_home _ <<< "$rp_account"
 fi
-if [[ "$sjb_home" != /* ]]; then
+if [[ "$rp_home" != /* ]]; then
     printf 'Cannot manage user data: home directory must be absolute.\n' >&2
     exit 1
 fi
-sjb_home=$(cd -- "$sjb_home" && pwd -P)
-if [[ "$sjb_home" == / ]]; then
+rp_home=$(cd -- "$rp_home" && pwd -P)
+if [[ "$rp_home" == / ]]; then
     printf 'Refusing to use the filesystem root as a user home.\n' >&2
     exit 1
 fi
-sjb_data="$sjb_home/.sjb"
+rp_data="$rp_home/.rp"
 
 if [[ "$1" == --system-clean ]]; then
-    printf 'Removing /usr/local/bin/sjb and /usr/local/share/man/man1/sjb.1\n'
-    printf 'Removing ALL jukebox data in %s (including downloaded songs).\n' "$sjb_data"
-    as_root rm -f -- /usr/local/bin/sjb /usr/local/share/man/man1/sjb.1
-    rm -rf -- "$sjb_data"
+    printf 'Removing /usr/local/bin/rp and /usr/local/share/man/man1/rp.1\n'
+    printf 'Removing ALL jukebox data in %s (including downloaded songs).\n' "$rp_data"
+    as_root rm -f -- /usr/local/bin/rp /usr/local/share/man/man1/rp.1
+    rm -rf -- "$rp_data"
     printf 'System installation and user data removed. Project files and shared dependencies kept.\n'
     exit 0
 fi
@@ -146,13 +146,13 @@ project_dir=$PWD
 build_dir=$(mktemp -d)
 trap 'rm -rf -- "$build_dir"' EXIT
 
-printf 'Dependencies ready. Building sjb...\n'
+printf 'Dependencies ready. Building rp...\n'
 # A separate output prevents the system defaults from leaking into local builds.
-make TARGET="$build_dir/sjb" CPPFLAGS="${CPPFLAGS:-} -DSJB_SYSTEM_INSTALL" "$build_dir/sjb"
-install -d -m700 -o "$sjb_uid" -g "$sjb_gid" -- "$sjb_data" "$sjb_data/config"
+make TARGET="$build_dir/rp" CPPFLAGS="${CPPFLAGS:-} -Drp_SYSTEM_INSTALL" "$build_dir/rp"
+install -d -m700 -o "$rp_uid" -g "$rp_gid" -- "$rp_data" "$rp_data/config"
 for database in jukebox.db playlists.db; do
-    if [[ -e "$sjb_data/$database" || -L "$sjb_data/$database" ]]; then
-        printf 'Keeping %s\n' "$sjb_data/$database"
+    if [[ -e "$rp_data/$database" || -L "$rp_data/$database" ]]; then
+        printf 'Keeping %s\n' "$rp_data/$database"
         continue
     fi
     if [[ -f "$project_dir/$database" ]]; then
@@ -161,20 +161,20 @@ for database in jukebox.db playlists.db; do
     else
         sqlite3 "$build_dir/$database" 'VACUUM;'
     fi
-    install -m600 -o "$sjb_uid" -g "$sjb_gid" -- "$build_dir/$database" "$sjb_data/$database"
+    install -m600 -o "$rp_uid" -g "$rp_gid" -- "$build_dir/$database" "$rp_data/$database"
 done
 # Copy every configuration file, preserving directory structure and user edits.
 while IFS= read -r -d '' config_file; do
     relative=${config_file#config/}
-    destination="$sjb_data/config/$relative"
+    destination="$rp_data/config/$relative"
     if [[ ! -e "$destination" && ! -L "$destination" ]]; then
-        install -d -m700 -o "$sjb_uid" -g "$sjb_gid" -- "${destination%/*}"
-        install -m600 -o "$sjb_uid" -g "$sjb_gid" -- "$config_file" "$destination"
+        install -d -m700 -o "$rp_uid" -g "$rp_gid" -- "${destination%/*}"
+        install -m600 -o "$rp_uid" -g "$rp_gid" -- "$config_file" "$destination"
     fi
 done < <(find config -type f -print0)
-as_root install -Dm755 -- "$build_dir/sjb" /usr/local/bin/sjb
-as_root install -Dm644 -- "$project_dir/man/sjb.1" /usr/local/share/man/man1/sjb.1
-printf 'Installed /usr/local/bin/sjb\n'
-printf 'Installed /usr/local/share/man/man1/sjb.1; read with man 1 sjb\n'
-printf 'User databases and config: %s\n' "$sjb_data"
-printf 'Run sjb from any directory; --db and --config override these defaults.\n'
+as_root install -Dm755 -- "$build_dir/rp" /usr/local/bin/rp
+as_root install -Dm644 -- "$project_dir/man/rp.1" /usr/local/share/man/man1/rp.1
+printf 'Installed /usr/local/bin/rp\n'
+printf 'Installed /usr/local/share/man/man1/rp.1; read with man 1 rp\n'
+printf 'User databases and config: %s\n' "$rp_data"
+printf 'Run rp from any directory; --db and --config override these defaults.\n'

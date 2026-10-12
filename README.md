@@ -2,14 +2,16 @@
 
 
 > You remember the original Shitty Jukebox right? **THIS IS EVEN CRAZIEEEEEEEEEEEEEER** AND yup my english is still as bad as before 
-
+>
 > **WHY Ω²?** 'Cuz squared the resistance against DMCA, squared the entropy (ehm acktually due to the natural log it's doubled), squared the song amount, squared the overengineering and squared the sleep-deprivation 
-
+>
 > to get the jokes you gotta seee [legacy jukebox](https://github.com/neurmancer/ShittyJukeBoxCLI/tree/legacy_jukebox)
-
+>
 > _so without furher shit let's start bragging_
-
+>
 > _'Sup?_ it's exactly 1.53AM and you know what that means...DOCUMENTATION TIMEEEE 
+>
+> _Well...I did renamed the Shitty Jukebox(sjb) to Radioport (rp) gotta had to rebrand at some point...but the title FUCKING stays_
 
 
 --- 
@@ -139,13 +141,13 @@ the process when you hit on it on queueueue untill I find why, I declare it is h
 
 ./build.sh # to build duh...
 
-./sjb 
+./rp 
 
 #or for system-wide installation
 
 ./build.sh --system    # requries sudo privs to accsess /usr/local/bin/ and dependency installations
 
-man 1 sjb # for usage (if installed with --system)
+man 1 rp # for usage (if installed with --system)
 ```
 
 ## Legal stuff

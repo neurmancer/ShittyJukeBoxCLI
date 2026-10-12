@@ -2,7 +2,7 @@
 
 > _'Sup? Apparently "just run it bro" doesn't count as documentation...so HERE WE FUCKING GO._
 >
-> Every CLI argument for `sjb` and `jukebox-add`, with actual examples
+> Every CLI argument for `rp` and `jukebox-add`, with actual examples
 
 ## First things first
 
@@ -10,7 +10,7 @@ From the project directory:
 
 ```sh
 make                 # builds BOTH of the little shits
-./sjb                # opens the player
+./rp                # opens the player
 ./jukebox-add        # starts the add-song questions
 ```
 
@@ -18,14 +18,14 @@ Examples below use `42` as a song ID. Replace it with an actual ID from `./jukeb
 
 Both programs expect separate arguments like `--db "my music.db"`. No short flags, no `--db=file` syntax, no positional "here's an MP3, figure it out" shit.
 
-## sjb — THE ACTUAL FUCKING PLAYER
+## rp — THE ACTUAL FUCKING PLAYER
 
 ```text
-./sjb [--db FILE] [--config FILE] [--cover FILE] [--preview]
-./sjb --offline [--config FILE] [--cover FILE]
-./sjb --path DIR [--config FILE] [--cover FILE]
-./sjb [--db FILE | --offline | --path DIR] --import-lrc SONG_ID FILE
-./sjb --help
+./rp [--db FILE] [--config FILE] [--cover FILE] [--preview]
+./rp --offline [--config FILE] [--cover FILE]
+./rp --path DIR [--config FILE] [--cover FILE]
+./rp [--db FILE | --offline | --path DIR] --import-lrc SONG_ID FILE
+./rp --help
 ```
 
 With no arguments, it opens the default catalog. A saved session comes back paused; hit Play to continue the questionable music choices from where you left off.
@@ -35,10 +35,10 @@ With no arguments, it opens the default catalog. A saved session comes back paus
 Pick the catalog you wanna use.
 
 ```sh
-./sjb --db "my music.db"
+./rp --db "my music.db"
 ```
 
-A local build defaults to `jukebox.db` in the current directory. The player installed through `./build.sh --system` defaults to `~/.sjb/jukebox.db`. A missing database gets created; an existing supported database gets migrated automatically.
+A local build defaults to `jukebox.db` in the current directory. The player installed through `./build.sh --system` defaults to `~/.rp/jukebox.db`. A missing database gets created; an existing supported database gets migrated automatically.
 
 **Don't combine `--db` with `--offline` or `--path`.** Those modes select their own local-library database. The player will reject that argument soup.
 
@@ -47,17 +47,17 @@ A local build defaults to `jukebox.db` in the current directory. The player inst
 Load your Lua color theme.
 
 ```sh
-./sjb --config "config/theme.lua"
+./rp --config "config/theme.lua"
 ```
 
-The local default is `config/theme.lua`; the system-installed default is `~/.sjb/config/theme.lua`. A missing default theme is fine. Explicitly asking for a missing or invalid file is an error. You pointed at the file bro, it has to exist.
+The local default is `config/theme.lua`; the system-installed default is `~/.rp/config/theme.lua`. A missing default theme is fine. Explicitly asking for a missing or invalid file is an error. You pointed at the file bro, it has to exist.
 
 ### --offline
 
-Scan and play downloaded MP3s from `~/.sjb/songs`.
+Scan and play downloaded MP3s from `~/.rp/songs`.
 
 ```sh
-./sjb --offline
+./rp --offline
 ```
 
 That directory must already exist. This selects the downloaded library; it doesn't download songs for you. Use the player's `d` / `D` controls for that shit.
@@ -67,8 +67,8 @@ That directory must already exist. This selects the downloaded library; it doesn
 Point the player at your own MP3 directory. This also enables offline mode, so you don't need to write `--offline` beside it like a nervous parent.
 
 ```sh
-./sjb --path "$HOME/Music"
-./sjb --path "$HOME/Music" --config "config/theme.lua"
+./rp --path "$HOME/Music"
+./rp --path "$HOME/Music" --config "config/theme.lua"
 ```
 
 The directory must exist. Subfolders become genres, and files at the root appear in All. If you supply both `--offline` and `--path`, the explicit directory wins.
@@ -78,13 +78,13 @@ The directory must exist. Subfolders become genres, and files at the root appear
 Override the artwork used during playback.
 
 ```sh
-./sjb --cover "covers/my extremely serious album.png"
+./rp --cover "covers/my extremely serious album.png"
 ```
 
 With preview mode, use a local PNG:
 
 ```sh
-./sjb --preview --cover "covers/album.png"
+./rp --preview --cover "covers/album.png"
 ```
 
 The terminal still needs image support to show the cover. Yup...this is where I mention kitty again.
@@ -94,7 +94,7 @@ The terminal still needs image support to show the cover. Yup...this is where I 
 Open the player layout with sample display data. Useful for checking the UI and cover art without picking a song first.
 
 ```sh
-./sjb --preview
+./rp --preview
 ```
 
 Preview doesn't restore or save your playback session. It still initializes the catalog and audio backend; this ain't a standalone screenshot generator.
@@ -104,9 +104,9 @@ Preview doesn't restore or save your playback session. It still initializes the 
 Import a UTF-8 LRC file as the song's **lead lyrics**, then exit without opening the player.
 
 ```sh
-./sjb --import-lrc 42 "song.lrc"
-./sjb --db "my music.db" --import-lrc 42 "song.lrc"
-./sjb --path "$HOME/Music" --import-lrc 42 "song.lrc"
+./rp --import-lrc 42 "song.lrc"
+./rp --db "my music.db" --import-lrc 42 "song.lrc"
+./rp --path "$HOME/Music" --import-lrc 42 "song.lrc"
 ```
 
 The ID must be positive and exist in the selected library. Offline libraries have their own IDs; don't assume online song 42 is also offline song 42.
@@ -120,7 +120,7 @@ LRC input is limited to 1 MiB. The importer reports how many timed lines it foun
 Print usage and exit.
 
 ```sh
-./sjb --help
+./rp --help
 ```
 
 The CLI equivalent of "bro what buttons do I press".
@@ -159,13 +159,13 @@ Choose which database to add to, inspect, or edit.
 
 ```sh
 ./jukebox-add --db "my music.db"
-./jukebox-add --db "$HOME/.sjb/jukebox.db" --list
+./jukebox-add --db "$HOME/.rp/jukebox.db" --list
 ```
 
 **This helper defaults to `jukebox.db` in the current directory**, even when you're using the system-installed player. To edit that player's catalog:
 
 ```sh
-./jukebox-add --db "$HOME/.sjb/jukebox.db" --edit 42
+./jukebox-add --db "$HOME/.rp/jukebox.db" --edit 42
 ```
 
 `./build.sh --system` installs the player and its manual, not this helper. Run the helper from your project directory after building it with `make jukebox-add` (or `make`).
