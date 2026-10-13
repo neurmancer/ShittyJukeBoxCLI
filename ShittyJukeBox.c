@@ -257,7 +257,7 @@ int main(int argc, char **argv)
 
         else {
             fprintf(stderr, "Usage: %s [--db jukebox.db] [--config config/theme.lua] [--preview] [--cover album.png] [--import-lrc SONG_ID FILE]\n"
-                            "  --offline              Play downloaded MP3s from ~/.sjb/songs\n"
+                            "  --offline              Play downloaded MP3s from ~/.rp/songs\n"
                             "  --path DIR             Play local MP3s; subfolders are genres, root files appear in All\n", argv[0]);
             return(strcmp(argv[i], "--help") ? 1 : 0);
         }
@@ -277,9 +277,9 @@ int main(int argc, char **argv)
             user_home = account ? account->pw_dir : NULL;
         }
         if (!user_home || !*user_home ||
-            snprintf(installed_database, sizeof installed_database, "%s/.sjb/jukebox.db", user_home) >= (int)sizeof installed_database ||
-            snprintf(installed_config, sizeof installed_config, "%s/.sjb/config/theme.lua", user_home) >= (int)sizeof installed_config) {
-            fprintf(stderr, "Cannot resolve ~/.sjb; pass --db and --config explicitly.\n");
+            snprintf(installed_database, sizeof installed_database, "%s/.rp/jukebox.db", user_home) >= (int)sizeof installed_database ||
+            snprintf(installed_config, sizeof installed_config, "%s/.rp/config/theme.lua", user_home) >= (int)sizeof installed_config) {
+            fprintf(stderr, "Cannot resolve ~/.rp; pass --db and --config explicitly.\n");
             return(1);
         }
         if (!database_explicit) { database_path = installed_database; }
