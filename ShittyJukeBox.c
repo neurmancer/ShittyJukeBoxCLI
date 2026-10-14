@@ -10,7 +10,7 @@
 #include "src/session.h"
 #include <glib.h>
 #include <errno.h>
-#ifdef SJB_SYSTEM_INSTALL
+#ifdef RP_SYSTEM_INSTALL
 #include <pwd.h>
 #include <unistd.h>
 #endif
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
         return(1);
     }
 
-#ifdef SJB_SYSTEM_INSTALL
+#ifdef RP_SYSTEM_INSTALL
     char installed_database[4096], installed_config[4096];
     if (!database_explicit || (!config_explicit && !lrc_path)) {
         const char *user_home = getenv("HOME");

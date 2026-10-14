@@ -23,7 +23,7 @@ static int fail(Database *db, const char *message)
 
 char *offline_default_root(void)
 {
-    return(g_build_filename(g_get_home_dir(), ".sjb", "songs", NULL));
+    return(g_build_filename(g_get_home_dir(), ".rp", "songs", NULL));
 }
 
 static GHashTable *downloaded_uris;
@@ -206,7 +206,7 @@ int offline_open(Database *db, const char *root)
         return(fail(db, "--path must name a directory"));
     }
     char *hash = g_compute_checksum_for_string(G_CHECKSUM_SHA256, canonical, -1);
-    char *state = g_build_filename(g_get_home_dir(), ".sjb", "libraries", hash, NULL);
+    char *state = g_build_filename(g_get_home_dir(), ".rp", "libraries", hash, NULL);
     char *path = g_build_filename(state, "jukebox.db", NULL);
     int result = g_mkdir_with_parents(state, 0700) < 0 ? fail(db, strerror(errno)) : database_open(db, path);
     if (!result) { result = database_begin(db); }
@@ -464,7 +464,7 @@ OfflineDownload *offline_download_start(Database *db, const char *root, int64_t 
     int error = pthread_create(&download->thread, NULL, download_worker, download);
     if (error) { fail(&download->db, strerror(error)); goto failed; }
     database_songs_free(songs, count);
-    snprintf(message, size, "Downloading %d song%s to ~/.sjb/songs...", copied, copied == 1 ? "" : "s");
+    snprintf(message, size, "Downloading %d song%s to ~/.rp/songs...", copied, copied == 1 ? "" : "s");
     return(download);
 failed:
     snprintf(message, size, "Download: %s", database_error(&download->db));
@@ -479,7 +479,7 @@ int offline_download_poll(OfflineDownload *download, char *message, size_t size)
 {
     if (!atomic_load(&download->finished)) { return(0); }
     if (download->result < 0) { snprintf(message, size, "Download failed: %s", database_error(&download->db)); }
-    else { snprintf(message, size, "Download complete: songs saved in ~/.sjb/songs."); }
+    else { snprintf(message, size, "Download complete: songs saved in ~/.rp/songs."); }
     return(1);
 }
 

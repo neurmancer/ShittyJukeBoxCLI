@@ -148,7 +148,7 @@ trap 'rm -rf -- "$build_dir"' EXIT
 
 printf 'Dependencies ready. Building rp...\n'
 # A separate output prevents the system defaults from leaking into local builds.
-make TARGET="$build_dir/rp" CPPFLAGS="${CPPFLAGS:-} -Drp_SYSTEM_INSTALL" "$build_dir/rp"
+make TARGET="$build_dir/rp" CPPFLAGS="${CPPFLAGS:-} -DRP_SYSTEM_INSTALL" "$build_dir/rp"
 install -d -m700 -o "$rp_uid" -g "$rp_gid" -- "$rp_data" "$rp_data/config"
 for database in jukebox.db playlists.db; do
     if [[ -e "$rp_data/$database" || -L "$rp_data/$database" ]]; then
