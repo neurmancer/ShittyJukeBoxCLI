@@ -206,7 +206,7 @@ static GVariant *get_property(GDBusConnection *bus, const char *sender, const ch
         return(player_property(&state, name));
     }
     
-    if (!strcmp(name, "Identity")) { return(g_variant_new_string("ShittyJukeBox")); }
+    if (!strcmp(name, "Identity")) { return(g_variant_new_string("Radioport")); }
     if (!strcmp(name, "CanQuit")) { return(g_variant_new_boolean(TRUE)); }
     if (!strcmp(name, "SupportedUriSchemes")) {
     
@@ -389,7 +389,7 @@ Mpris *mpris_create(MprisRead read, MprisControl control, void *context, char *e
         if (!mpris->registrations[i]) { goto failed; }
     }
     
-    snprintf(mpris->name, sizeof mpris->name, ROOT ".ShittyJukeBox");
+    snprintf(mpris->name, sizeof mpris->name, ROOT ".Radioport");
     
     for (int attempt = 0; attempt < 2; ++attempt) {
         GVariant *reply = g_dbus_connection_call_sync(mpris->bus, "org.freedesktop.DBus", "/org/freedesktop/DBus",
@@ -407,7 +407,7 @@ Mpris *mpris_create(MprisRead read, MprisControl control, void *context, char *e
             return(mpris);
         }
     
-        snprintf(mpris->name, sizeof mpris->name, ROOT ".ShittyJukeBox.instance%ld", (long)getpid());
+        snprintf(mpris->name, sizeof mpris->name, ROOT ".Radioport.instance%ld", (long)getpid());
     }
 
 failed:
